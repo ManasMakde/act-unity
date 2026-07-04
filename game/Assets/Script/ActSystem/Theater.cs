@@ -50,19 +50,27 @@ public class Theater : MonoBehaviour
 
 
     // Private Properties
-    public HashSet<Act> _allActs = new();
-    public HashSet<Act> _ongoingActs = new();
-    public Dictionary<Act, Act.TickFlags> _deferredActs = new();
-    public Dictionary<Act, bool> _stagedTickActs = new();
-    public Dictionary<Act, bool> _stagedPhysicsTickActs = new();
-    public Dictionary<Act, bool> _stagedLateTickActs = new();
-    public Dictionary<Act, bool> _actsToTick = new();
-    public Dictionary<Act, bool> _actsToPhysicsTick = new();
-    public Dictionary<Act, bool> _actsToLateTick = new();
-    public bool _isEnabled = true;
+    private HashSet<Act> _allActs = new();
+    private HashSet<Act> _ongoingActs = new();
+    private Dictionary<Act, Act.TickFlags> _deferredActs = new();
+    private Dictionary<Act, bool> _stagedTickActs = new();
+    private Dictionary<Act, bool> _stagedPhysicsTickActs = new();
+    private Dictionary<Act, bool> _stagedLateTickActs = new();
+    private Dictionary<Act, bool> _actsToTick = new();
+    private Dictionary<Act, bool> _actsToPhysicsTick = new();
+    private Dictionary<Act, bool> _actsToLateTick = new();
+    private bool _isEnabled = true;
 
 
     // Private Staging Methods
+    public void AddAct(Act newAct)
+    {
+        _allActs.Add(newAct);
+    }
+    public void RemoveAct(Act oldAct)
+    {
+		_allActs.Remove(oldAct);
+    }
     public void StageDeferred(Act act, Act.TickFlags flag)
     {
         if (act == null)

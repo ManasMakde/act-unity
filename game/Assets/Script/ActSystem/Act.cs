@@ -61,9 +61,17 @@ public class Act
 
 	public void Init(Theater theater, string name = "", bool initiallyEnabled = true)
 	{
+		// Warn if null theater provided
+		if (theater == null)
+		{
+			Debug.LogError(name + " Null theater provided for initialization!");
+			return;
+		}
+
+
 		// Assign new owning theater
 		_theater = theater;
-		_theater._allActs.Add(this);
+		_theater.AddAct(this);
 
 
 		// Assign new name
@@ -108,7 +116,7 @@ public class Act
 
 
 		// Unassign owning theater
-		_theater._allActs.Remove(this);
+		_theater.RemoveAct(this);
 		_theater = null;
 	}
 	public void Perform()
@@ -235,7 +243,7 @@ public class Act
 	}
 	public GameObject GetOwner()
 	{
-		return _theater.transform.parent?.gameObject;
+		return _theater?.gameObject;
 	}
 	static public float GetDelta()
 	{
