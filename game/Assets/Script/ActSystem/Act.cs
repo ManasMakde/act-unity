@@ -26,7 +26,7 @@ public class Act
 	{
 		Interrupted = -2,
 		Failure = -1,
-		None = 0,  // Intentionally kept none zero and success one for easier bool comparison do not change
+		Pending = 0,
 		Success = 1,
 		Retry = 2
 	}
@@ -292,19 +292,19 @@ public class Act
 	}
 	protected virtual Outcome Enter()
 	{
-		return _tickFlags != TickFlags.None ? Outcome.None : Outcome.Success;
+		return _tickFlags != TickFlags.None ? Outcome.Pending : Outcome.Success;
 	}
 	protected virtual Outcome Tick()
 	{
-		return Outcome.None;
+		return Outcome.Pending;
 	}
 	protected virtual Outcome PhysicsTick()
 	{
-		return Outcome.None;
+		return Outcome.Pending;
 	}
 	protected virtual Outcome LateTick()
 	{
-		return Outcome.None;
+		return Outcome.Pending;
 	}
 	protected virtual void Exit()
 	{
@@ -326,7 +326,7 @@ public class Act
 			Redirect(Status.Exiting, newOutcome);
 		}
 	}
-	protected void BlockSelf(Act byAct, BlockType blockType)
+	protected virtual void BlockSelf(Act byAct, BlockType blockType)
 	{
 		// Return if already blocked or top epilogues match up
 		if (_blockedByActs.Contains(byAct) || HasMutualTopEpilogue(this, byAct))
@@ -352,7 +352,7 @@ public class Act
 			OnBlockChanged?.Invoke(this, byAct, blockType, true);
 		}
 	}
-	protected void UnblockSelf(Act byAct)
+	protected virtual void UnblockSelf(Act byAct)
 	{
 
 		// Return if not currently blocked by act
@@ -372,14 +372,14 @@ public class Act
 			OnBlockChanged?.Invoke(this, byAct, BlockType.Persistent, false);
 		}
 	}
-	protected void BlockOthers()
+	protected virtual void BlockOthers()
 	{
 		foreach (Act act in _actsToBlock.Keys)
 		{
 			act.BlockSelf(this, _actsToBlock[act]);
 		}
 	}
-	protected void UnblockOthers()
+	protected virtual void UnblockOthers()
 	{
 		foreach (Act act in _actsToBlock.Keys)
 		{
@@ -392,7 +392,7 @@ public class Act
 	// Private
 	private Theater _theater = null;  // Which theater this act belongs to
 	private Status _status = Status.None;  // Keeps track of where in the perform life cycle the act is currently
-	private Outcome _outcome = Outcome.None;  // Denotes how the act ended
+	private Outcome _outcome = Outcome.Pending;  // Denotes how the act ended
 	private bool _didEnter = false;  // True if exit has been reached via enter
 	private string _name = "";  // Useful for debugging
 	private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();  // Which acts to block when performing this act
@@ -451,18 +451,30 @@ public class Act
 
 		return false;
 	}
+	private static void FinishEpilogues(Act ofAct, Outcome newOutcome)
+	{
+		foreach (Act eAct in ofAct._epilogueActs)
+		{
+			eAct?.ContinuePrologue(ofAct, newOutcome);
+
+			// Prevents false positive "mutation while iterating" error DO NOT REMOVE
+			if (ofAct._epilogueActs.Count == 0)
+			{
+				break;
+			}
+		}
+	}
 	private static void FinishPrologues(Act ofAct, Outcome newOutcome)
 	{
 		foreach (Act pAct in ofAct._prologueActs)
 		{
 			pAct?.Finish(newOutcome);
-		}
-	}
-	private static void FinishEpilogues(Act ofAct, Outcome newOutcome)
-	{
-		foreach (Act eAct in ofAct._epilogueActs)
-		{
-			eAct.ContinuePrologue(ofAct, newOutcome);
+
+			// Prevents false positive "mutation while iterating" error DO NOT REMOVE
+			if (ofAct._prologueActs.Count == 0)
+			{
+				break;
+			}
 		}
 	}
 	private static void ClearPrologueChain(Act ofAct)
@@ -625,7 +637,7 @@ public class Act
 			}
 		}
 	}
-	private void ContinuePrologue(Act pAct, Outcome newOutcome = Outcome.None)
+	private void ContinuePrologue(Act pAct, Outcome newOutcome = Outcome.Pending)
 	{
 		// Guard
 		if (_status != Status.Prologuing)
@@ -684,7 +696,7 @@ public class Act
 
 
 		// Redirect to exit
-		if (newOutcome != Outcome.None)
+		if (newOutcome != Outcome.Pending)
 		{
 			Redirect(Status.Exiting, newOutcome);
 			return;
@@ -761,7 +773,7 @@ public class Act
 
 
 		// Check if exit was requested
-		if (newOutcome != Outcome.None)
+		if (newOutcome != Outcome.Pending)
 		{
 			Redirect(Status.Exiting, newOutcome);
 		}
@@ -800,7 +812,7 @@ public class Act
 
 
 		// Check if exit was requested
-		if (newOutcome != Outcome.None)
+		if (newOutcome != Outcome.Pending)
 		{
 			Redirect(Status.Exiting, newOutcome);
 		}
@@ -840,7 +852,7 @@ public class Act
 
 
 		// Check if exit was requested
-		if (newOutcome != Outcome.None)
+		if (newOutcome != Outcome.Pending)
 		{
 			Redirect(Status.Exiting, newOutcome);
 		}
@@ -931,7 +943,7 @@ public class Act
 		// Reset properties
 		var toRetry = _outcome == Outcome.Retry;
 		_status = Status.None;
-		_outcome = Outcome.None;
+		_outcome = Outcome.Pending;
 		_didEnter = false;
 		_prologueCompleteCount = 0;
 
@@ -951,7 +963,7 @@ public class Act
 		// Let theater know this act has ended
 		_theater.UnstageOngoing(this);
 	}
-	private void Redirect(Status newStatus, Outcome newOutcome = Outcome.None)
+	private void Redirect(Status newStatus, Outcome newOutcome = Outcome.Pending)
 	{
 
 		// None -> Prologue
