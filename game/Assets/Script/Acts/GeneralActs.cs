@@ -234,20 +234,90 @@ public class DamageAct : Act
     [HideInInspector] public HealthSystem healthSystem;
     [HideInInspector] public float amount = 5.0f;
     [HideInInspector] public bool canDie = true;
+    [HideInInspector] public bool toAnimate = false;
+    [HideInInspector] public float flashDuration = 0.5f;
+    [HideInInspector] public float flashInterval = 0.1f;
+    [HideInInspector] public float flashAlpha = 0.3f; // Target transparency (0 = invisible, 1 = opaque)
+    [HideInInspector] public SpriteRenderer spriteRenderer;
+
+
+    // Private Properties
+    private Coroutine AnimCoroutine; // Track the running coroutine
+
+
+    // Private Methods
+    private IEnumerator Animate()
+    {
+        // Change opacity in intervals
+        Color originalColor = spriteRenderer.color;
+        Color flashedColor = new Color(originalColor.r, originalColor.g, originalColor.b, flashAlpha);
+        float elapsed = 0f;
+        while (elapsed < flashDuration)
+        {
+            spriteRenderer.color = spriteRenderer.color == originalColor ? flashedColor : originalColor;
+            yield return new WaitForSeconds(flashInterval);
+            elapsed += flashInterval;
+        }
+
+
+        // Reset color
+        spriteRenderer.color = originalColor;
+        Finish(Outcome.Success);
+    }
 
 
     // Override Methods
+    protected override void Setup()
+    {
+        _canReperform = true;
+
+        if (toAnimate)
+        {
+            spriteRenderer = GetOwner().GetComponent<SpriteRenderer>();
+        }
+    }
     protected override bool CanPerform()
     {
-        return healthSystem != null;
+        return healthSystem != null && (!toAnimate || spriteRenderer != null);
     }
     protected override Outcome Enter()
     {
+        // Reduce health
         healthSystem.ReduceHealth(amount);
+
+
+        // Death
         if (canDie && Mathf.Approximately(healthSystem.CurrentHealth, 0f))
         {
             MonoBehaviour.Destroy(GetOwner());
+            return Outcome.Success;
         }
+
+
+        // Animate
+        if (toAnimate)
+        {
+            AnimCoroutine = GetTheater().StartCoroutine(Animate());
+            return Outcome.Pending;
+        }
+
         return Outcome.Success;
+    }
+    protected override void Exit()
+    {
+        // Stop animation
+        if (AnimCoroutine != null)
+        {
+            GetTheater().StopCoroutine(AnimCoroutine);
+            AnimCoroutine = null;
+        }
+
+
+        // Reset animation changes
+        if (toAnimate && spriteRenderer != null)
+        {
+            Color currentColor = spriteRenderer.color;
+            spriteRenderer.color = new Color(currentColor.r, currentColor.g, currentColor.b, 1f);
+        }
     }
 }

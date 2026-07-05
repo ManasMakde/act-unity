@@ -16,6 +16,11 @@ public class BiterSpider : SpiderBase
     // Override Properties
     protected override void Awake()
     {
+        // Animate when damaged
+        damageAct.toAnimate = true;
+        damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played
+
+
         base.Awake();
 
 
