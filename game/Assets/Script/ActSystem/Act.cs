@@ -99,7 +99,6 @@ public class Act
 	}
 	public void Deinit()
 	{
-
 		// Make sure act is not ongoing
 		Abort();
 
@@ -119,6 +118,12 @@ public class Act
 		// Unassign owning theater
 		_theater.RemoveAct(this);
 		_theater = null;
+
+
+		// Reset performed on ticks
+		_performedOnTick = -1;
+		_performedOnPhysicsTick = -1;
+		_performedOnLateTick = -1;
 	}
 	public void Perform()
 	{
@@ -129,11 +134,21 @@ public class Act
 	}
 	public void PerformDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
 	{
-		_theater?.StageDeferred(this, tickFlag);
+		if(_theater != null)
+		{
+			_theater.StageDeferred(this, tickFlag);
+		}
 	}
 	public void Retry()
 	{
-		Finish(Outcome.Retry);
+		if (IsOngoing())
+		{
+			Finish(Outcome.Retry);
+		}
+		else
+		{
+			Perform();
+		}
 	}
 	public void Abort()
 	{
@@ -153,6 +168,21 @@ public class Act
 
 			// Add to block list
 			_actsToBlock[bAct] = blockType;
+		}
+	}
+	public void RemoveFromBlock(List<Act> acts)
+	{
+		foreach (Act bAct in acts)
+		{
+			// Skip if self
+			if (bAct == this)
+			{
+				continue;
+			}
+
+
+			// Remove from block list
+			_actsToBlock.Remove(bAct);
 		}
 	}
 	public void SetEnabled(bool newEnabled)
@@ -952,10 +982,10 @@ public class Act
 		UnblockOthers();
 
 
-		// Retry performance
-		if (toRetry)
+		// Retry perform
+		if (toRetry && CanPerformImpl())
 		{
-			Perform();
+			PerformImpl();
 			return;
 		}
 
