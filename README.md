@@ -3,7 +3,7 @@ This is the unity implementation of the **Act Pattern**
 For a complete explaination & implementation in other game engines visit the [main repository](https://github.com/ManasMakde/act)
 
 > **Note**:  
-> If you just want the `Act` & `Theater` class files look in the following paths:  
+> If you want to use the Act Pattern just copy paste these files anywhere into your project:  
 > 1. [`game/Assets/Script/ActSystem/Act.cs`](game/Assets/Script/ActSystem/Act.cs)  
 > 1. [`game/Assets/Script/ActSystem/Theater.cs`](game/Assets/Script/ActSystem/Theater.cs)  
 
