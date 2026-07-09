@@ -2,10 +2,12 @@
 This is the unity implementation of the **Act Pattern**  
 For a complete explaination & implementation in other game engines visit the [main repository](https://github.com/ManasMakde/act)
 
-> **Note**:  
-> If you want to use the Act Pattern just copy paste these files anywhere into your project:  
-> 1. [`game/Assets/Script/ActSystem/Act.cs`](game/Assets/Script/ActSystem/Act.cs)  
-> 1. [`game/Assets/Script/ActSystem/Theater.cs`](game/Assets/Script/ActSystem/Theater.cs)  
+> ℹ️ **Note**:  
+> If you want to use the Act Pattern in your project just copy paste these files:  
+> 1. [`Act.cs`](game/Assets/Script/ActSystem/Act.cs)  
+> 1. [`Theater.cs`](game/Assets/Script/ActSystem/Theater.cs)
+>
+> _Also feel free to leave a ⭐ if you use them in your project!_  
 
 
 
