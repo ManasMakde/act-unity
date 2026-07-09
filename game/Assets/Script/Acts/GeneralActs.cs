@@ -35,7 +35,6 @@ public class PerpetualAct : Act
     }
 }
 
-
 [Serializable]
 public class GotoAct : Act
 {
@@ -98,7 +97,6 @@ public class GotoAct : Act
     }
 }
 
-
 [Serializable]
 public class AttackAct : Act
 {
@@ -119,7 +117,6 @@ public class AttackAct : Act
         return Outcome.Success;
     }
 }
-
 
 [Serializable]
 public class WaitAct : Act
@@ -154,7 +151,6 @@ public class WaitAct : Act
     }
 }
 
-
 [Serializable]
 public class MoveAct : Act
 {
@@ -170,7 +166,6 @@ public class MoveAct : Act
         if(rb == null){
             rb = GetOwner().GetComponent<Rigidbody2D>();
         }
-        // Debug.Log(GetOwner().GetComponent<Rigidbody2D>());
         rb.gravityScale = 0f;  // No gravity for top down
     }
     protected override bool CanPerform()
@@ -188,15 +183,14 @@ public class MoveAct : Act
     }
 }
 
-
 [Serializable]
 public class ShootAct : Act
 {
     // Public Properties
-    [SerializeField] public GameObject bulletPrefab;
+    [SerializeField] public GameObject projectilePrefab;
     [HideInInspector] public Vector2 spawnLocation = new();
     [HideInInspector] public bool spawnAtOwner = true;
-    [HideInInspector] public Vector2 bulletDirection = new();
+    [HideInInspector] public Vector2 direction = new();
 
 
     // Override Methods
@@ -205,27 +199,28 @@ public class ShootAct : Act
     }
     protected override bool CanPerform()
     {
-        return bulletPrefab != null;
+        return projectilePrefab != null;
     }
     protected override Outcome Enter()
     {
         // Spawn Bullet
-        var spawnPosition = spawnAtOwner ? GetOwner().transform.position : new Vector3(spawnLocation.x, spawnLocation.y, 0.0f);
-        GameObject bullet = MonoBehaviour.Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
+        var spawnPosition = spawnAtOwner ? GetOwner().transform.position : (Vector3)spawnLocation;
+        GameObject bullet = MonoBehaviour.Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
        
        
         // Set bullet direction
-        Bullet bulletScript = bullet.GetComponent<Bullet>();
-        bulletScript.direction = bulletDirection;
+        ProjectileBase bulletScript = bullet.GetComponent<ProjectileBase>();
+        bulletScript.direction = direction;
+        bulletScript.SetOwner(GetOwner());
+        
         
         return Outcome.Success;
     }
     protected override void Exit()
     {
-        bulletDirection = Vector2.zero;
+        direction = Vector2.zero;
     }
 }
-
 
 [Serializable]
 public class DamageAct : Act
@@ -318,6 +313,128 @@ public class DamageAct : Act
         {
             Color currentColor = spriteRenderer.color;
             spriteRenderer.color = new Color(currentColor.r, currentColor.g, currentColor.b, 1f);
+        }
+    }
+}
+
+[Serializable]
+public class LookAct : Act
+{
+    // Enums
+    public enum TurnType
+    {
+        Once,  // Turns only once towards target
+        UntilFacing,  // Turns until target has been reached
+        Continuous  // Follows target indefinitely
+    }
+
+
+    // Public Properties
+    [SerializeField] public Transform targetTransform = null;
+    [SerializeField] public float targetRotation = 0f;  // Rotation towards which to turn
+    [SerializeField] public TurnType turnType = TurnType.UntilFacing;
+    [SerializeField] public float followTimeout = 0f;  // 0 or less means indefinitely
+    [SerializeField] public bool instantTurn = false;  // If true then snaps rotation instantly else drags at turn speed
+    [SerializeField] public float turnSpeed = 150f;
+    [SerializeField] public float acceptanceAngle = 0.5f;  // In deg, used to decide if goal rotation reached
+    [HideInInspector] public Rigidbody2D rb;
+
+
+    // Private Properties
+    private Coroutine followCoroutine;
+
+
+    // Static Method
+    public float RotationTowardsPosition(Vector2 position){
+
+        Vector2 direction = (Vector2)position - rb.position;
+        return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+    }
+
+
+    // Private Methods
+    private float GetGoalRotation()
+    {
+        // Turn towards target actor if assigned
+        if (targetTransform == null)
+        {
+            return targetRotation;
+        }
+
+        return RotationTowardsPosition((Vector2)targetTransform.position);
+    }
+    private float CalcRotationLerp(float goalRotation, float deltaTime)
+    {
+        // Snap instantly or drag at turn speed
+        return instantTurn ? goalRotation : Mathf.MoveTowardsAngle(rb.rotation, goalRotation, turnSpeed * deltaTime);
+    }
+    private IEnumerator FollowDurationRoutine()
+    {
+        yield return new WaitForSeconds(followTimeout);
+        Finish(Outcome.Success);
+    }
+
+
+    // Override Methods
+    protected override void Setup()
+    {
+        // Auto get rigidBody if not provided
+        if (rb == null)
+        {
+            rb = GetOwner().GetComponent<Rigidbody2D>();
+        }
+
+        // Enable ticking
+        _tickFlags = TickFlags.PhysicsTick;
+    }
+    protected override bool CanPerform()
+    {
+        return rb != null;
+    }
+    protected override Outcome Enter()
+    {
+        // Turn single time and finish
+        if (turnType == TurnType.Once)
+        {
+            float goalRotation = GetGoalRotation();
+            rb.MoveRotation(CalcRotationLerp(goalRotation, GetPhysicsDelta()));
+            return Outcome.Success;
+        }
+
+
+        // Stop follow after given positive duration
+        if (turnType == TurnType.Continuous && followTimeout > 0f)
+        {
+            followCoroutine = GetTheater().StartCoroutine(FollowDurationRoutine());
+        }
+
+        return Outcome.Pending;
+    }
+    protected override Outcome PhysicsTick()
+    {
+        // Turn owner
+        float goalRotation = GetGoalRotation();
+        rb.MoveRotation(CalcRotationLerp(goalRotation, GetPhysicsDelta()));
+
+
+        // Keep ticking if not meant to stop at goal
+        if (turnType != TurnType.UntilFacing)
+        {
+            return Outcome.Pending;
+        }
+
+
+        // Exit if reached goal rotation
+        float angleDiff = Mathf.Abs(Mathf.DeltaAngle(rb.rotation, goalRotation));
+        return angleDiff <= acceptanceAngle ? Outcome.Success : Outcome.Pending;
+    }
+    protected override void Exit()
+    {
+        // Clear follow coroutine
+        if (followCoroutine != null)
+        {
+            GetTheater().StopCoroutine(followCoroutine);
+            followCoroutine = null;
         }
     }
 }

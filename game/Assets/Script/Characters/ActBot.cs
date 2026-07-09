@@ -44,7 +44,7 @@ public class ActBot : MonoBehaviour, IDamageable, ITrappable
         if (Input.GetMouseButtonDown(0))
         {
             Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            shootAct.bulletDirection = ((Vector2)mouseWorldPosition - (Vector2)transform.position).normalized;
+            shootAct.direction = ((Vector2)mouseWorldPosition - (Vector2)transform.position).normalized;
             shootAct.Perform();
         }
     }

@@ -1,14 +1,18 @@
 using UnityEngine;
 
+
 public class BiterSpider : SpiderBase
 {
     // Public Properties
     [SerializeField] bool isVenomous = false;
     [SerializeField] GameObject venomPrefab = null;
 
+
     // Act Properties
     [SerializeField] PerpetualAct liveAct = new();
+    [SerializeField] PerpetualAct lookPerpAct = new();
     [SerializeField] GotoAct chaseAct = new();
+    [SerializeField] LookAct lookAct = new();
     [SerializeField] WaitAct delayAttackAct = new();
     [SerializeField] AttackAct biteAct = new();
 
@@ -18,7 +22,7 @@ public class BiterSpider : SpiderBase
     {
         // Animate when damaged
         damageAct.toAnimate = true;
-        damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played
+        damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damage animation is being played
 
 
         base.Awake();
@@ -39,9 +43,17 @@ public class BiterSpider : SpiderBase
         liveAct.Init(theater, "Live Act");
 
 
-        // Setup Goto Act
+        // Setup Look & Look Perp Act
+        lookAct.turnType = LookAct.TurnType.Continuous;
+        lookAct.targetTransform = playerTransform;
+        lookAct.Init(theater, "Turn Act");
+        lookPerpAct.Prologue += (Act act) => new() { lookAct };
+        lookPerpAct.Init(theater, "Look Act");
+
+
+        // Setup Chase Act
         chaseAct.target = playerTransform;
-        chaseAct.Init(theater, "Goto Act");
+        chaseAct.Init(theater, "Chase Act");
 
 
         // Setup Attack Act

@@ -237,7 +237,7 @@ Transform:
   m_GameObject: {fileID: 1840618125}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.5849, y: -0.08794, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -256,6 +256,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   spiderPrefabs:
+  - {fileID: 2422983801374224807, guid: be1b7e2a53b9cc8439b5e97ad9d94dcb, type: 3}
   - {fileID: 2318549658272616526, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
   - {fileID: 3822765123079691983, guid: d2cf9100fe36474418af2417945560cd, type: 3}
   spawnInterval: 3
@@ -313,10 +314,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5607604400439526008, guid: 08c66af28b36ff94b8840fb17b1c45c9, type: 3}
-      propertyPath: shootAct.bulletPrefab
-      value: 
-      objectReference: {fileID: 2910026093151187665, guid: 1d3a2fd2edf56d846871a1cae10ca587, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

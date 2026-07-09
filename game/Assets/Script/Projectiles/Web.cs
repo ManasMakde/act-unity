@@ -2,10 +2,19 @@ using UnityEngine;
 
 public class Web : ProjectileBase
 {
-    [SerializeField] private GameObject webEffectPrefab;
+    [SerializeField] private GameObject stickyEffectPrefab;
 
-    private void OnTriggerEnter2D(Collider2D other)
+    protected override void HitBehaviour(Collider2D other)
     {
+        // Restart counter if already sticky
+        StickyEffect existingSticky = other.GetComponentInChildren<StickyEffect>();
+        if(existingSticky != null)
+        {
+            existingSticky.Restart();
+            return;
+        }
+
+
         // Return if not trappable
         ITrappable trappable = other.GetComponent<ITrappable>();
         if (trappable == null)
@@ -14,12 +23,11 @@ public class Web : ProjectileBase
         }
 
 
-        // Trap in web
-        if (webEffectPrefab == null)
+        // Apply sticky effect
+        if (stickyEffectPrefab == null)
         {
             return;
         }
-        Instantiate(webEffectPrefab, other.transform.position, Quaternion.identity, other.transform);
-        Destroy(gameObject);
+        Instantiate(stickyEffectPrefab, other.transform.position, Quaternion.identity, other.transform);
     }
 }

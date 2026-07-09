@@ -6,7 +6,7 @@ public class Bullet : ProjectileBase
     [SerializeField] private float damageAmount = 10f;
     [SerializeField] public bool damageOwner = false;
 
-    private void OnTriggerEnter2D(Collider2D other)
+    protected override void HitBehaviour(Collider2D other)
     {
         // Return if cannot damage owner
         if (other.gameObject == owner && !damageOwner)
@@ -25,6 +25,6 @@ public class Bullet : ProjectileBase
 
         // Apply damage
         damageable.TakeDamage(damageAmount);
-        Destroy(gameObject);
+        // Destroy(gameObject);
     }
 }

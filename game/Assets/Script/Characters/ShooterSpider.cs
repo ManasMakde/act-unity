@@ -1,174 +1,151 @@
-// using UnityEngine;
-
-// public class ShooterSpider : SpiderBase
-// {
-//     private enum ShooterState
-//     {
-//         Kiting,
-//         Charging,
-//         Dead
-//     }
+using UnityEngine;
 
 
-//     // Private Properties
-//     [SerializeField] private float preferredDistance = 5f;
-//     [SerializeField] private float shootInterval = 2f;
-//     [SerializeField] private float chargeShootInterval = 0.5f;
-//     [SerializeField] private float circleStrafeSpeed = 90f;
-//     [SerializeField] private float lowHealthFraction = 0.3f;
-//     [SerializeField] private float chargeCheckInterval = 1f;
-//     [SerializeField] private float chargeChance = 0.3f;
-//     [SerializeField] private GameObject webProjectilePrefab;
-//     [SerializeField] private float fullCircleDegrees = 360f;
-//     private ShooterState currentState = ShooterState.Kiting;
-//     private float shootTimer;
-//     private float chargeCheckTimer;
-//     private float angleTraveled;
-//     private Vector3 chargeCenter;
+public class ShooterSpider : SpiderBase
+{
+    // Act Properties
+    [SerializeField] PerpetualAct liveAct = new();
+    [SerializeField] GotoAct wanderAct = new();
+    [SerializeField] WaitAct waitAct = new();
+    [SerializeField] LookAct lookAct = new();
+    [SerializeField] LookAct aimAct = new();
+    [SerializeField] ShootAct shootAct = new();
 
 
-//     // Public Methods
-//     public override void Attack()
-//     {
-//         if (webProjectilePrefab == null)
-//         {
-//             Debug.LogWarning("Attack called but web projectile prefab missing");
-//             return;
-//         }
+    // Static Methods
+    public static Vector3[] GetCameraCornersOnGround(Camera camera)  // Ground= x-y plane
+    {
+        Vector3[] corners = new Vector3[4];
+        Vector3[] screenCorners = new Vector3[]
+        {
+            new Vector3(0, 0, camera.nearClipPlane),
+            new Vector3(0, 1, camera.nearClipPlane),
+            new Vector3(1, 1, camera.nearClipPlane),
+            new Vector3(1, 0, camera.nearClipPlane)
+        };
 
-//         if (playerTransform == null)
-//         {
-//             Debug.LogWarning("Attack called but player transform missing");
-//             return;
-//         }
+        float groundZ = 0.0f;  // z where sprites live
+        Plane targetPlane = new Plane(Vector3.forward, new Vector3(0, 0, groundZ));
+        for (int i = 0; i < 4; i++)
+        {
+            Ray ray = camera.ViewportPointToRay(screenCorners[i]);
+            if (targetPlane.Raycast(ray, out float enterDistance))
+            {
+                corners[i] = ray.GetPoint(enterDistance);
+            }
+            else
+            {
+                Debug.LogWarning("GetCameraCornersOnGround ray missed ground plane, using zero corner");
+                corners[i] = Vector3.zero;
+            }
+        }
 
-//         Vector2 direction = (playerTransform.position - transform.position).normalized;
-//         GameObject webObj = Instantiate(webProjectilePrefab, transform.position, Quaternion.identity);
-//         Web web = webObj.GetComponent<Web>();
-//         if (web == null)
-//         {
-//             Debug.LogWarning("Attack instantiated web with no Web component");
-//             return;
-//         }
+        return corners;
+    }
+    public static Vector3 GetRandomPointInView(Camera camera)
+    {
+        Vector3[] corners = GetCameraCornersOnGround(camera);
+        Vector3 p0 = corners[0];
+        Vector3 p1 = corners[1];
+        Vector3 p2 = corners[2];
+        Vector3 p3 = corners[3];
 
-//         web.SetDirection(direction);
-//     }
+        float areaA = Vector3.Cross(p1 - p0, p2 - p0).magnitude * 0.5f;
+        float areaB = Vector3.Cross(p2 - p0, p3 - p0).magnitude * 0.5f;
+        float totalArea = areaA + areaB;
 
+        Vector3 a, b, c;
+        if (Random.value < (areaA / totalArea))
+        {
+            a = p0; b = p1; c = p2;
+        }
+        else
+        {
+            a = p0; b = p2; c = p3;
+        }
 
-//     // Private Methods
-//     private void UpdateKiting()
-//     {
-//         if (playerTransform == null)
-//         {
-//             Debug.LogWarning("UpdateKiting called but player transform missing");
-//             return;
-//         }
+        float r1 = Random.value;
+        float r2 = Random.value;
 
-//         float distance = GetDistanceToPlayer();
-//         if (distance > detectionRange)
-//         {
-//             return;
-//         }
+        if (r1 + r2 > 1f)
+        {
+            r1 = 1f - r1;
+            r2 = 1f - r2;
+        }
 
-//         if (distance > preferredDistance)
-//         {
-//             MoveTowardsPlayer();
-//         }
-//         else if (distance < preferredDistance)
-//         {
-//             MoveAwayFromPlayer();
-//         }
-
-//         shootTimer -= Time.deltaTime;
-//         if (shootTimer <= 0f)
-//         {
-//             Attack();
-//             shootTimer = shootInterval;
-//         }
-
-//         chargeCheckTimer -= Time.deltaTime;
-//         if (chargeCheckTimer <= 0f)
-//         {
-//             TryStartCharge();
-//             chargeCheckTimer = chargeCheckInterval;
-//         }
-//     }
-//     private void TryStartCharge()
-//     {
-//         float healthFraction = healthSystem.CurrentHealth / healthSystem.MaxHealth;
-//         if (healthFraction > lowHealthFraction)
-//         {
-//             return;
-//         }
-
-//         float roll = Random.value;
-//         if (roll > chargeChance)
-//         {
-//             return;
-//         }
-
-//         StartCharge();
-//     }
-//     private void StartCharge()
-//     {
-//         if (playerTransform == null)
-//         {
-//             Debug.LogWarning("StartCharge called but player transform missing");
-//             return;
-//         }
-
-//         currentState = ShooterState.Charging;
-//         chargeCenter = playerTransform.position;
-//         angleTraveled = 0f;
-//         shootTimer = chargeShootInterval;
-//     }
-//     private void UpdateCharging()
-//     {
-//         Vector3 offset = transform.position - chargeCenter;
-//         float stepAngle = circleStrafeSpeed * Time.deltaTime;
-
-//         offset = Quaternion.Euler(0f, 0f, stepAngle) * offset;
-//         transform.position = chargeCenter + offset;
-//         angleTraveled += Mathf.Abs(stepAngle);
-
-//         shootTimer -= Time.deltaTime;
-//         if (shootTimer <= 0f)
-//         {
-//             Attack();
-//             shootTimer = chargeShootInterval;
-//         }
-
-//         if (angleTraveled >= fullCircleDegrees)
-//         {
-//             currentState = ShooterState.Dead;
-//             Destroy(gameObject);
-//         }
-//     }
-//     private void MoveAwayFromPlayer()
-//     {
-//         if (playerTransform == null)
-//         {
-//             Debug.LogWarning("MoveAwayFromPlayer called but player transform missing");
-//             return;
-//         }
-
-//         Vector2 direction = (transform.position - playerTransform.position).normalized;
-//         transform.position += (Vector3)direction * moveSpeed * Time.deltaTime;
-//     }
+        float r3 = 1f - r1 - r2;
+        return (r1 * a) + (r2 * b) + (r3 * c);
+    }
 
 
-//     // Override Methods
-//     private void Update()
-//     {
-//         if (currentState == ShooterState.Kiting)
-//         {
-//             UpdateKiting();
-//             return;
-//         }
+    // Private Methods
+    private Vector2 GetLookDirection()  // current facing direction based on aimAct rotation
+    {
+        float rotationRad = aimAct.rb.rotation * Mathf.Deg2Rad;
+        return new Vector2(Mathf.Cos(rotationRad), Mathf.Sin(rotationRad));
+    }
 
-//         if (currentState == ShooterState.Charging)
-//         {
-//             UpdateCharging();
-//         }
-//     }
-// }
+
+    // Override Properties
+    protected override void Awake()
+    {
+        // Animate when damaged
+        damageAct.toAnimate = true;
+        damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played
+
+
+        base.Awake();
+
+
+        // Setup Live Act
+        liveAct.Prologue += (Act act) =>
+        {
+            // Do not shoot if player is already stuck
+            bool isPlayerStuck = playerTransform == null || (playerTransform.GetComponentInChildren<StickyEffect>() != null);
+
+
+            // Set random location to wander & look towards
+            Vector2 randomPosition = GetRandomPointInView(Camera.main);
+            wanderAct.location = randomPosition;
+            lookAct.targetRotation = lookAct.RotationTowardsPosition(randomPosition);
+
+
+            // Wander to Random positions -> Aim -> Shoot -> Wait
+            return Act.Seq(new() {
+                new() { wanderAct, lookAct },
+                isPlayerStuck? new() {} : new() { aimAct },  // Don't aim if player is already stuck
+                isPlayerStuck ? new() {} : new() { shootAct },  // Don't shoot if player is already stuck
+                new() { waitAct }
+            });
+        };
+        liveAct.Init(theater, "Live Act");
+
+
+        // Wander Act
+        wanderAct.Init(theater, "Wander Act");
+
+
+        // Wait Act
+        waitAct.Init(theater, "Wander Wait Act");
+
+
+        // Look Act
+        lookAct.turnType = LookAct.TurnType.UntilFacing;
+        lookAct.Init(theater, "look Act");
+
+
+        // Aim Act
+        aimAct.targetTransform = playerTransform;
+        aimAct.turnType = LookAct.TurnType.Continuous;
+        aimAct.followTimeout = 2.0f;
+        aimAct.Init(theater, "Aim Act");
+
+
+        // Shoot Act
+        shootAct.OnPreEnter += (Act act) =>
+        {
+            shootAct.direction = GetLookDirection();
+        };
+        shootAct.Init(theater, "Shoot Act");
+    }
+}

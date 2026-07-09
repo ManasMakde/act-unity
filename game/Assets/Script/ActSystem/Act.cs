@@ -290,12 +290,20 @@ public class Act
 	}
 	public static List<Act> Seq(List<List<Act>> pArrays)  // Only use inside Prologue
 	{
+		// Remove empty lists before chaining
+		pArrays.RemoveAll(pArr => pArr.Count == 0);
+
+
 		// Return if empty list
 		var pLength = pArrays.Count;
 		if (pLength == 0)
 		{
 			return new List<Act>();
 		}
+
+
+		// Update length after removal
+		pLength = pArrays.Count;
 
 
 		// Chain all prologues
@@ -420,11 +428,11 @@ public class Act
 
 
 	// Private
+	private string _name = "";  // Useful for debugging
 	private Theater _theater = null;  // Which theater this act belongs to
 	private Status _status = Status.None;  // Keeps track of where in the perform life cycle the act is currently
 	private Outcome _outcome = Outcome.Pending;  // Denotes how the act ended
 	private bool _didEnter = false;  // True if exit has been reached via enter
-	private string _name = "";  // Useful for debugging
 	private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();  // Which acts to block when performing this act
 	private HashSet<Act> _blockedByActs = new();  // Which acts are blocking this act
 	private HashSet<Act> _topEpilogueActs = new();
@@ -577,6 +585,10 @@ public class Act
 		_performedOnTick = Time.frameCount;
 		_performedOnPhysicsTick = Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
 		_performedOnLateTick = Time.frameCount;
+
+
+		// Mark outcome as pending
+		_outcome = Outcome.Pending;
 
 
 		// Finish any ongoing perform
@@ -973,7 +985,6 @@ public class Act
 		// Reset properties
 		var toRetry = _outcome == Outcome.Retry;
 		_status = Status.None;
-		_outcome = Outcome.Pending;
 		_didEnter = false;
 		_prologueCompleteCount = 0;
 
