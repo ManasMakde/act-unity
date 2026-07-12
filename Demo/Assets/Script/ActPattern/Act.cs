@@ -37,6 +37,7 @@ public class Act
 	}
 
 
+
 	// Public
 	public event Action<Act /* act */> OnPreSetup;
 	public event Action<Act /* act */> OnPostSetup;
@@ -134,7 +135,7 @@ public class Act
 	}
 	public void PerformDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
 	{
-		if(_theater != null)
+		if (_theater != null)
 		{
 			_theater.StageDeferred(this, tickFlag);
 		}
@@ -367,7 +368,7 @@ public class Act
 	protected virtual void BlockSelf(Act byAct, BlockType blockType)
 	{
 		// Return if already blocked or top epilogues match up
-		if (_blockedByActs.Contains(byAct) || HasMutualTopEpilogue(this, byAct))
+		if (_blockedByActs.Contains(byAct) || InSamePrologueChain(this, byAct))
 		{
 			return;
 		}
@@ -451,11 +452,11 @@ public class Act
 			for (int j = 0; j < arrayA.Count; j++)
 			{
 				Act actA = arrayA[j];
-				AssignPrologue(actB, actA);
+				AssignPrologueEpilogue(actB, actA);
 			}
 		}
 	}
-	private static bool HasMutualTopEpilogue(Act actA, Act actB)
+	private static bool InSamePrologueChain(Act actA, Act actB)
 	{
 		// Incase both are the same acts
 		if (actA == actB)
@@ -530,7 +531,7 @@ public class Act
 		ofAct._topEpilogueActs.Clear();
 		ofAct._prologueActs.Clear();
 	}
-	private static void AssignPrologue(Act eAct, Act pAct)
+	private static void AssignPrologueEpilogue(Act eAct, Act pAct)
 	{
 		// Assign prologue
 		eAct._prologueActs.Add(pAct);
@@ -538,21 +539,43 @@ public class Act
 
 		// Assign epilogue
 		pAct._epilogueActs.Add(eAct);
-
-
-		// Assign top epilogue
-		if (eAct._epilogueActs.Count == 0)
+	}
+	private static void AssignTopEpilogues(Act eAct, HashSet<Act> topEpilogues = null)
+	{
+		// Get top epilogues to pass on
+		if (topEpilogues == null || topEpilogues.Count == 0)
 		{
-			pAct._topEpilogueActs.Add(eAct);
+			if (eAct._epilogueActs.Count == 0)
+			{
+				topEpilogues = new HashSet<Act> { eAct };
+			}
+			else
+			{
+				topEpilogues = new HashSet<Act>(eAct._topEpilogueActs);
+			}
 		}
-		else
+
+
+		// Recurse into prologues
+		foreach (Act pAct in eAct._prologueActs)
 		{
-			pAct._topEpilogueActs.UnionWith(new HashSet<Act>(eAct._topEpilogueActs));
+			// Skip null
+			if (pAct == null)
+			{
+				continue;
+			}
+
+
+			// Assign top epilogues
+			pAct._topEpilogueActs.UnionWith(new HashSet<Act>(topEpilogues));
+
+
+			// Recurse further down chain
+			AssignTopEpilogues(pAct, topEpilogues);
 		}
 	}
 	private bool CanPerformImpl()
 	{
-
 		// Return if null theater
 		if (_theater == null)
 		{
@@ -611,7 +634,6 @@ public class Act
 		// Assign all prologues and epilogues
 		foreach (Act pAct in Prologue.Invoke(this))
 		{
-
 			// Skip self
 			if (pAct == this)
 			{
@@ -626,8 +648,12 @@ public class Act
 			}
 
 			// Assign prologue epilogue and top epilogue
-			AssignPrologue(this, pAct);
+			AssignPrologueEpilogue(this, pAct);
 		}
+
+
+		// Assign all top epilogues
+		AssignTopEpilogues(this);
 
 
 		// Block
