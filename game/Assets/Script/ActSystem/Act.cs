@@ -318,8 +318,8 @@ public class Act
 
 
 	// Protected
-	protected bool _canReperform = false;  // Indicates if act can interrupt itself and restart perform assign in Setup
-	protected TickFlags _tickFlags = TickFlags.None;  // Indicates if act will be ticking after entering assign in Setup
+	protected bool _canReperform = false;  // Indicates if act can interrupt itself and restart perform, Only assign in Setup()
+	protected TickFlags _tickFlags = TickFlags.None;  // Indicates if act will be ticking after entering, Only assign in Setup()
 
 	protected virtual void Setup()
 	{
