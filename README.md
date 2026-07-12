@@ -4,8 +4,8 @@ For a complete explaination & implementation in other game engines visit the [ma
 
 > ℹ️ **Note**:  
 > If you want to use the Act Pattern in your project just copy paste these files:  
-> 1. [`Act.cs`](game/Assets/Script/ActSystem/Act.cs)  
-> 1. [`Theater.cs`](game/Assets/Script/ActSystem/Theater.cs)
+> 1. [`Act.cs`](Demo/Assets/Script/ActPattern/Act.cs)  
+> 1. [`Theater.cs`](Demo/Assets/Script/ActPattern/Theater.cs)
 >
 > _Also feel free to leave a ⭐ if you use them in your project!_  
 
