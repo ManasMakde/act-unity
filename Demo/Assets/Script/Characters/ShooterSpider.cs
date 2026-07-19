@@ -98,7 +98,7 @@ public class ShooterSpider : SpiderBase
 
 
         // Setup Live Act
-        liveAct.Prologue += (Act act) =>
+        liveAct.prologue += (Act act) =>
         {
             // Do not shoot if player is already stuck
             bool isPlayerStuck = playerTransform == null || (playerTransform.GetComponentInChildren<StickyEffect>() != null);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class Theater : MonoBehaviour
 {
     // Public Signals
@@ -34,10 +35,41 @@ public class Theater : MonoBehaviour
     }
     public void AbortAll()
     {
+        // Return if already in between aborting all
+        if (_isAbortingAll)
+        {
+            return;
+        }
+
+
+        // Guard to avoid mutation
+        _isAbortingAll = true;
+
+
+        // Abort all acts
         foreach (Act act in _allActs)
         {
             act.Abort();
         }
+
+
+        // Reset guard
+        _isAbortingAll = false;
+
+
+        // Apply pending adds & removes after loop
+        foreach (Act act in _pendingModActs.Keys)
+        {
+            if (_pendingModActs[act])
+            {
+                _allActs.Add(act);
+            }
+            else
+            {
+                _allActs.Remove(act);
+            }
+        }
+        _pendingModActs.Clear();
     }
     public bool AreAnyOngoing()
     {
@@ -53,23 +85,96 @@ public class Theater : MonoBehaviour
     private HashSet<Act> _allActs = new();
     private HashSet<Act> _ongoingActs = new();
     private Dictionary<Act, Act.TickFlags> _deferredActs = new();
+    private Dictionary<Act, bool> _pendingModActs = new();
     private Dictionary<Act, bool> _stagedTickActs = new();
     private Dictionary<Act, bool> _stagedPhysicsTickActs = new();
     private Dictionary<Act, bool> _stagedLateTickActs = new();
     private Dictionary<Act, bool> _actsToTick = new();
     private Dictionary<Act, bool> _actsToPhysicsTick = new();
     private Dictionary<Act, bool> _actsToLateTick = new();
+    private bool _isAbortingAll = false;
     private bool _isEnabled = true;
 
 
     // Private Staging Methods
     public void AddAct(Act newAct)
     {
+        // Return if null act
+        if (newAct == null)
+        {
+            return;
+        }
+
+
+        // Mark as pending if abort all is ongoing
+        if (_isAbortingAll)
+        {
+            _pendingModActs[newAct] = true;
+            return;
+        }
+
         _allActs.Add(newAct);
     }
     public void RemoveAct(Act oldAct)
     {
-		_allActs.Remove(oldAct);
+        // Return if null act
+        if (oldAct == null)
+        {
+            return;
+        }
+
+
+        // Mark as pending if abort all is ongoing
+        if (_isAbortingAll)
+        {
+            _pendingModActs[oldAct] = false;
+            return;
+        }
+
+        _allActs.Remove(oldAct);
+    }
+    public void StageOngoing(Act act)
+    {
+        // Return if invalid act or already ongoing
+        if (act == null || _ongoingActs.Contains(act))
+        {
+            return;
+        }
+
+
+        // Mark as ongoing act
+        _ongoingActs.Add(act);
+
+
+        // Clear defer
+        UnstageDeferred(act);
+
+
+        // Broadcast act started
+        OnPerformStart?.Invoke(this, act);
+    }
+    public void UnstageOngoing(Act act)
+    {
+        // Return if act is null or was never staged ongoing
+        if (act == null || !_ongoingActs.Contains(act))
+        {
+            return;
+        }
+
+
+        // Remove as ongoing act
+        _ongoingActs.Remove(act);
+
+
+        // Broadcast act ended
+        OnPerformEnd?.Invoke(this, act);
+
+
+        // Broadcast all ended if none ongoing
+        if (!AreAnyOngoing())
+        {
+            OnAllPerformEnd?.Invoke(this);
+        }
     }
     public void StageDeferred(Act act, Act.TickFlags flag)
     {
@@ -78,7 +183,7 @@ public class Theater : MonoBehaviour
             return;
         }
 
-        _deferredActs[act] = flag;
+        _deferredActs[act] = _deferredActs.ContainsKey(act) ? (_deferredActs[act] | flag) : flag;
     }
     public void UnstageDeferred(Act act)
     {
@@ -129,7 +234,6 @@ public class Theater : MonoBehaviour
     {
         if (act == null)
         {
-            Debug.LogWarning("Theater UnstagePhysicsTick received null act");
             return;
         }
 
@@ -172,43 +276,6 @@ public class Theater : MonoBehaviour
             _stagedLateTickActs[act] = false;
         }
     }
-    public void StageOngoing(Act act)
-    {
-
-        // Return if invalid act or already ongoing
-        if (act == null || _ongoingActs.Contains(act))
-        {
-            return;
-        }
-
-
-        // Mark as ongoing act
-        _ongoingActs.Add(act);
-
-
-        // Clear defer
-        UnstageDeferred(act);
-
-
-        // Broadcast act started
-        OnPerformStart?.Invoke(this, act);
-    }
-    public void UnstageOngoing(Act act)
-    {
-        // Remove as ongoing act
-        _ongoingActs.Remove(act);
-
-
-        // Broadcast act ended
-        OnPerformEnd?.Invoke(this, act);
-
-
-        // Broadcast all ended if none ongoing
-        if (!AreAnyOngoing())
-        {
-            OnAllPerformEnd?.Invoke(this);
-        }
-    }
 
 
     // Private Tick Methods
@@ -233,11 +300,8 @@ public class Theater : MonoBehaviour
         }
 
 
-        // Merge back
+        // Merge back & clear
         MergeDict(_stagedTickActs, _actsToTick, false);
-
-
-        // Clear
         _actsToTick.Clear();
 
 
@@ -277,11 +341,8 @@ public class Theater : MonoBehaviour
         }
 
 
-        // Merge back
+        // Merge back & clear
         MergeDict(_stagedPhysicsTickActs, _actsToPhysicsTick, false);
-
-
-        // Clear
         _actsToPhysicsTick.Clear();
 
 
@@ -321,11 +382,8 @@ public class Theater : MonoBehaviour
         }
 
 
-        // Merge back
+        // Merge back & clear
         MergeDict(_stagedLateTickActs, _actsToLateTick, false);
-
-
-        // Clear
         _actsToLateTick.Clear();
 
 
@@ -382,7 +440,6 @@ public class Theater : MonoBehaviour
     }
     private static void MergeDict<TKey, TValue>(Dictionary<TKey, TValue> dict, Dictionary<TKey, TValue> other, bool overwrite)
     {
-
         foreach (var pair in other)
         {
             if (overwrite || !dict.ContainsKey(pair.Key))

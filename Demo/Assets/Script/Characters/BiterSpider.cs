@@ -29,7 +29,7 @@ public class BiterSpider : SpiderBase
 
 
         // Setup Live Act
-        liveAct.Prologue += (Act act) =>
+        liveAct.prologue += (Act act) =>
         {
             // Attack then Wait
             if (chaseAct.IsWithinRange())
@@ -47,7 +47,7 @@ public class BiterSpider : SpiderBase
         lookAct.turnType = LookAct.TurnType.Continuous;
         lookAct.targetTransform = playerTransform;
         lookAct.Init(theater, "Turn Act");
-        lookPerpAct.Prologue += (Act act) => new() { lookAct };
+        lookPerpAct.prologue += (Act act) => new() { lookAct };
         lookPerpAct.Init(theater, "Look Act");
 
 

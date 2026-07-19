@@ -43,6 +43,15 @@ For a complete explaination & implementation in other game engines visit the [ma
 | \<Act act,<br> Act blockingAct,<br> [BlockType](#blocktype) blockType,<br>bool didBlock\> | [OnBlockChanged](#onblockchanged) |
 
 
+| Access | Type | Properties |
+|--------|------|--------------|
+| public | Func\<Act, List\<Act\>\> | [prologue](#prologue) |
+| public | List\<Func\<Act, bool\>\> | [performConditions](#performconditions) |
+| public | bool | [isVerbose](#isverbose) |
+| protected | bool | [_canReperform](#_canreperform) |
+| protected | [TickFlags](#tickflags) | [_tickFlags](#_tickflags) |
+
+
 | Access | Type | Methods |
 |--------|------|--------------|
 | public | void | [Init](#init)(Theater theater, string name, bool initiallyEnabled) |
@@ -59,7 +68,6 @@ For a complete explaination & implementation in other game engines visit the [ma
 | public | bool | [IsOngoing](#isongoing)() |
 | public | bool | [IsEnabled](#isenabled)() |
 | public | bool | [IsBlocked](#isblocked)() |
-| public | bool | [DidEnter](#didenter)() |
 | public | bool | [CanTick](#cantick)([TickFlags](#tickflags) type) |
 | public | [Outcome](#outcome) | [GetOutcome](#getoutcome)() |
 | public | Theater | [GetTheater](#gettheater)() |
@@ -82,13 +90,6 @@ For a complete explaination & implementation in other game engines visit the [ma
 | protected virtual | void | [BlockOthers](#blockothers)() <abbr title="">Virtual</abbr> |
 | protected virtual | void | [UnblockOthers](#unblockothers)() <abbr title="">Virtual</abbr> |
 
-
-| Access | Type | Properties |
-|--------|------|--------------|
-| public | Func\<Act, List\<Act\>\> | [Prologue](#prologue) |
-| public | List\<Func\<Act, bool\>\> | [PerformConditions](#performconditions) |
-| protected | bool | [_canReperform](#_canreperform) |
-| protected | [TickFlags](#tickflags) | [_tickFlags](#_tickflags) |
 
 
 <br/>
@@ -286,6 +287,38 @@ Invoked whenever the act has been blocked/unblocked.
 ---
 
 
+### <a id="isverbose"></a> public bool isVerbose
+`Default: false`  
+
+Controls whether or not to print warnings. Set to `false` to silence them.
+
+
+---
+
+
+### <a id="_canreperform"></a> protected bool _canReperform
+> **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
+
+`Default: false` 
+
+If `true` then calling `Perform()` while act is already performing will finish interruptively current perform and then reperform.  
+If `false` then current ongoing perform must be completed before calling `Perform()` again.
+
+
+---
+
+
+### <a id="_tickflags"></a> protected [TickFlags](#tickflags) _tickFlags
+> **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
+
+`Default: TickFlags.None`  
+
+Determines which tick methods are to be called. Look into [`Enter()`](#enter) & [`TickFlags`](#tickflags) to learn more.
+
+
+---
+
+
 ### <a id="init"></a> public void Init(Theater theater, string name = "", bool initiallyEnabled = true)
 This method is used to initialize the act & it must be called once before you can call [`Perform()`](#perform).  
 Generally this will be called in [`MonoBehaviour.Awake()`][Unity-Awake] or [`MonoBehaviour.Start()`][Unity-Start] though it can be used elsewhere if required.  
@@ -297,7 +330,7 @@ void Awake()
     {
         Debug.Log("Before Entering");
     };
-    myAct.Prologue += (Act act) =>
+    myAct.prologue += (Act act) =>
     {
         return new() { someAct }
     };
@@ -455,27 +488,6 @@ Returns `true` if the act is currently blocked by 1 or more other acts.
 ---
 
 
-### <a id="didenter"></a> public bool DidEnter()
-Returns `true` if the act has gone through [`Enter()`](#enter) while performing.  
-Useful for determining if the act reached [`Exit()`](#exit) via enter/tick or via failed prologue in it's [lifecycle][Act-Lifecycle]  
-```csharp
-myAct1.Prologue += (Act act) => { return new() { null } };
-myAct1.OnPostExit += (Act act) => {
-    Debug.Log(myAct1.DidEnter());  // False
-}
-myAct1.Perform();
-
-
-myAct2.OnPostExit += (Act act) => {
-    Debug.Log(myAct2.DidEnter());  // True
-}
-myAct2.Perform();
-```
-
-
----
-
-
 ### <a id="cantick"></a> public bool CanTick([TickFlags](#tickflags) type)
 Returns `true` if the act can tick on the given flag type(s).
 
@@ -530,9 +542,9 @@ Mainly useful for debugging purposes.
 
 
 ### <a id="seq"></a> public static List\<Act\> Seq(List\<List\<Act\>\> pArrays)
-This method is to be used **only** inside [Prologue](#prologue), It allows you to call prologue acts in sequence.  
+This method is to be used **only** inside [prologue](#prologue), It allows you to call prologue acts in sequence.  
 ```csharp
-myAct.Prologue += (Act act) => {
+myAct.prologue += (Act act) => {
     return Act.Seq(new() {
         new() { myActA1 },
         new() { myActB1, myActB2 },
@@ -547,19 +559,19 @@ And then after all prologue acts are complete would `myAct` be performed.
 
 This is how to do it without using `Seq()`:
 ```csharp
-myAct.Prologue += (Act act) => {
+myAct.prologue += (Act act) => {
     return new() { myActC1 };
 }
 
-myActC1.Prologue += (Act act) => {
+myActC1.prologue += (Act act) => {
     return new() { myActB1, myActB2 };
 }
 
-myActB1.Prologue += (Act act) => {
+myActB1.prologue += (Act act) => {
     return new() { myActA1 };
 }
 
-myActB2.Prologue += (Act act) => {
+myActB2.prologue += (Act act) => {
     return new() { myActA1 };
 }
 ```
@@ -845,13 +857,13 @@ public class MyAct : Act
 ---
 
 
-### <a id="prologue"></a> public Func\<Act, List\<Act\>\> Prologue
+### <a id="prologue"></a> public Func\<Act, List\<Act\>\> prologue
 `Default: (act) => new List<Act>()`  
 
 Assign this with a function which returns a list of acts, All acts in that list will be performed in parallel before the main act is performed.  
-If the list contains `null` or if any act failed to perform it will be treated as prologuing failed & directly proceeed to [`Exit()`](#exit) with [`DidEnter()`](#didperform) as `false`.  
+If the list contains `null` or if any act failed to perform it will be treated as prologuing failed & directly proceeed to [`Exit()`](#exit) with [`GetOutcome()`](#getoutcome) reflecting the failure.  
 ```csharp
-myAct.Prologue += (Act act) => {
+myAct.prologue += (Act act) => {
 
     if(toFail){
         return new() { null };  // This will intentionally fail the act
@@ -865,7 +877,7 @@ myAct.Prologue += (Act act) => {
 ---
 
 
-### <a id="performconditions"></a> public List\<Func\<Act, bool\>\> PerformConditions
+### <a id="performconditions"></a> public List\<Func\<Act, bool\>\> performConditions
 `Default: new List<Func<Act, bool>>()`  
 
 Used when overriding [`CanPerform()`](#canperform) isn't sufficient and additional external conditions are required.  
@@ -876,35 +888,12 @@ void FixedUpdate()
 }
 void Awake()
 {
-    jumpAct.PerformConditions.Add(()=> {
+    jumpAct.performConditions.Add((Act act)=> {
         return Input.GetKeyDown(KeyCode.Space)  // Only jump when spacebar is pressed
     })
     jumpAct.Init(theater, "Jump Act");
 }
 ```
-
-
----
-
-
-### <a id="_canreperform"></a> protected bool _canReperform
-> **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
-
-`Default: false` 
-
-If `true` then calling `Perform()` while act is already performing will finish interruptively current perform and then reperform.  
-If `false` then current ongoing perform must be completed before calling `Perform()` again.
-
-
----
-
-
-### <a id="_tickflags"></a> protected [TickFlags](#tickflags) _tickFlags
-> **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
-
-`Default: TickFlags.None`  
-
-Determines which tick methods are to be called. Look into [`Enter()`](#enter) & [`TickFlags`](#tickflags) to learn more.
 
 
 <br/>

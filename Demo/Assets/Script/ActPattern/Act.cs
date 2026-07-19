@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+
 
 [Serializable]
 public class Act
@@ -39,6 +41,8 @@ public class Act
 
 
 	// Public
+	public event Action<Act /* act */> OnPerformStart;
+	public event Action<Act /* act */> OnPerformEnd;
 	public event Action<Act /* act */> OnPreSetup;
 	public event Action<Act /* act */> OnPostSetup;
 	public event Action<Act /* act */> OnPrePrologue;
@@ -58,15 +62,16 @@ public class Act
 	public event Action<Act /* act */, bool /* newIsEnabled */> OnEnableChanged;
 	public event Action<Act /* act */, Act /* blockingAct */, BlockType /* blockType */, bool /* didBlock */> OnBlockChanged;
 
-	public Func<Act, List<Act>> Prologue = (act) => new List<Act>();  // List all acts to perform before this act, return a list containing null for failure outcome
-	public List<Func<Act, bool>> PerformConditions = new List<Func<Act, bool>>();  // Externally extendable conditions for CanPerformImpl
+	public Func<Act, List<Act>> prologue = (act) => new List<Act>();  // List all acts to perform before this act, Return { null } for failure outcome
+	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();  // Externally extendable conditions for CanPerform()
+	public bool isVerbose = false;  // Toggle for warning messages
 
 	public void Init(Theater theater, string name = "", bool initiallyEnabled = true)
 	{
 		// Warn if null theater provided
 		if (theater == null)
 		{
-			Debug.LogError(name + " Null theater provided for initialization!");
+			WriteLog("Null theater provided for initialization!", name);
 			return;
 		}
 
@@ -117,8 +122,11 @@ public class Act
 
 
 		// Unassign owning theater
-		_theater.RemoveAct(this);
-		_theater = null;
+		if (_theater != null)
+		{
+			_theater.RemoveAct(this);
+			_theater = null;
+		}
 
 
 		// Reset performed on ticks
@@ -135,16 +143,20 @@ public class Act
 	}
 	public void PerformDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
 	{
-		if (_theater != null)
+		// Warn if null theater provided
+		if (_theater == null)
 		{
-			_theater.StageDeferred(this, tickFlag);
+			WriteLog("Cannot perform deferred, Theater is null! Have you initialized act?");
+			return;
 		}
+
+		_theater.StageDeferred(this, tickFlag);
 	}
 	public void Retry()
 	{
 		if (IsOngoing())
 		{
-			Finish(Outcome.Retry);
+			Redirect(Status.Exiting, Outcome.Retry);
 		}
 		else
 		{
@@ -153,16 +165,16 @@ public class Act
 	}
 	public void Abort()
 	{
-		Finish(Outcome.Interrupted);
+		Redirect(Status.Exiting, Outcome.Interrupted);
 	}
 	public void AddToBlock(List<Act> acts, BlockType blockType = BlockType.Persistent)
 	{
 		foreach (Act bAct in acts)
 		{
-			// Skip if self reserved for enable disable
+			// Skip if self (reserved for enable/disable)
 			if (bAct == this)
 			{
-				Debug.LogWarning(_name + " Trying to block self");
+				WriteLog("Trying to block self!");
 				continue;
 			}
 
@@ -175,9 +187,10 @@ public class Act
 	{
 		foreach (Act bAct in acts)
 		{
-			// Skip if self
+			// Skip if self (reserved for enable/disable)
 			if (bAct == this)
 			{
+				WriteLog("Trying to unblock self!");
 				continue;
 			}
 
@@ -257,10 +270,6 @@ public class Act
 
 		return _blockedByActs.Count != 0;
 	}
-	public bool DidEnter()
-	{
-		return _didEnter;
-	}
 	public bool CanTick(TickFlags type)
 	{
 		return (_tickFlags & type) != 0;
@@ -289,8 +298,18 @@ public class Act
 	{
 		return _name;
 	}
-	public static List<Act> Seq(List<List<Act>> pArrays)  // Only use inside Prologue
+	public static List<Act> Seq(List<List<Act>> pArrays)  // Only use inside prologue
 	{
+		// Check for any null
+		foreach (List<Act> pArray in pArrays)
+		{
+			if (pArray.Contains(null))
+			{
+				return new List<Act> { null };
+			}
+		}
+
+
 		// Remove empty lists before chaining
 		pArrays.RemoveAll(pArr => pArr.Count == 0);
 
@@ -303,15 +322,12 @@ public class Act
 		}
 
 
-		// Update length after removal
-		pLength = pArrays.Count;
-
-
 		// Chain all prologues
 		for (int i = pLength - 1; i > 0; i--)
 		{
 			LinkPrologueArrays(pArrays[i], pArrays[i - 1]);
 		}
+
 
 		return pArrays[pLength - 1];  // Return last acts
 	}
@@ -319,8 +335,8 @@ public class Act
 
 
 	// Protected
-	protected bool _canReperform = false;  // Indicates if act can interrupt itself and restart perform, Only assign in Setup()
-	protected TickFlags _tickFlags = TickFlags.None;  // Indicates if act will be ticking after entering, Only assign in Setup()
+	protected bool _canReperform = false;  // Indicates if act can interrupt itself & restart perform, Only assign in Setup()
+	protected TickFlags _tickFlags = TickFlags.None;  // Indicates if act will be "Ticking" after entering, Only assign in Setup()
 
 	protected virtual void Setup()
 	{
@@ -351,31 +367,37 @@ public class Act
 	protected virtual void Cleanup()
 	{
 	}
-	protected void Finish(Outcome newOutcome = Outcome.Success)  // Call in Enter if Exit needs to be delayed
+	protected void Finish(Outcome newOutcome = Outcome.Success)
 	{
-		// If currently prologuing
-		if (_status == Status.Prologuing)
-		{
-			ContinuePrologue(null, newOutcome);
-		}
-
-		// If currently entering or ticking
-		else if (_status == Status.Entering || _status == Status.Ticking)
-		{
-			Redirect(Status.Exiting, newOutcome);
-		}
+		Redirect(Status.Exiting, newOutcome);
 	}
 	protected virtual void BlockSelf(Act byAct, BlockType blockType)
 	{
-		// Return if already blocked or top epilogues match up
-		if (_blockedByActs.Contains(byAct) || InSamePrologueChain(this, byAct))
+		// Return incase null act
+		if (byAct == null)
+		{
+			WriteLog("Failed to block, null act provided!");
+			return;
+		}
+
+
+		// Return if already blocked
+		if (_blockedByActs.Contains(byAct))
 		{
 			return;
 		}
 
 
+		// Return if both acts are in the same prologue chain
+		if (this != byAct && GetTopEpilogues(this).Overlaps(GetTopEpilogues(byAct)))
+		{
+			WriteLog("Failed to block, Both " + _name + " and " + byAct._name + " are in the same prologue chain!");
+			return;
+		}
+
+
 		// Finish interrupted incase ongoing
-		Finish(Outcome.Interrupted);
+		Redirect(Status.Exiting, Outcome.Interrupted);
 
 
 		// Add to blocked by list if persistent
@@ -393,10 +415,18 @@ public class Act
 	}
 	protected virtual void UnblockSelf(Act byAct)
 	{
+		// Return incase null act
+		if (byAct == null)
+		{
+			WriteLog("Failed to unblock, null act provided!");
+			return;
+		}
+
 
 		// Return if not currently blocked by act
 		if (!_blockedByActs.Contains(byAct))
 		{
+			WriteLog("Failed to unblock, Act is not blocked by " + byAct._name);
 			return;
 		}
 
@@ -422,7 +452,10 @@ public class Act
 	{
 		foreach (Act act in _actsToBlock.Keys)
 		{
-			act.UnblockSelf(this);
+			if (_actsToBlock[act] == BlockType.Persistent)  // Skip oneshot
+			{
+				act.UnblockSelf(this);
+			}
 		}
 	}
 
@@ -432,14 +465,13 @@ public class Act
 	private string _name = "";  // Useful for debugging
 	private Theater _theater = null;  // Which theater this act belongs to
 	private Status _status = Status.None;  // Keeps track of where in the perform life cycle the act is currently
+	private Status _prevStatus = Status.None;
 	private Outcome _outcome = Outcome.Pending;  // Denotes how the act ended
-	private bool _didEnter = false;  // True if exit has been reached via enter
 	private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();  // Which acts to block when performing this act
 	private HashSet<Act> _blockedByActs = new();  // Which acts are blocking this act
-	private HashSet<Act> _topEpilogueActs = new();
 	private HashSet<Act> _epilogueActs = new();
 	private HashSet<Act> _prologueActs = new();
-	private int _prologueCompleteCount = 0;
+	private HashSet<Act> _pendingPrologueActs = new();
 	private int _performedOnTick = -1;
 	private int _performedOnPhysicsTick = -1;
 	private int _performedOnLateTick = -1;
@@ -452,126 +484,105 @@ public class Act
 			for (int j = 0; j < arrayA.Count; j++)
 			{
 				Act actA = arrayA[j];
-				AssignPrologueEpilogue(actB, actA);
+				actB._prologueActs.Add(actA);
+				actA._epilogueActs.Add(actB);
 			}
 		}
 	}
-	private static bool InSamePrologueChain(Act actA, Act actB)
+	private static HashSet<Act> GetTopEpilogues(Act ofAct, HashSet<Act> result = null, HashSet<Act> visited = null)
 	{
-		// Incase both are the same acts
-		if (actA == actB)
+		result ??= new HashSet<Act>();
+		visited ??= new HashSet<Act>();
+
+
+		// Skip if already visited
+		if (!visited.Add(ofAct))
 		{
-			return false;
+			return result;
 		}
 
 
-		// Incase act a is a top epilogue
-		if (actA._epilogueActs.Count == 0 && actB._topEpilogueActs.Contains(actA))
+		// Add if top epilogue
+		if (ofAct._epilogueActs.Count == 0)
 		{
-			return true;
+			result.Add(ofAct);
+			return result;
 		}
 
 
-		// Incase act b is a top epilogue
-		if (actB._epilogueActs.Count == 0 && actA._topEpilogueActs.Contains(actB))
-		{
-			return true;
-		}
-
-
-		// Check for overlap in top epilogue of both
-		foreach (Act eAct in actA._topEpilogueActs)
-		{
-			if (actB._topEpilogueActs.Contains(eAct))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-	private static void FinishEpilogues(Act ofAct, Outcome newOutcome)
-	{
+		// Recurse into each epilogue
 		foreach (Act eAct in ofAct._epilogueActs)
 		{
-			eAct?.ContinuePrologue(ofAct, newOutcome);
+			GetTopEpilogues(eAct, result, visited);
+		}
 
-			// Prevents false positive "mutation while iterating" error DO NOT REMOVE
-			if (ofAct._epilogueActs.Count == 0)
+		return result;
+	}
+	private static void AssignPrologueChain(Act ofAct)  // Done
+	{
+		foreach (Act pAct in ofAct.prologue.Invoke(ofAct))
+		{
+			// Skip self
+			if (pAct == ofAct)
 			{
-				break;
+				continue;
 			}
+
+
+			// Assign prologue and epilogue
+			ofAct._prologueActs.Add(pAct);
+			pAct._epilogueActs.Add(ofAct);
 		}
 	}
-	private static void FinishPrologues(Act ofAct, Outcome newOutcome)
+	private static void FinishPrologues(Act ofAct, Outcome newOutcome)  // Done
 	{
-		foreach (Act pAct in ofAct._prologueActs)
-		{
-			pAct?.Finish(newOutcome);
+		// Set outcome to iterrupted incase retrying
+		var pOutcome = newOutcome == Outcome.Retry ? Outcome.Interrupted : newOutcome;
 
-			// Prevents false positive "mutation while iterating" error DO NOT REMOVE
-			if (ofAct._prologueActs.Count == 0)
-			{
-				break;
-			}
+
+		// Finish all pending prologues
+		while (ofAct._pendingPrologueActs.Count != 0)
+		{
+			Act pAct = ofAct._pendingPrologueActs.First();
+			ofAct._pendingPrologueActs.Remove(pAct);
+			pAct?.Finish(pOutcome);
+		}
+	}
+	private static void ContinueEpilogues(Act ofAct, Outcome newOutcome)  // Done
+	{
+		// Continue and clear out epilogues
+		while (ofAct._epilogueActs.Count != 0)
+		{
+			Act eAct = ofAct._epilogueActs.First();
+			ofAct._epilogueActs.Remove(eAct);
+			eAct.CompletedPrologue(ofAct, newOutcome);
 		}
 	}
 	private static void ClearPrologueChain(Act ofAct)
 	{
-		// Recurse clear
-		foreach (Act pAct in ofAct._prologueActs)
+		while (ofAct._prologueActs.Count != 0)
 		{
-			if (pAct != null)
-			{
-				ClearPrologueChain(pAct);
-			}
-		}
-
-		ofAct._epilogueActs.Clear();
-		ofAct._topEpilogueActs.Clear();
-		ofAct._prologueActs.Clear();
-	}
-	private static void AssignPrologueEpilogue(Act eAct, Act pAct)
-	{
-		// Assign prologue
-		eAct._prologueActs.Add(pAct);
+			// Get prologue act
+			Act pAct = ofAct._prologueActs.First();
+			ofAct._prologueActs.Remove(pAct);
 
 
-		// Assign epilogue
-		pAct._epilogueActs.Add(eAct);
-	}
-	private static void AssignTopEpilogues(Act eAct, HashSet<Act> topEpilogues = null)
-	{
-		// Get top epilogues to pass on
-		if (topEpilogues == null || topEpilogues.Count == 0)
-		{
-			if (eAct._epilogueActs.Count == 0)
-			{
-				topEpilogues = new HashSet<Act> { eAct };
-			}
-			else
-			{
-				topEpilogues = new HashSet<Act>(eAct._topEpilogueActs);
-			}
-		}
-
-
-		// Recurse into prologues
-		foreach (Act pAct in eAct._prologueActs)
-		{
-			// Skip null
+			// Skip if null
 			if (pAct == null)
 			{
 				continue;
 			}
 
 
-			// Assign top epilogues
-			pAct._topEpilogueActs.UnionWith(new HashSet<Act>(topEpilogues));
+			// Remove self from epilogue
+			pAct._epilogueActs.Remove(ofAct);
 
 
-			// Recurse further down chain
-			AssignTopEpilogues(pAct, topEpilogues);
+			// Recurse down, Incase Seq() linked stale acts that were never performed
+			if (pAct._epilogueActs.Count == 0)
+			{
+				ClearPrologueChain(pAct);
+			}
 		}
 	}
 	private bool CanPerformImpl()
@@ -579,23 +590,41 @@ public class Act
 		// Return if null theater
 		if (_theater == null)
 		{
-			Debug.LogWarning(_name + " Null theater found, initialize first!");
+			WriteLog("Cannot perform, Theater is null! Have you initialized act?");
 			return false;
 		}
 
 
-		// Return conditions
-		if (!IsEnabled() || !_theater.IsEnabled() || IsBlocked() || (!_canReperform && IsOngoing()))
+		// Return if disabled
+		if (!IsEnabled() || !_theater.IsEnabled())
 		{
+			WriteLog("Cannot perform, act or theater is disabled!");
+			return false;
+		}
+
+
+		// Return if blocked
+		if (IsBlocked())
+		{
+			WriteLog("Cannot perform, act is blocked!");
+			return false;
+		}
+
+
+		// Return if already ongoing
+		if (!_canReperform && IsOngoing())
+		{
+			WriteLog("Cannot perform, act is ongoing!");
 			return false;
 		}
 
 
 		// Return if any external condition is false
-		foreach (Func<Act, bool> cond in PerformConditions)
+		foreach (Func<Act, bool> cond in performConditions)
 		{
 			if (!cond(this))
 			{
+				WriteLog("Cannot perform, failed an external perform condition!");
 				return false;
 			}
 		}
@@ -604,56 +633,46 @@ public class Act
 	}
 	private void PerformImpl()
 	{
-		// Store tick
-		_performedOnTick = Time.frameCount;
-		_performedOnPhysicsTick = Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
-		_performedOnLateTick = Time.frameCount;
-
-
-		// Mark outcome as pending
-		_outcome = Outcome.Pending;
-
-
 		// Finish any ongoing perform
 		Finish(Outcome.Interrupted);
 
 
-		// Redirect to prologue
+		// Start prologuing
 		Redirect(Status.Prologuing);
 	}
 	private void PrologueImpl()
 	{
-		// Let theater know this act is now ongoing
-		_theater.StageOngoing(this);
+		// Broadcast perform start
+		OnPerformStart?.Invoke(this);
 		if (_status != Status.Prologuing)
 		{
 			return;  // Guard
 		}
 
 
-		// Assign all prologues and epilogues
-		foreach (Act pAct in Prologue.Invoke(this))
+		// Let theater know this act has started
+		if (_theater != null)
 		{
-			// Skip self
-			if (pAct == this)
-			{
-				continue;
-			}
-
-			// Fail incase null
-			if (pAct == null)
-			{
-				Redirect(Status.Exiting, Outcome.Failure);
-				return;
-			}
-
-			// Assign prologue epilogue and top epilogue
-			AssignPrologueEpilogue(this, pAct);
+			_theater.StageOngoing(this);
+		}
+		if (_status != Status.Prologuing)
+		{
+			return;  // Guard
 		}
 
 
-		// Assign all top epilogues
-		AssignTopEpilogues(this);
+		// Store during which tick act was performed
+		_performedOnTick = Time.frameCount;
+		_performedOnPhysicsTick = Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
+		_performedOnLateTick = Time.frameCount;
+
+
+		// Assign prologues & epilogues
+		AssignPrologueChain(this);
+		if (_status != Status.Prologuing)
+		{
+			return;  // Guard
+		}
 
 
 		// Block
@@ -680,32 +699,44 @@ public class Act
 		}
 
 
-		// Perform all prologues
-		foreach (Act pAct in _prologueActs)
-		{
+		// Reset pending prologues
+		_pendingPrologueActs.Clear();
 
-			// Skip if ongoing
-			if (pAct.IsOngoing())
-			{
-				continue;
-			}
+
+		// Perform all prologues
+		while (_prologueActs.Count != 0)
+		{
+			// Pop a prologue & get prerequisites
+			var pAct = _prologueActs.First();
+			var isOngoing = pAct.IsOngoing();
+			var canPerform = pAct.CanPerformImpl();
+
 
 			// Fail incase cannot perform
-			if (!pAct.CanPerformImpl())
+			if (!isOngoing && !canPerform)
 			{
 				Redirect(Status.Exiting, Outcome.Failure);
 				return;
 			}
 
-			// Perform
-			pAct.PerformImpl();
+
+			// Shift to pending
+			_prologueActs.Remove(pAct);
+			_pendingPrologueActs.Add(pAct);
+
+
+			// Perform if not already ongoing
+			if (!isOngoing)
+			{
+				pAct.PerformImpl();
+			}
 			if (_status != Status.Prologuing)
 			{
 				return;  // Guard
 			}
 		}
 	}
-	private void ContinuePrologue(Act pAct, Outcome newOutcome = Outcome.Pending)
+	private void CompletedPrologue(Act pAct, Outcome newOutcome)
 	{
 		// Guard
 		if (_status != Status.Prologuing)
@@ -714,28 +745,35 @@ public class Act
 		}
 
 
-		// Wait for all prologues to complete
-		var prologueSucceeded = newOutcome == Outcome.Success && pAct != null;
-		if (prologueSucceeded && _prologueCompleteCount + 1 != _prologueActs.Count)
+		// Remove from pending and move to completed
+		_pendingPrologueActs.Remove(pAct);
+
+
+		// Exit if prologue act did not succeed
+		if (newOutcome != Outcome.Success)
 		{
-			_prologueCompleteCount += 1;
+			Redirect(Status.Exiting, newOutcome);
+			return;
+		}
+
+
+		// Wait for all prologues to complete
+		if (_pendingPrologueActs.Count != 0 || _prologueActs.Count != 0)
+		{
 			return;
 		}
 
 
 		// Broadcast post prologue
-		if (prologueSucceeded)
-		{
-			OnPostPrologue?.Invoke(this);
-		}
+		OnPostPrologue?.Invoke(this);
 		if (_status != Status.Prologuing)
 		{
 			return;  // Guard
 		}
 
 
-		// If prologue succeeded goto enter otherwise exit
-		Redirect(prologueSucceeded ? Status.Entering : Status.Exiting, newOutcome);
+		// Redirect to enter
+		Redirect(Status.Entering);
 	}
 	private void EnterImpl()
 	{
@@ -772,35 +810,17 @@ public class Act
 
 
 		// Start ticking
-		if (CanTick(TickFlags.Tick))
+		if (CanTick(TickFlags.Tick) && _theater != null)
 		{
 			_theater.StageTick(this);
 		}
-		if (_status != Status.Entering)
-		{
-			return;  // Guard
-		}
-
-
-		// Start physics ticking
-		if (CanTick(TickFlags.PhysicsTick))
+		if (CanTick(TickFlags.PhysicsTick) && _theater != null)
 		{
 			_theater.StagePhysicsTick(this);
 		}
-		if (_status != Status.Entering)
-		{
-			return;  // Guard
-		}
-
-
-		// Start late ticking
-		if (CanTick(TickFlags.LateTick))
+		if (CanTick(TickFlags.LateTick) && _theater != null)
 		{
 			_theater.StageLateTick(this);
-		}
-		if (_status != Status.Entering)
-		{
-			return;  // Guard
 		}
 
 
@@ -887,7 +907,6 @@ public class Act
 	}
 	public void LateTickImpl()
 	{
-
 		// Guard
 		if (_status != Status.Ticking)
 		{
@@ -927,122 +946,96 @@ public class Act
 	}
 	private void ExitImpl()
 	{
-
-		// Stop ticking
-		if (CanTick(TickFlags.Tick))
+		// Only exit if coming from enter or tick
+		if (_prevStatus == Status.Entering || _prevStatus == Status.Ticking)
 		{
-			_theater.UnstageTick(this);
-		}
-		if (_status != Status.Exiting)
-		{
-			return;  // Guard
-		}
-
-
-		// Stop physics ticking
-		if (CanTick(TickFlags.PhysicsTick))
-		{
-			_theater.UnstagePhysicsTick(this);
-		}
-		if (_status != Status.Exiting)
-		{
-			return;  // Guard
-		}
+			// Stop ticking
+			if (CanTick(TickFlags.Tick) && _theater != null)
+			{
+				_theater.UnstageTick(this);
+			}
+			if (CanTick(TickFlags.PhysicsTick) && _theater != null)
+			{
+				_theater.UnstagePhysicsTick(this);
+			}
+			if (CanTick(TickFlags.LateTick) && _theater != null)
+			{
+				_theater.UnstageLateTick(this);
+			}
 
 
-		// Stop late ticking
-		if (CanTick(TickFlags.LateTick))
-		{
-			_theater.UnstageLateTick(this);
-		}
-		if (_status != Status.Exiting)
-		{
-			return;  // Guard
+			// Broadcast pre exit
+			OnPreExit?.Invoke(this);
+
+
+			// Core exit
+			Exit();
+
+
+			// Broadcast post exit
+			OnPostExit?.Invoke(this);
 		}
 
 
-		// Broadcast pre exit
-		OnPreExit?.Invoke(this);
-		if (_status != Status.Exiting)
-		{
-			return;  // Guard
-		}
-
-
-		// Core exit
-		Exit();
-		if (_status != Status.Exiting)
-		{
-			return;  // Guard
-		}
-
-
-		// Broadcast post exit
-		OnPostExit?.Invoke(this);
-		if (_status != Status.Exiting)
-		{
-			return;  // Guard
-		}
-
-
-		// Finish epilogues
-		if (_outcome != Outcome.Retry)
-		{
-			FinishEpilogues(this, _outcome);
-		}
-		if (_status != Status.Exiting)
-		{
-			return;  // Guard
-		}
-
-
-		// Finish prologues
-		FinishPrologues(this, _outcome == Outcome.Retry ? Outcome.Interrupted : _outcome);
-		if (_status != Status.Exiting)
-		{
-			return;  // Guard
-		}
-
-
-		// Clear chain
+		// Finish Prologues if any pending & Clear prologue chain 
+		FinishPrologues(this, _outcome);
 		ClearPrologueChain(this);
 
 
-		// Reset properties
-		var toRetry = _outcome == Outcome.Retry;
-		_status = Status.None;
-		_didEnter = false;
-		_prologueCompleteCount = 0;
-
-
-		// Unblock
-		UnblockOthers();
-
-
-		// Retry perform
-		if (toRetry && CanPerformImpl())
+		// Do not continue epilogues or unblock if retrying 
+		if (_outcome != Outcome.Retry)
 		{
-			PerformImpl();
-			return;
+			ContinueEpilogues(this, _outcome);
+			UnblockOthers();
 		}
+
+
+		// Retry
+		if (_outcome == Outcome.Retry)
+		{
+			if (CanPerformImpl())
+			{
+				_status = Status.None;
+				PerformImpl();
+				return;
+			}
+
+			// Continue epilogues & unblock which were previously skipped
+			ContinueEpilogues(this, _outcome);
+			UnblockOthers();
+		}
+
+
+		// Reset status
+		_status = Status.None;
+
 
 
 		// Let theater know this act has ended
-		_theater.UnstageOngoing(this);
+		if (_theater != null)
+		{
+			_theater.UnstageOngoing(this);
+		}
+
+
+		// Broadcast perform end
+		OnPerformEnd?.Invoke(this);
 	}
 	private void Redirect(Status newStatus, Outcome newOutcome = Outcome.Pending)
 	{
-
-		// None -> Prologue
+		// None -> prologue
 		if (_status == Status.None && newStatus == Status.Prologuing)
 		{
+			_prevStatus = _status;
 			_status = Status.Prologuing;
+			_outcome = Outcome.Pending;
 			PrologueImpl();
 		}
 
-		// Prologue -> Enter
+		// prologue -> Enter
 		else if (_status == Status.Prologuing && newStatus == Status.Entering)
 		{
+			_prevStatus = _status;
 			_status = Status.Entering;
 			EnterImpl();
 		}
@@ -1050,16 +1043,26 @@ public class Act
 		// Enter -> Tick
 		else if (_status == Status.Entering && newStatus == Status.Ticking)
 		{
+			_prevStatus = _status;
 			_status = Status.Ticking;
 		}
 
-		// Prologue or Enter or Tick -> Exit
+		// prologue or Enter or Tick -> Exit
 		else if ((_status == Status.Prologuing || _status == Status.Entering || _status == Status.Ticking) && newStatus == Status.Exiting)
 		{
-			_didEnter = _status == Status.Entering || _status == Status.Ticking;
+			_prevStatus = _status;
 			_status = Status.Exiting;
 			_outcome = newOutcome;
 			ExitImpl();
 		}
+	}
+	private void WriteLog(string message, string overrideName = "")
+	{
+		if (!isVerbose)
+		{
+			return;
+		}
+
+		Debug.LogWarning((overrideName != "" ? overrideName : _name) + " " + message);
 	}
 }
