@@ -496,10 +496,14 @@ public class Act
 
 
 		// Skip if already visited
-		if (!visited.Add(ofAct))
+		if (visited.Contains(ofAct))
 		{
 			return result;
 		}
+
+
+		// Mark as visited
+		visited.Add(ofAct);
 
 
 		// Add if top epilogue
@@ -518,7 +522,7 @@ public class Act
 
 		return result;
 	}
-	private static void AssignPrologueChain(Act ofAct)  // Done
+	private static void AssignPrologueChain(Act ofAct)
 	{
 		foreach (Act pAct in ofAct.prologue.Invoke(ofAct))
 		{
@@ -529,12 +533,20 @@ public class Act
 			}
 
 
+			// Fail incase null
+			if (pAct == null)
+			{
+				ofAct.Redirect(Status.Exiting, Outcome.Failure);
+				return;
+			}
+
+
 			// Assign prologue and epilogue
 			ofAct._prologueActs.Add(pAct);
 			pAct._epilogueActs.Add(ofAct);
 		}
 	}
-	private static void FinishPrologues(Act ofAct, Outcome newOutcome)  // Done
+	private static void FinishPrologues(Act ofAct, Outcome newOutcome)
 	{
 		// Set outcome to iterrupted incase retrying
 		var pOutcome = newOutcome == Outcome.Retry ? Outcome.Interrupted : newOutcome;
@@ -548,7 +560,7 @@ public class Act
 			pAct?.Finish(pOutcome);
 		}
 	}
-	private static void ContinueEpilogues(Act ofAct, Outcome newOutcome)  // Done
+	private static void ContinueEpilogues(Act ofAct, Outcome newOutcome)
 	{
 		// Continue and clear out epilogues
 		while (ofAct._epilogueActs.Count != 0)
@@ -624,7 +636,6 @@ public class Act
 		{
 			if (!cond(this))
 			{
-				WriteLog("Cannot perform, failed an external perform condition!");
 				return false;
 			}
 		}
