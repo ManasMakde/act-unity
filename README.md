@@ -70,10 +70,10 @@ For a complete explaination & implementation in other game engines visit the [ma
 | public | bool | [IsEnabled](#isenabled)() |
 | public | bool | [IsBlocked](#isblocked)() |
 | public | bool | [CanTick](#cantick)([TickFlags](#tickflags) type) |
-| public | [Status](#status) | [GetStatus](#getstatus)() |
-| public | [Outcome](#outcome) | [GetOutcome](#getoutcome)() |
 | public | Theater | [GetTheater](#gettheater)() |
 | public | GameObject | [GetOwner](#getowner)() |
+| public | [Status](#status) | [GetStatus](#getstatus)() |
+| public | [Outcome](#outcome) | [GetOutcome](#getoutcome)() |
 | public static | float | [GetDelta](#getdelta)() |
 | public static | float | [GetPhysicsDelta](#getphysicsdelta)() |
 | public | string | [GetName](#getname)() |
@@ -477,7 +477,7 @@ Returns `true` if the act is currently performing.
 
 
 ### <a id="isactive"></a> public bool IsActive()
-Returns `true` if the act is currently performing and not prologuing.
+Returns `true` if the act is currently between entering & exiting.
 
 
 ---
@@ -504,6 +504,20 @@ Returns `true` if the act can tick on the given flag type(s).
 ---
 
 
+### <a id="gettheater"></a> public Theater GetTheater()
+Returns the `Theater` the act belongs to.
+
+
+---
+
+
+### <a id="getowner"></a> public GameObject GetOwner()
+Returns the [gameObject][Unity-GameObject] the `Theater` is attached to.
+
+
+---
+
+
 ### <a id="getstatus"></a> public [Status](#status) GetStatus()
 Returns the current [Status](#status) of the act.
 
@@ -514,20 +528,6 @@ Returns the current [Status](#status) of the act.
 ### <a id="getoutcome"></a> public [Outcome](#outcome) GetOutcome()
 Returns the outcome of [`Enter()`](#enter) or any of the tick methods.  
 However this is only to be used inside the lifecycle methods since [`Exit()`](#exit) will internally reset the flag.
-
-
----
-
-
-### <a id="gettheater"></a> public Theater GetTheater()
-Returns the `Theater` the act belongs to.
-
-
----
-
-
-### <a id="getowner"></a> public GameObject GetOwner()
-Returns the [gameObject][Unity-GameObject] the `Theater` is attached to.
 
 
 ---
