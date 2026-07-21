@@ -256,6 +256,10 @@ public class Act
 	{
 		return _status != Status.None;
 	}
+	public bool IsActive()
+	{
+		return _status != Status.None && _status != Status.Prologuing;
+	}
 	public bool IsEnabled()
 	{
 		return !_blockedByActs.Contains(this);
@@ -274,10 +278,6 @@ public class Act
 	{
 		return (_tickFlags & type) != 0;
 	}
-	public Outcome GetOutcome()
-	{
-		return _outcome;
-	}
 	public Theater GetTheater()
 	{
 		return _theater;
@@ -285,6 +285,14 @@ public class Act
 	public GameObject GetOwner()
 	{
 		return _theater?.gameObject;
+	}
+	public Status GetStatus()
+	{
+		return _status;
+	}
+	public Outcome GetOutcome()
+	{
+		return _outcome;
 	}
 	static public float GetDelta()
 	{

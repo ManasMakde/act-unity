@@ -66,9 +66,11 @@ For a complete explaination & implementation in other game engines visit the [ma
 | public | bool | [DidPerform](#didperform)([TickFlags](#tickflags)) |
 | public | bool | [DidPerformEver](#didperformever)() |
 | public | bool | [IsOngoing](#isongoing)() |
+| public | bool | [IsActive](#isactive)() |
 | public | bool | [IsEnabled](#isenabled)() |
 | public | bool | [IsBlocked](#isblocked)() |
 | public | bool | [CanTick](#cantick)([TickFlags](#tickflags) type) |
+| public | [Status](#status) | [GetStatus](#getstatus)() |
 | public | [Outcome](#outcome) | [GetOutcome](#getoutcome)() |
 | public | Theater | [GetTheater](#gettheater)() |
 | public | GameObject | [GetOwner](#getowner)() |
@@ -474,6 +476,13 @@ Returns `true` if the act is currently performing.
 ---
 
 
+### <a id="isactive"></a> public bool IsActive()
+Returns `true` if the act is currently performing and not prologuing.
+
+
+---
+
+
 ### <a id="isenabled"></a> public bool IsEnabled()
 Returns `true` if the act is currently enabled.
 
@@ -490,6 +499,13 @@ Returns `true` if the act is currently blocked by 1 or more other acts.
 
 ### <a id="cantick"></a> public bool CanTick([TickFlags](#tickflags) type)
 Returns `true` if the act can tick on the given flag type(s).
+
+
+---
+
+
+### <a id="getstatus"></a> public [Status](#status) GetStatus()
+Returns the current [Status](#status) of the act.
 
 
 ---
