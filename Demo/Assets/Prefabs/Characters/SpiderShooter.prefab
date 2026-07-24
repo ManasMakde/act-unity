@@ -120,6 +120,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShooterSpider
   damageAct:
+    isVerbose: 0
     amount: 5
     canDie: 1
     toAnimate: 0
@@ -128,25 +129,40 @@ MonoBehaviour:
     flashAlpha: 0.3
     spriteRenderer: {fileID: 0}
   liveAct:
+    isVerbose: 0
     toPerpetuate: 1
   wanderAct:
+    isVerbose: 0
     speed: 5
     acceptanceRadius: 0.1
     location: {x: 0, y: 0}
     target: {fileID: 0}
     rb: {fileID: 0}
   waitAct:
+    isVerbose: 0
     duration: 5
-  aimAct:
+  lookAct:
+    isVerbose: 0
     targetTransform: {fileID: 0}
     targetRotation: 0
     turnType: 1
-    followDuration: 0
+    followTimeout: 0
+    instantTurn: 0
+    turnSpeed: 150
+    acceptanceAngle: 0.5
+    rb: {fileID: 0}
+  aimAct:
+    isVerbose: 0
+    targetTransform: {fileID: 0}
+    targetRotation: 0
+    turnType: 1
+    followTimeout: 0
     instantTurn: 0
     turnSpeed: 150
     acceptanceAngle: 0.5
     rb: {fileID: 0}
   shootAct:
+    isVerbose: 0
     projectilePrefab: {fileID: 2910026093151187665, guid: 130b1cd27160d2748ad4fff91b56351b, type: 3}
     spawnLocation: {x: 0, y: 0}
     spawnAtOwner: 1

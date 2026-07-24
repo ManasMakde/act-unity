@@ -314,6 +314,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5607604400439526008, guid: 08c66af28b36ff94b8840fb17b1c45c9, type: 3}
+      propertyPath: moveAct.isVerbose
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5607604400439526008, guid: 08c66af28b36ff94b8840fb17b1c45c9, type: 3}
+      propertyPath: shootAct.isVerbose
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5607604400439526008, guid: 08c66af28b36ff94b8840fb17b1c45c9, type: 3}
+      propertyPath: damageAct.isVerbose
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

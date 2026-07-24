@@ -107,17 +107,45 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cb2a23cbcf93a348970b3d44b90c3b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BiterSpider
+  damageAct:
+    isVerbose: 1
+    amount: 5
+    canDie: 1
+    toAnimate: 0
+    flashDuration: 0.5
+    flashInterval: 0.1
+    flashAlpha: 0.3
+    spriteRenderer: {fileID: 0}
+  isVenomous: 0
+  venomPrefab: {fileID: 0}
   liveAct:
+    isVerbose: 0
+    toPerpetuate: 1
+  lookPerpAct:
+    isVerbose: 0
     toPerpetuate: 1
   chaseAct:
+    isVerbose: 0
     speed: 3
     acceptanceRadius: 1
     location: {x: 0, y: 0}
     target: {fileID: 0}
     rb: {fileID: 0}
+  lookAct:
+    isVerbose: 0
+    targetTransform: {fileID: 0}
+    targetRotation: 0
+    turnType: 1
+    followTimeout: 0
+    instantTurn: 0
+    turnSpeed: 150
+    acceptanceAngle: 0.5
+    rb: {fileID: 0}
   delayAttackAct:
+    isVerbose: 0
     duration: 1
   biteAct:
+    isVerbose: 0
     damageAmount: 10
     target: {fileID: 0}
 --- !u!114 &4099351806886524146

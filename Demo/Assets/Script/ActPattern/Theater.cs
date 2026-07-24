@@ -278,128 +278,66 @@ public class Theater : MonoBehaviour
     }
 
 
-    // Private Tick Methods
-    private void TickActs()
+    // Private Methods
+    private static void TickActs(ref Dictionary<Act, bool> stagedActs, ref Dictionary<Act, bool> actsToTick, Act.TickFlags flag)
     {
-        // Return if no act to tick
-        if (_stagedTickActs.Count == 0)
+        // Return if no act to process
+        if (stagedActs.Count == 0)
         {
             return;
         }
 
 
         // Reference swap to avoid mutation
-        _actsToTick = _stagedTickActs;
-        _stagedTickActs = new();
+        actsToTick = stagedActs;
+        stagedActs = new();
 
 
-        // Tick all acts
-        foreach (Act act in _actsToTick.Keys)
+        // Tick all acts based on flag
+        foreach (Act act in actsToTick.Keys)
         {
-            act.TickImpl();
+            if (flag == Act.TickFlags.Tick)
+            {
+                act.TickImpl();
+            }
+            else if (flag == Act.TickFlags.PhysicsTick)
+            {
+                act.PhysicsTickImpl();
+            }
+            else if (flag == Act.TickFlags.LateTick)
+            {
+                act.LateTickImpl();
+            }
         }
 
 
         // Merge back & clear
-        MergeDict(_stagedTickActs, _actsToTick, false);
-        _actsToTick.Clear();
+        MergeDict(stagedActs, actsToTick, false);
+        actsToTick.Clear();
 
 
         // Filter
         var filter = new List<Act>();
-        foreach (Act act in _stagedTickActs.Keys)
+        foreach (Act act in stagedActs.Keys)
         {
-            if (!_stagedTickActs[act])
+            if (!stagedActs[act])
             {
                 filter.Add(act);
             }
         }
-
         foreach (Act act in filter)
         {
-            _stagedTickActs.Remove(act);
+            stagedActs.Remove(act);
         }
     }
-    private void PhysicsTickActs()
+    private static void MergeDict<TKey, TValue>(Dictionary<TKey, TValue> dict, Dictionary<TKey, TValue> other, bool overwrite)
     {
-        // Return if no act to physics tick
-        if (_stagedPhysicsTickActs.Count == 0)
+        foreach (var pair in other)
         {
-            return;
-        }
-
-
-        // Reference swap to avoid mutation
-        _actsToPhysicsTick = _stagedPhysicsTickActs;
-        _stagedPhysicsTickActs = new Dictionary<Act, bool>();
-
-
-        // Physics tick all acts
-        foreach (Act act in _actsToPhysicsTick.Keys)
-        {
-            act.PhysicsTickImpl();
-        }
-
-
-        // Merge back & clear
-        MergeDict(_stagedPhysicsTickActs, _actsToPhysicsTick, false);
-        _actsToPhysicsTick.Clear();
-
-
-        // Filter
-        var filter = new List<Act>();
-        foreach (Act act in _stagedPhysicsTickActs.Keys)
-        {
-            if (!_stagedPhysicsTickActs[act])
+            if (overwrite || !dict.ContainsKey(pair.Key))
             {
-                filter.Add(act);
+                dict[pair.Key] = pair.Value;
             }
-        }
-
-        foreach (Act act in filter)
-        {
-            _stagedPhysicsTickActs.Remove(act);
-        }
-    }
-    private void LateTickActs()
-    {
-        // Return if no act to late tick
-        if (_stagedLateTickActs.Count == 0)
-        {
-            return;
-        }
-
-
-        // Reference swap to avoid mutation
-        _actsToLateTick = _stagedLateTickActs;
-        _stagedLateTickActs = new Dictionary<Act, bool>();
-
-
-        // Late tick all acts
-        foreach (Act act in _actsToLateTick.Keys)
-        {
-            act.LateTickImpl();
-        }
-
-
-        // Merge back & clear
-        MergeDict(_stagedLateTickActs, _actsToLateTick, false);
-        _actsToLateTick.Clear();
-
-
-        // Filter
-        var filter = new List<Act>();
-        foreach (Act act in _stagedLateTickActs.Keys)
-        {
-            if (!_stagedLateTickActs[act])
-            {
-                filter.Add(act);
-            }
-        }
-
-        foreach (Act act in filter)
-        {
-            _stagedLateTickActs.Remove(act);
         }
     }
     private void DeferActs(Act.TickFlags flag)
@@ -438,32 +376,22 @@ public class Theater : MonoBehaviour
         // Merge back unperformed
         MergeDict(_deferredActs, actsToDefer, false);
     }
-    private static void MergeDict<TKey, TValue>(Dictionary<TKey, TValue> dict, Dictionary<TKey, TValue> other, bool overwrite)
-    {
-        foreach (var pair in other)
-        {
-            if (overwrite || !dict.ContainsKey(pair.Key))
-            {
-                dict[pair.Key] = pair.Value;
-            }
-        }
-    }
 
 
     // Private Override Methods
     private void Update()
     {
-        TickActs();
+        TickActs(ref _stagedTickActs, ref _actsToTick, Act.TickFlags.Tick);
         DeferActs(Act.TickFlags.Tick);
     }
     private void FixedUpdate()
     {
-        PhysicsTickActs();
+        TickActs(ref _stagedPhysicsTickActs, ref _actsToPhysicsTick, Act.TickFlags.PhysicsTick);
         DeferActs(Act.TickFlags.PhysicsTick);
     }
     private void LateUpdate()
     {
-        LateTickActs();
+        TickActs(ref _stagedLateTickActs, ref _actsToLateTick, Act.TickFlags.LateTick);
         DeferActs(Act.TickFlags.LateTick);
     }
 }

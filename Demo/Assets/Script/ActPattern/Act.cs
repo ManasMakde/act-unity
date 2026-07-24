@@ -605,7 +605,7 @@ public class Act
 			}
 		}
 	}
-	private bool CanPerformImpl()
+	private bool CanPerformImpl(bool skipOngoingCheck = false)
 	{
 		// Return if null theater
 		if (_theater == null)
@@ -632,7 +632,7 @@ public class Act
 
 
 		// Return if already ongoing
-		if (!_canReperform && IsOngoing())
+		if (!skipOngoingCheck && !_canReperform && IsOngoing())
 		{
 			WriteLog("Cannot perform, act is ongoing!");
 			return false;
@@ -725,34 +725,37 @@ public class Act
 		// Perform all prologues
 		while (_prologueActs.Count != 0)
 		{
-			// Pop a prologue & get prerequisites
-			var pAct = _prologueActs.First();
-			var isOngoing = pAct.IsOngoing();
-			var canPerform = pAct.CanPerformImpl();
-
-
-			// Fail incase cannot perform
-			if (!isOngoing && !canPerform)
+			// Guard
+			if (_status != Status.Prologuing)
 			{
-				Redirect(Status.Exiting, Outcome.Failure);
 				return;
 			}
 
 
-			// Shift to pending
-			_prologueActs.Remove(pAct);
-			_pendingPrologueActs.Add(pAct);
-
-
-			// Perform if not already ongoing
-			if (!isOngoing)
+			// Skip prologue if ongoing
+			var pAct = _prologueActs.First();
+			var isOngoing = pAct.IsOngoing();
+			if (isOngoing)
 			{
+				_prologueActs.Remove(pAct);
+				_pendingPrologueActs.Add(pAct);
+				continue;
+			}
+
+
+			// Perform prologue
+			if (pAct.CanPerformImpl())
+			{
+				_prologueActs.Remove(pAct);
+				_pendingPrologueActs.Add(pAct);
 				pAct.PerformImpl();
+				continue;
 			}
-			if (_status != Status.Prologuing)
-			{
-				return;  // Guard
-			}
+
+
+			// Exit with failure if failed to perform
+			Redirect(Status.Exiting, Outcome.Failure);
+			return;
 		}
 	}
 	private void CompletedPrologue(Act pAct, Outcome newOutcome)
@@ -1012,7 +1015,7 @@ public class Act
 		// Retry
 		if (_outcome == Outcome.Retry)
 		{
-			if (CanPerformImpl())
+			if (CanPerformImpl(true))
 			{
 				_status = Status.None;
 				PerformImpl();
