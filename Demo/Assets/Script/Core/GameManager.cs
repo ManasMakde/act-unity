@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float minSpawnRadius = 6f;
     [SerializeField] private float maxSpawnRadius = 10f;
     private Transform playerTransform;
-    private ActBot player;
+    private Player player;
 
 
     // Private Methods
@@ -60,7 +60,7 @@ public class GameManager : MonoBehaviour
         // Get player via tag
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         playerTransform = playerObj.transform;
-        player = playerObj.GetComponent<ActBot>();
+        player = playerObj.GetComponent<Player>();
 
 
         // End game when player dies

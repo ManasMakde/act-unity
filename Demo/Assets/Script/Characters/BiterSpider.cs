@@ -6,6 +6,12 @@ public class BiterSpider : SpiderBase
     // Public Properties
     [SerializeField] bool isVenomous = false;
     [SerializeField] GameObject venomPrefab = null;
+    [SerializeField] EventfulAnimator eventfulAnimator = null;
+
+
+    // Animation Properties
+    [SerializeField] public AnimationClip idleAnim = null;
+    [SerializeField] public AnimationClip walkAnim = null;
 
 
     // Act Properties
@@ -18,14 +24,40 @@ public class BiterSpider : SpiderBase
 
 
     // Override Properties
+    void Update()
+    {
+        // Return if any override animation playing
+        if (damageAct.IsActive() || biteAct.IsActive())
+        {
+            return;
+        }
+
+
+        // Walk
+        if (chaseAct.IsActive())
+        {
+            eventfulAnimator.Play(walkAnim);
+        }
+
+
+        // Idle
+        else
+        {
+            eventfulAnimator.Play(idleAnim);
+        }
+    }
     protected override void Awake()
     {
         // Animate when damaged
-        damageAct.toAnimate = true;
+        damageAct.toFlash = true;
         damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damage animation is being played
 
 
         base.Awake();
+
+
+        // Setup Animator
+        eventfulAnimator = GetComponentInChildren<EventfulAnimator>();
 
 
         // Setup Live Act
@@ -45,6 +77,7 @@ public class BiterSpider : SpiderBase
 
         // Setup Look & Look Perp Act
         lookAct.turnType = LookAct.TurnType.Continuous;
+        lookAct.turnSpeed = -1.0f;
         lookAct.targetTransform = playerTransform;
         lookAct.Init(theater, "Turn Act");
         lookPerpAct.prologue += (Act act) => new() { lookAct };

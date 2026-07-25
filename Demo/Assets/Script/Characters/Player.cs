@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Theater))]
-public class ActBot : MonoBehaviour, IDamageable, ITrappable
+public class Player : MonoBehaviour, IDamageable, ITrappable
 {
     // Public Actions
     public event Action OnDeath;

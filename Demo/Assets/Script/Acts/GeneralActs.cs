@@ -6,12 +6,12 @@ using UnityEngine;
 [Serializable]
 public class PerpetualAct : Act
 {
-	// Public Properties
-	[HideInInspector] public bool toPerpetuate = true;
+    // Public Properties
+    [HideInInspector] public bool toPerpetuate = true;
 
 
-	// Override Methods
-	protected override void Setup()
+    // Override Methods
+    protected override void Setup()
     {
         _canReperform = true;
         if (toPerpetuate)
@@ -21,16 +21,17 @@ public class PerpetualAct : Act
     }
     protected override void Exit()
     {
-        if (toPerpetuate){
-			PerformDeferred();
+        if (toPerpetuate)
+        {
+            PerformDeferred();
         }
     }
-	protected override void UnblockSelf(Act byAct)
+    protected override void UnblockSelf(Act byAct)
     {
         base.UnblockSelf(byAct);
-		if (toPerpetuate && !IsBlocked())
+        if (toPerpetuate && !IsBlocked())
         {
-			PerformDeferred();
+            PerformDeferred();
         }
     }
 }
@@ -51,7 +52,7 @@ public class GotoAct : Act
     {
         Vector2 destination = GetDestination();
         float distance = Vector2.Distance(rb.position, destination);
-        return distance <= acceptanceRadius;  
+        return distance <= acceptanceRadius;
     }
 
 
@@ -66,9 +67,10 @@ public class GotoAct : Act
     protected override void Setup()
     {
         // Auto get rigidBody if not provided
-        if(rb == null){
+        if (rb == null)
+        {
             rb = GetOwner().GetComponent<Rigidbody2D>();
-        }        
+        }
         rb.gravityScale = 0f;  // No gravity for top down
 
 
@@ -102,19 +104,62 @@ public class AttackAct : Act
 {
     // Public Properties
     [SerializeField] public float damageAmount = 10.0f;
+    [SerializeField] public AnimationClip animation;
     [HideInInspector] public Transform target;
 
 
+    // Private Properties
+    [HideInInspector] public EventfulAnimator eventfulAnimator;
+
+
+    // Private Methods
+    private void OnAnimationEnded(AnimationClip clip)
+    {
+        // Ignore if not the attack clip
+        if (clip != animation)
+        {
+            return;
+        }
+
+        Finish(Outcome.Success);
+    }
+
+
     // Override methods
+    protected override void Setup()
+    {
+        if (animation != null)
+        {
+            eventfulAnimator = GetOwner().GetComponentInChildren<EventfulAnimator>();
+        }
+    }
     protected override bool CanPerform()
     {
-        return target != null && target.GetComponent<IDamageable>() != null;
+        return target != null && target.GetComponent<IDamageable>() != null && !(animation != null && eventfulAnimator == null);
     }
     protected override Outcome Enter()
     {
         var damageable = target.GetComponent<IDamageable>();
         damageable.TakeDamage(damageAmount);
-        return Outcome.Success;
+        if (animation == null)
+        {
+            return Outcome.Success;
+        }
+
+        // Play animation
+        eventfulAnimator.OnAnimationEnded += OnAnimationEnded;
+        eventfulAnimator.Play(animation);
+        return Outcome.Pending;
+
+    }
+    protected override void Exit()
+    {
+        // Stop animation
+        if (eventfulAnimator != null)
+        {
+            eventfulAnimator.Stop();
+            eventfulAnimator.OnAnimationEnded -= OnAnimationEnded;
+        }
     }
 }
 
@@ -136,12 +181,12 @@ public class WaitAct : Act
     }
 
     // Override Methods
-	protected override Outcome Enter()
+    protected override Outcome Enter()
     {
         waitCoroutine = GetTheater().StartCoroutine(WaitRoutine());
         return Outcome.Pending;
     }
-	protected override void Exit()
+    protected override void Exit()
     {
         if (waitCoroutine != null)
         {
@@ -163,7 +208,8 @@ public class MoveAct : Act
     // Override Methods
     protected override void Setup()
     {
-        if(rb == null){
+        if (rb == null)
+        {
             rb = GetOwner().GetComponent<Rigidbody2D>();
         }
         rb.gravityScale = 0f;  // No gravity for top down
@@ -188,37 +234,124 @@ public class ShootAct : Act
 {
     // Public Properties
     [SerializeField] public GameObject projectilePrefab;
+    [SerializeField] public float delayAmount = 0f;
+    public AnimationClip animation;
     [HideInInspector] public Vector2 spawnLocation = new();
     [HideInInspector] public bool spawnAtOwner = true;
     [HideInInspector] public Vector2 direction = new();
 
 
-    // Override Methods
-    protected override void Setup()
+    // Private Properties
+    [HideInInspector] public EventfulAnimator eventfulAnimator;
+    private Coroutine delayCoroutine; // Track the running delay coroutine
+    private bool _animationPlaying = false; // True while shoot animation is playing
+    private bool _shootPending = false; // True while waiting on delay to shoot
+
+
+    // Private Methods
+    private IEnumerator DelayedShoot()
     {
+        yield return new WaitForSeconds(delayAmount);
+        SpawnBullet();
+        _shootPending = false;
+        TryFinish();
     }
-    protected override bool CanPerform()
-    {
-        return projectilePrefab != null;
-    }
-    protected override Outcome Enter()
+    private void SpawnBullet()
     {
         // Spawn Bullet
         var spawnPosition = spawnAtOwner ? GetOwner().transform.position : (Vector3)spawnLocation;
         GameObject bullet = MonoBehaviour.Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
-       
-       
+
+
         // Set bullet direction
         ProjectileBase bulletScript = bullet.GetComponent<ProjectileBase>();
         bulletScript.direction = direction;
         bulletScript.SetOwner(GetOwner());
-        
-        
-        return Outcome.Success;
+    }
+    private void OnAnimationEnded(AnimationClip clip)
+    {
+        // Ignore if not the shoot clip
+        if (clip != animation)
+        {
+            return;
+        }
+
+        // Mark animation done
+        _animationPlaying = false;
+        TryFinish();
+    }
+    private void TryFinish()
+    {
+        // Wait for both animation and shoot delay to complete
+        if (_animationPlaying || _shootPending)
+        {
+            return;
+        }
+
+        Finish(Outcome.Success);
+    }
+
+
+    // Override Methods
+    protected override void Setup()
+    {
+        if (animation != null)
+        {
+            eventfulAnimator = GetOwner().GetComponentInChildren<EventfulAnimator>();
+        }
+    }
+    protected override bool CanPerform()
+    {
+        return projectilePrefab != null && (animation == null || eventfulAnimator != null);
+    }
+    protected override Outcome Enter()
+    {
+        // Start animation
+        if (animation != null)
+        {
+            _animationPlaying = true;
+            eventfulAnimator.OnAnimationEnded += OnAnimationEnded;
+            eventfulAnimator.Play(animation);
+        }
+
+
+        // Shoot instantly or after delay
+        if (delayAmount <= 0f)
+        {
+            SpawnBullet();
+        }
+        else
+        {
+            _shootPending = true;
+            delayCoroutine = GetTheater().StartCoroutine(DelayedShoot());
+        }
+
+
+        // Pending if either started, else success
+        return (_animationPlaying || _shootPending) ? Outcome.Pending : Outcome.Success;
     }
     protected override void Exit()
     {
+        // Stop delay coroutine
+        if (delayCoroutine != null)
+        {
+            GetTheater().StopCoroutine(delayCoroutine);
+            delayCoroutine = null;
+        }
+
+
+        // Stop animation
+        if (eventfulAnimator != null)
+        {
+            eventfulAnimator.Stop();
+            eventfulAnimator.OnAnimationEnded -= OnAnimationEnded;
+        }
+
+
+        // Reset state
         direction = Vector2.zero;
+        _animationPlaying = false;
+        _shootPending = false;
     }
 }
 
@@ -226,28 +359,36 @@ public class ShootAct : Act
 public class DamageAct : Act
 {
     // Public Properties
+    public AnimationClip animation;
     [HideInInspector] public HealthSystem healthSystem;
     [HideInInspector] public float amount = 5.0f;
     [HideInInspector] public bool canDie = true;
-    [HideInInspector] public bool toAnimate = false;
+    [HideInInspector] public bool toFlash = false;
     [HideInInspector] public float flashDuration = 0.5f;
     [HideInInspector] public float flashInterval = 0.1f;
     [HideInInspector] public float flashAlpha = 0.3f; // Target transparency (0 = invisible, 1 = opaque)
+
+
+    // Private Properties
+    [HideInInspector] public EventfulAnimator eventfulAnimator;
     [HideInInspector] public SpriteRenderer spriteRenderer;
 
 
     // Private Properties
     private Coroutine AnimCoroutine; // Track the running coroutine
+    private bool _animationPlaying = false; // True while damage animation is playing
+    private bool _flashPlaying = false; // True while flash coroutine is playing
+    private bool _toDie = false;
 
 
     // Private Methods
-    private IEnumerator Animate()
+    private IEnumerator Flash(float duration)
     {
         // Change opacity in intervals
         Color originalColor = spriteRenderer.color;
         Color flashedColor = new Color(originalColor.r, originalColor.g, originalColor.b, flashAlpha);
         float elapsed = 0f;
-        while (elapsed < flashDuration)
+        while (elapsed < duration)
         {
             spriteRenderer.color = spriteRenderer.color == originalColor ? flashedColor : originalColor;
             yield return new WaitForSeconds(flashInterval);
@@ -257,6 +398,34 @@ public class DamageAct : Act
 
         // Reset color
         spriteRenderer.color = originalColor;
+        OnFlashEnded();
+    }
+    private void OnAnimationEnded(AnimationClip clip)
+    {
+        // Ignore if not the damage clip
+        if (clip != animation)
+        {
+            return;
+        }
+
+        // Mark animation done
+        _animationPlaying = false;
+        TryFinish();
+    }
+    private void OnFlashEnded()
+    {
+        // Mark flash done
+        _flashPlaying = false;
+        TryFinish();
+    }
+    private void TryFinish()
+    {
+        // Wait for both animation and flash to complete
+        if (_animationPlaying || _flashPlaying)
+        {
+            return;
+        }
+
         Finish(Outcome.Success);
     }
 
@@ -266,14 +435,18 @@ public class DamageAct : Act
     {
         _canReperform = true;
 
-        if (toAnimate)
+        if (toFlash)
         {
-            spriteRenderer = GetOwner().GetComponent<SpriteRenderer>();
+            spriteRenderer = GetOwner().GetComponentInChildren<SpriteRenderer>();
+        }
+        if (animation != null)
+        {
+            eventfulAnimator = GetOwner().GetComponentInChildren<EventfulAnimator>();
         }
     }
     protected override bool CanPerform()
     {
-        return healthSystem != null && (!toAnimate || spriteRenderer != null);
+        return healthSystem != null && (!toFlash || spriteRenderer != null) && (animation != null || eventfulAnimator != null);
     }
     protected override Outcome Enter()
     {
@@ -284,19 +457,30 @@ public class DamageAct : Act
         // Death
         if (canDie && Mathf.Approximately(healthSystem.CurrentHealth, 0f))
         {
-            MonoBehaviour.Destroy(GetOwner());
-            return Outcome.Success;
+            _toDie = true;
         }
 
 
-        // Animate
-        if (toAnimate)
+        // Start animation
+        if (animation != null)
         {
-            AnimCoroutine = GetTheater().StartCoroutine(Animate());
-            return Outcome.Pending;
+            _animationPlaying = true;
+            eventfulAnimator.OnAnimationEnded += OnAnimationEnded;
+            eventfulAnimator.Play(animation);
         }
 
-        return Outcome.Success;
+
+        // Start flash, duration matches animation length if animation is playing
+        if (toFlash)
+        {
+            float flashLength = animation != null ? animation.length : flashDuration;
+            _flashPlaying = true;
+            AnimCoroutine = GetTheater().StartCoroutine(Flash(flashLength));
+        }
+
+
+        // Pending if either started, else success
+        return (_animationPlaying || _flashPlaying) ? Outcome.Pending : Outcome.Success;
     }
     protected override void Exit()
     {
@@ -308,12 +492,33 @@ public class DamageAct : Act
         }
 
 
-        // Reset animation changes
-        if (toAnimate && spriteRenderer != null)
+        // Stop animation
+        if (eventfulAnimator != null)
+        {
+            eventfulAnimator.Stop();
+            eventfulAnimator.OnAnimationEnded -= OnAnimationEnded;
+        }
+
+
+        // Reset flashing changes
+        if (toFlash && spriteRenderer != null)
         {
             Color currentColor = spriteRenderer.color;
             spriteRenderer.color = new Color(currentColor.r, currentColor.g, currentColor.b, 1f);
         }
+
+
+        // Die
+        if (_toDie)
+        {
+            MonoBehaviour.Destroy(GetOwner());
+        }
+
+
+        // Reset playing flags
+        _animationPlaying = false;
+        _flashPlaying = false;
+        _toDie = false;
     }
 }
 
@@ -334,8 +539,7 @@ public class LookAct : Act
     [SerializeField] public float targetRotation = 0f;  // Rotation towards which to turn
     [SerializeField] public TurnType turnType = TurnType.UntilFacing;
     [SerializeField] public float followTimeout = 0f;  // 0 or less means indefinitely
-    [SerializeField] public bool instantTurn = false;  // If true then snaps rotation instantly else drags at turn speed
-    [SerializeField] public float turnSpeed = 150f;
+    [SerializeField] public float turnSpeed = 150f;  // Set to negative if to snap turn instantly 
     [SerializeField] public float acceptanceAngle = 0.5f;  // In deg, used to decide if goal rotation reached
     [HideInInspector] public Rigidbody2D rb;
 
@@ -345,7 +549,8 @@ public class LookAct : Act
 
 
     // Static Method
-    public float RotationTowardsPosition(Vector2 position){
+    public float RotationTowardsPosition(Vector2 position)
+    {
 
         Vector2 direction = (Vector2)position - rb.position;
         return Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
@@ -366,7 +571,7 @@ public class LookAct : Act
     private float CalcRotationLerp(float goalRotation, float deltaTime)
     {
         // Snap instantly or drag at turn speed
-        return instantTurn ? goalRotation : Mathf.MoveTowardsAngle(rb.rotation, goalRotation, turnSpeed * deltaTime);
+        return turnSpeed < 0.0f ? goalRotation : Mathf.MoveTowardsAngle(rb.rotation, goalRotation, turnSpeed * deltaTime);
     }
     private IEnumerator FollowDurationRoutine()
     {

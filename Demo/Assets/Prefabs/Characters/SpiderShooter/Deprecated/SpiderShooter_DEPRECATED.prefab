@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 5809892976634669109}
   - component: {fileID: 8446437874631947135}
   m_Layer: 0
-  m_Name: SpiderShooter
+  m_Name: SpiderShooter_DEPRECATED
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -64,6 +64,18 @@ PrefabInstance:
       propertyPath: m_Color.r
       value: 0.5461137
       objectReference: {fileID: 0}
+    - target: {fileID: 6005052005793894462, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
+      propertyPath: m_Color.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6005052005793894462, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6005052005793894462, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
+      propertyPath: m_Color.r
+      value: 0.23363113
+      objectReference: {fileID: 0}
     - target: {fileID: 7134527181943191076, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
       propertyPath: isVenomous
       value: 1

@@ -7,6 +7,7 @@ public abstract class SpiderBase : MonoBehaviour, IDamageable
     protected Theater theater;
     public DamageAct damageAct = new();
 
+
     // Protected Methods
     protected Transform playerTransform;
     protected HealthSystem healthSystem;
@@ -18,6 +19,7 @@ public abstract class SpiderBase : MonoBehaviour, IDamageable
         damageAct.amount = amount;
         damageAct.Perform();
     }
+
 
     // Override Methods
     protected virtual void Awake()

@@ -1,0 +1,509 @@
+fileFormatVersion: 2
+guid: 3344a6343b54c2b44af631828fbd9376
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 477038245475968593
+    second: Damaged_0
+  - first:
+      213: 1398815047815489872
+    second: Damaged_1
+  - first:
+      213: -4155106823232359955
+    second: Damaged_2
+  - first:
+      213: -3134539031082181341
+    second: Damaged_3
+  - first:
+      213: -3097028871984802304
+    second: Damaged_4
+  - first:
+      213: -7390835706220147823
+    second: Damaged_5
+  - first:
+      213: -5593904837000854094
+    second: Damaged_6
+  - first:
+      213: 5227565187254193652
+    second: Damaged_7
+  - first:
+      213: -2846064482069506327
+    second: Damaged_8
+  - first:
+      213: -1728522701914535961
+    second: Damaged_9
+  - first:
+      213: 7733249414377904024
+    second: Damaged_10
+  - first:
+      213: -2115962104124767329
+    second: Damaged_11
+  - first:
+      213: 1780152933182231801
+    second: Damaged_12
+  - first:
+      213: 2851158464647486158
+    second: Damaged_13
+  - first:
+      213: -7831881456195727030
+    second: Damaged_14
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Damaged_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 156eeddb1c7ce9600800000000000000
+      internalID: 477038245475968593
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_1
+      rect:
+        serializedVersion: 2
+        x: 311
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d411c4c9ddf4fc43a3a91f66f38e2c6
+      internalID: 1398815047815489872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_2
+      rect:
+        serializedVersion: 2
+        x: 622
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5527b1409cf793b4093f7e4cb099a2cb
+      internalID: -4155106823232359955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_3
+      rect:
+        serializedVersion: 2
+        x: 933
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6b08589a25f858c49bf26cd1f72bc998
+      internalID: -3134539031082181341
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_4
+      rect:
+        serializedVersion: 2
+        x: 1244
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ff08368b220dd4944a08a2c4d4f19fc2
+      internalID: -3097028871984802304
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_5
+      rect:
+        serializedVersion: 2
+        x: 1555
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b8b4da0d0e25b044882fa56d5e1892ea
+      internalID: -7390835706220147823
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_6
+      rect:
+        serializedVersion: 2
+        x: 1866
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1f3282ac601b2894d8d5f94f54705944
+      internalID: -5593904837000854094
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_7
+      rect:
+        serializedVersion: 2
+        x: 2177
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e58fcfa070bd08c40afa2f2ce337ca70
+      internalID: 5227565187254193652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_8
+      rect:
+        serializedVersion: 2
+        x: 2488
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ba508b682311bd84cac99fbcd84a8338
+      internalID: -2846064482069506327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_9
+      rect:
+        serializedVersion: 2
+        x: 2799
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a78a7facb2a4ef542b127f9aae0d05f4
+      internalID: -1728522701914535961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_10
+      rect:
+        serializedVersion: 2
+        x: 3110
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d0c2af75fea410f4783f4c5ce53a83c6
+      internalID: 7733249414377904024
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_11
+      rect:
+        serializedVersion: 2
+        x: 3421
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ade686ab2fdda884f993af15ccaec0fc
+      internalID: -2115962104124767329
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_12
+      rect:
+        serializedVersion: 2
+        x: 3732
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fde8664bd43ebe244822d215c7c8979c
+      internalID: 1780152933182231801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_13
+      rect:
+        serializedVersion: 2
+        x: 4043
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 92ed64e8aa6a1644aa28ec26189b12e2
+      internalID: 2851158464647486158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Damaged_14
+      rect:
+        serializedVersion: 2
+        x: 4354
+        y: 0
+        width: 311
+        height: 314
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22be2f3e0e81ae44dbe6bb9b931f61d3
+      internalID: -7831881456195727030
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 1b50313028cb33646b9d4849f0f43be9
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":15.0,"y":1.0},"gridSpriteSize":{"x":311.0,"y":314.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Damaged_0: 477038245475968593
+      Damaged_1: 1398815047815489872
+      Damaged_10: 7733249414377904024
+      Damaged_11: -2115962104124767329
+      Damaged_12: 1780152933182231801
+      Damaged_13: 2851158464647486158
+      Damaged_14: -7831881456195727030
+      Damaged_2: -4155106823232359955
+      Damaged_3: -3134539031082181341
+      Damaged_4: -3097028871984802304
+      Damaged_5: -7390835706220147823
+      Damaged_6: -5593904837000854094
+      Damaged_7: 5227565187254193652
+      Damaged_8: -2846064482069506327
+      Damaged_9: -1728522701914535961
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

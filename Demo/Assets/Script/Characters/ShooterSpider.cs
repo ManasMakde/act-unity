@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class ShooterSpider : SpiderBase
 {
+    // Public Properties
+    [SerializeField] EventfulAnimator eventfulAnimator = null;
+
+
     // Act Properties
     [SerializeField] PerpetualAct liveAct = new();
     [SerializeField] GotoAct wanderAct = new();
@@ -10,6 +14,11 @@ public class ShooterSpider : SpiderBase
     [SerializeField] LookAct lookAct = new();
     [SerializeField] LookAct aimAct = new();
     [SerializeField] ShootAct shootAct = new();
+
+
+    // Animation Properties
+    [SerializeField] public AnimationClip idleAnim = null;
+    [SerializeField] public AnimationClip walkAnim = null;
 
 
     // Static Methods
@@ -87,16 +96,42 @@ public class ShooterSpider : SpiderBase
 
 
     // Override Properties
+    void Update()
+    {
+        // Return if any override animation playing
+        if (damageAct.IsActive() || shootAct.IsActive())
+        {
+            return;
+        }
+
+
+        // Walk
+        if (wanderAct.IsActive())
+        {
+            eventfulAnimator.Play(walkAnim);
+        }
+
+
+        // Idle
+        else
+        {
+            eventfulAnimator.Play(idleAnim);
+        }
+    }
     protected override void Awake()
     {
         // Animate when damaged
-        damageAct.toAnimate = true;
+        damageAct.toFlash = true;
         damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played
 
 
         base.Awake();
 
 
+        // Setup Animator
+        eventfulAnimator = GetComponentInChildren<EventfulAnimator>();
+
+        
         // Setup Live Act
         liveAct.prologue += (Act act) =>
         {
@@ -131,11 +166,13 @@ public class ShooterSpider : SpiderBase
 
         // Look Act
         lookAct.turnType = LookAct.TurnType.UntilFacing;
+        lookAct.turnSpeed = -1.0f;
         lookAct.Init(theater, "look Act");
 
 
         // Aim Act
         aimAct.targetTransform = playerTransform;
+        aimAct.turnSpeed = -1.0f;
         aimAct.turnType = LookAct.TurnType.Continuous;
         aimAct.followTimeout = 2.0f;
         aimAct.Init(theater, "Aim Act");

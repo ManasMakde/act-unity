@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 7308776271312174698}
   - component: {fileID: 6225557386175135137}
   m_Layer: 0
-  m_Name: ActBot
+  m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -76,21 +76,29 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActBot
   moveAct:
+    isVerbose: 0
     speed: 5
     direction: {x: 0, y: 0}
     rb: {fileID: 0}
   shootAct:
+    isVerbose: 0
     projectilePrefab: {fileID: 2910026093151187665, guid: 1d3a2fd2edf56d846871a1cae10ca587, type: 3}
+    delayAmount: 0
+    animation: {fileID: 0}
     spawnLocation: {x: 0, y: 0}
     spawnAtOwner: 1
     direction: {x: 0, y: 0}
+    eventfulAnimator: {fileID: 0}
   damageAct:
+    isVerbose: 0
+    animation: {fileID: 0}
     amount: 5
     canDie: 1
-    toAnimate: 0
+    toFlash: 0
     flashDuration: 0.5
     flashInterval: 0.1
     flashAlpha: 0.3
+    eventfulAnimator: {fileID: 0}
     spriteRenderer: {fileID: 0}
 --- !u!114 &4020967471088464063
 MonoBehaviour:
@@ -151,7 +159,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
