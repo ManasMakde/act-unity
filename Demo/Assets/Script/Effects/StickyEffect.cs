@@ -10,6 +10,7 @@ public class StickyEffect : MonoBehaviour
     // Private Properties
     [SerializeField] private float trapDuration = 3f;
     private ITrappable target;
+    private float lockedZRotation;
 
 
     // Public Methods
@@ -40,9 +41,19 @@ public class StickyEffect : MonoBehaviour
             return;
         }
 
+
+        // To avoid rotating with player
+        lockedZRotation = UnityEngine.Random.Range(0f, 360f);
+        transform.rotation = Quaternion.Euler(0f, 0f, lockedZRotation);
+
+
         // Trap Target
         target.Trap(trapDuration);
         Invoke(nameof(UntrapAndDestroy), trapDuration);
+    }
+    private void LateUpdate()
+    {
+        transform.rotation = Quaternion.Euler(0f, 0f, lockedZRotation); // Not the best way, someone should refactor
     }
 
 }

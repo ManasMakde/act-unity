@@ -315,6 +315,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5607604400439526008, guid: 08c66af28b36ff94b8840fb17b1c45c9, type: 3}
+      propertyPath: barrelLength
+      value: 1.75
+      objectReference: {fileID: 0}
+    - target: {fileID: 5607604400439526008, guid: 08c66af28b36ff94b8840fb17b1c45c9, type: 3}
       propertyPath: moveAct.isVerbose
       value: 0
       objectReference: {fileID: 0}
