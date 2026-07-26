@@ -34,6 +34,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 4482476560264796242}
+  - {fileID: 9053003092129722241}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &6225557386175135137
@@ -133,21 +134,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6517358ee54105c4b95c3adecc667d56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActBot
-  barrelLength: 1
-  theater: {fileID: 0}
+  barrelObject: {fileID: 1928929065395068098}
+  theater: {fileID: 4020967471088464063}
   moveAct:
     isVerbose: 0
     speed: 5
+    useBorder: 0
+    border:
+      serializedVersion: 2
+      x: -10
+      y: -10
+      width: 20
+      height: 20
     direction: {x: 0, y: 0}
     rb: {fileID: 0}
   shootAct:
     isVerbose: 0
     projectilePrefab: {fileID: 2910026093151187665, guid: 1d3a2fd2edf56d846871a1cae10ca587, type: 3}
     delayAmount: 0
-    animation: {fileID: 0}
     spawnLocation: {x: 0, y: 0}
     spawnAtOwner: 1
     direction: {x: 0, y: 0}
+    animation: {fileID: 0}
     eventfulAnimator: {fileID: 0}
   damageAct:
     isVerbose: 0
@@ -260,3 +268,34 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &1928929065395068098
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 9053003092129722241}
+  m_Layer: 0
+  m_Name: Barrel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9053003092129722241
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1928929065395068098}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.6718, y: 0.021, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1379797063375036009}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

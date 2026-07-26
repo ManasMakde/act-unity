@@ -6,16 +6,10 @@ using UnityEngine.SceneManagement;
 
 
 [Serializable]
-public struct FloatRange
+public struct Range
 {
     public float min;
     public float max;
-}
-[Serializable]
-public struct IntRange
-{
-    public int min;
-    public int max;
 }
 
 
@@ -24,8 +18,8 @@ public class GameManager : MonoBehaviour
 {
     // Private Properties
     [SerializeField] private List<GameObject> spiderPrefabs;
-    [SerializeField] private FloatRange spawnInterval = new FloatRange { min = 5f, max = 10f };
-    [SerializeField] private IntRange spiderCount = new IntRange { min = 1, max = 3 };
+    [SerializeField] private Range spawnInterval = new Range { min = 5f, max = 10f };
+    [SerializeField] private int maxSpawnCount = 3;
     [SerializeField] private float minSpawnRadius = 6f;
     [SerializeField] private float maxSpawnRadius = 10f;
     [SerializeField] private UIDocument gameOverDocument;
@@ -49,7 +43,7 @@ public class GameManager : MonoBehaviour
 
 
         // Spawn random amount of spiders
-        int count = UnityEngine.Random.Range(spiderCount.min, spiderCount.max + 1);
+        int count = UnityEngine.Random.Range(1, maxSpawnCount + 1);
         for (int i = 0; i < count; i++)
         {
             Vector2 spawnOffset = GetRandomSpawnOffset();

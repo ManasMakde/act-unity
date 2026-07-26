@@ -3,32 +3,25 @@ using UnityEngine;
 
 public class Web : ProjectileBase
 {
+    // Private Properties
     [SerializeField] private GameObject stickyEffectPrefab;
 
+    
+    // Override Methods
     protected override void HitBehaviour(Collider2D other)
     {
-        // Restart counter if already sticky
-        StickyEffect existingSticky = other.GetComponentInChildren<StickyEffect>();
-        if(existingSticky != null)
-        {
-            existingSticky.Restart();
-            // return;
-        }
-
-
         // Return if not trappable
-        // ITrappable trappable = other.GetComponent<ITrappable>();
-        // if (trappable == null)
-        // {
-        //     return;
-        // }
-
-
-        // Apply sticky effect
-        if (stickyEffectPrefab == null)
+        ITrappable trappable = other.GetComponent<ITrappable>();
+        if (trappable == null)
         {
             return;
         }
-        Instantiate(stickyEffectPrefab, other.transform.position, Quaternion.identity, other.transform);
+
+
+        // Apply sticky effect
+        if (stickyEffectPrefab != null)
+        {
+            Instantiate(stickyEffectPrefab, other.transform.position, Quaternion.identity, other.transform);
+        }
     }
 }

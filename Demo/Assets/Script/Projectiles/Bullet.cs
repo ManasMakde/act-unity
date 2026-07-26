@@ -1,17 +1,20 @@
 using UnityEngine;
 
+
 public class Bullet : ProjectileBase
 {
     // Public Methods
     [SerializeField] private float damageAmount = 10f;
     [SerializeField] public bool damageOwner = false;
 
+
+    // Override Methods
     protected override void HitBehaviour(Collider2D other)
     {
         // Return if cannot damage owner
         if (other.gameObject == owner && !damageOwner)
         {
-            return;   
+            return;
         }
 
 
@@ -25,6 +28,5 @@ public class Bullet : ProjectileBase
 
         // Apply damage
         damageable.TakeDamage(damageAmount);
-        // Destroy(gameObject);
     }
 }

@@ -66,7 +66,7 @@ public class EventfulAnimator : MonoBehaviour
         // Stop playing animation
         // animatorComponent.Play(currentAnimation.name, 0f);
         animatorComponent.enabled = false;
-        currentAnimation = null;  // reset so same clip can replay
+        currentAnimation = null;
     }
     public void Resume()
     {

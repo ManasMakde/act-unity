@@ -11,7 +11,7 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
 
     // Private Properties
     [SerializeField] HealthSystem healthSystem = new();
-    [SerializeField] float barrelLength = 1f;  // Distance from player center to barrel tip
+    [SerializeField] GameObject barrelObject;
 
 
     // Act Properties
@@ -20,6 +20,21 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
     [SerializeField] ShootAct shootAct = new();
     [SerializeField] DamageAct damageAct = new();
     [SerializeField] LookAct lookAct = new();
+
+
+    // Static Methods
+    public static Rect GetBorderFromCamera(Camera camera)
+    {
+        if (camera == null)
+        {
+            return new Rect();
+        }
+
+        float cameraHeight = 2f * camera.orthographicSize;
+        float cameraWidth = cameraHeight * camera.aspect;
+        Vector2 cameraCenter = camera.transform.position;
+        return new Rect(cameraCenter.x - cameraWidth * 0.5f, cameraCenter.y - cameraHeight * 0.5f, cameraWidth, cameraHeight);
+    }
 
 
     // Interface Methods
@@ -38,27 +53,11 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
     }
 
 
-    // Private Methods
-    private Rect GetBorderFromCamera()
-    {
-        Camera mainCamera = Camera.main;
-        if (mainCamera == null)
-        {
-            return new Rect();
-        }
-
-        float cameraHeight = 2f * mainCamera.orthographicSize;
-        float cameraWidth = cameraHeight * mainCamera.aspect;
-        Vector2 cameraCenter = mainCamera.transform.position;
-        return new Rect(cameraCenter.x - cameraWidth * 0.5f, cameraCenter.y - cameraHeight * 0.5f, cameraWidth, cameraHeight);
-    }
-
-
     // Override Methods
     void Update()
     {
         // Move
-        moveAct.border = GetBorderFromCamera();
+        moveAct.border = GetBorderFromCamera(Camera.main);
         moveAct.direction = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
         moveAct.Perform();
 
@@ -71,8 +70,9 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
         // Shoot
         if (Input.GetMouseButtonDown(0))
         {
+            Vector2 spawnOrigin = barrelObject?.transform.position ?? transform.position;
             shootAct.direction = ((Vector2)mouseWorldPosition - (Vector2)transform.position).normalized;
-            shootAct.spawnLocation = (Vector2)transform.position + shootAct.direction * barrelLength;
+            shootAct.spawnLocation = spawnOrigin;
             shootAct.Perform();
         }
     }
@@ -86,7 +86,7 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
         lookAct.Init(theater, "Look Act");
         lookAct.Perform();
 
-        moveAct.border = GetBorderFromCamera();
+        moveAct.border = GetBorderFromCamera(Camera.main);
         moveAct.useBorder = true;
         moveAct.Init(theater, "Move Act");
 
@@ -97,7 +97,7 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
         damageAct.healthSystem = healthSystem;
         damageAct.OnPostExit += (Act act) =>
         {
-            if(Mathf.Approximately(healthSystem.currentHealth, 0.0f))
+            if (Mathf.Approximately(healthSystem.currentHealth, 0.0f))
             {
                 OnDeath?.Invoke();
             }
