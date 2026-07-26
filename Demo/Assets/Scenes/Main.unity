@@ -220,8 +220,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1840618126}
-  - component: {fileID: 1840618127}
   - component: {fileID: 1840618128}
+  - component: {fileID: 1840618127}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -260,9 +260,17 @@ MonoBehaviour:
   - {fileID: 2629257370417029993, guid: ffe9b5db3ee8c5c4fbd4ca5166535b4c, type: 3}
   - {fileID: 2318549658272616526, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
   - {fileID: 3822765123079691983, guid: d2cf9100fe36474418af2417945560cd, type: 3}
-  spawnInterval: 3
+  spawnInterval:
+    min: 4
+    max: 6
+  spiderCount:
+    min: 1
+    max: 3
   minSpawnRadius: 6
   maxSpawnRadius: 10
+  gameOverDocument: {fileID: 0}
+  gameOverRootName: game-over-root
+  restartButtonName: restart-button
 --- !u!114 &1840618128
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -6,11 +6,26 @@ using UnityEngine.SceneManagement;
 
 
 [Serializable]
+public struct FloatRange
+{
+    public float min;
+    public float max;
+}
+[Serializable]
+public struct IntRange
+{
+    public int min;
+    public int max;
+}
+
+
+[Serializable]
 public class GameManager : MonoBehaviour
 {
     // Private Properties
     [SerializeField] private List<GameObject> spiderPrefabs;
-    [SerializeField] private float spawnInterval = 2f;
+    [SerializeField] private FloatRange spawnInterval = new FloatRange { min = 5f, max = 10f };
+    [SerializeField] private IntRange spiderCount = new IntRange { min = 1, max = 3 };
     [SerializeField] private float minSpawnRadius = 6f;
     [SerializeField] private float maxSpawnRadius = 10f;
     [SerializeField] private UIDocument gameOverDocument;
@@ -33,12 +48,25 @@ public class GameManager : MonoBehaviour
         }
 
 
-        // Spawn spider
-        Vector2 spawnOffset = GetRandomSpawnOffset();
-        Vector3 spawnPos = playerTransform.position + (Vector3)spawnOffset;
-        int prefabIndex = UnityEngine.Random.Range(0, spiderPrefabs.Count);
-        GameObject prefabToSpawn = spiderPrefabs[prefabIndex];
-        Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+        // Spawn random amount of spiders
+        int count = UnityEngine.Random.Range(spiderCount.min, spiderCount.max + 1);
+        for (int i = 0; i < count; i++)
+        {
+            Vector2 spawnOffset = GetRandomSpawnOffset();
+            Vector3 spawnPos = playerTransform.position + (Vector3)spawnOffset;
+            int prefabIndex = UnityEngine.Random.Range(0, spiderPrefabs.Count);
+            GameObject prefabToSpawn = spiderPrefabs[prefabIndex];
+            Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+        }
+
+
+        // Queue up next spawn with random interval
+        ScheduleNextSpawn();
+    }
+    private void ScheduleNextSpawn()
+    {
+        float nextInterval = UnityEngine.Random.Range(spawnInterval.min, spawnInterval.max);
+        Invoke(nameof(SpawnSpider), nextInterval);
     }
     private Vector2 GetRandomSpawnOffset()
     {
@@ -91,18 +119,20 @@ public class GameManager : MonoBehaviour
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         playerTransform = playerObj.transform;
         player = playerObj.GetComponent<Player>();
-
-
-        // End game when player dies
         player.OnDeath += EndGame;
 
-
-        // Spawn Spiders in fixed intervals
-        InvokeRepeating(nameof(SpawnSpider), spawnInterval, spawnInterval);
-
-
+    
         // Setup game over UI references
         SetupGameOverUI();
+
+
+        // Spawn spiders with random interval between spawns
+        ScheduleNextSpawn();
+
+
+        // Spawn first wave instantly
+        SpawnSpider();
+
     }
     private void SetupGameOverUI()
     {
