@@ -1,28 +1,33 @@
 using UnityEngine;
 
 
-public class ShooterSpider : SpiderBase
+[RequireComponent(typeof(Theater))]
+public class ShooterSpider : MonoBehaviour, IDamageable
 {
-    // Public Properties
-    [SerializeField] EventfulAnimator eventfulAnimator = null;
+    // Private Properties
+    [SerializeField] HealthSystem healthSystem = new();
+    [SerializeField] EventfulAnimator eventfulAnimator;
+    Transform playerTransform;
+
+
+    // Animation Properties
+    [SerializeField] AnimationClip idleAnim;
+    [SerializeField] AnimationClip walkAnim;
 
 
     // Act Properties
+    [SerializeField] Theater theater;
     [SerializeField] PerpetualAct liveAct = new();
     [SerializeField] GotoAct wanderAct = new();
     [SerializeField] WaitAct waitAct = new();
     [SerializeField] LookAct lookAct = new();
     [SerializeField] LookAct aimAct = new();
     [SerializeField] ShootAct shootAct = new();
-
-
-    // Animation Properties
-    [SerializeField] public AnimationClip idleAnim = null;
-    [SerializeField] public AnimationClip walkAnim = null;
+    [SerializeField] DamageAct damageAct = new();
 
 
     // Static Methods
-    public static Vector3[] GetCameraCornersOnGround(Camera camera)  // Ground= x-y plane
+    public static Vector3[] GetCameraCornersOnGround(Camera camera)  // Ground = x-y plane
     {
         Vector3[] corners = new Vector3[4];
         Vector3[] screenCorners = new Vector3[]
@@ -95,6 +100,14 @@ public class ShooterSpider : SpiderBase
     }
 
 
+    // Interface Methods
+    public void TakeDamage(float amount)
+    {
+        damageAct.amount = amount;
+        damageAct.Perform();
+    }
+
+
     // Override Properties
     void Update()
     {
@@ -118,21 +131,27 @@ public class ShooterSpider : SpiderBase
             eventfulAnimator.Play(idleAnim);
         }
     }
-    protected override void Awake()
+    void Awake()
     {
-        // Animate when damaged
-        damageAct.toFlash = true;
-        damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played
-
-
-        base.Awake();
-
-
         // Setup Animator
         eventfulAnimator = GetComponentInChildren<EventfulAnimator>();
 
-        
-        // Setup Live Act
+
+        // Get Player
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            playerTransform = playerObj.transform;
+        }
+        else
+        {
+            enabled = false;  // Disable if player not found
+        }
+
+
+        // Setup Acts
+        theater = GetComponent<Theater>();
+
         liveAct.prologue += (Act act) =>
         {
             // Do not shoot if player is already stuck
@@ -155,34 +174,34 @@ public class ShooterSpider : SpiderBase
         };
         liveAct.Init(theater, "Live Act");
 
-
-        // Wander Act
         wanderAct.Init(theater, "Wander Act");
 
-
-        // Wait Act
         waitAct.Init(theater, "Wander Wait Act");
 
-
-        // Look Act
         lookAct.turnType = LookAct.TurnType.UntilFacing;
         lookAct.turnSpeed = -1.0f;
         lookAct.Init(theater, "look Act");
 
-
-        // Aim Act
         aimAct.targetTransform = playerTransform;
         aimAct.turnSpeed = -1.0f;
         aimAct.turnType = LookAct.TurnType.Continuous;
         aimAct.followTimeout = 2.0f;
         aimAct.Init(theater, "Aim Act");
 
-
-        // Shoot Act
         shootAct.OnPreEnter += (Act act) =>
         {
             shootAct.direction = GetLookDirection();
         };
         shootAct.Init(theater, "Shoot Act");
+
+        damageAct.OnPostEnter += (Act act) =>
+        {
+            Debug.Log($"Spider damaged -{damageAct.amount}");
+        };
+        damageAct.healthSystem = healthSystem;
+        damageAct.toFlash = true;
+        damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played
+        damageAct.Init(theater, "Damage Act");
+
     }
 }

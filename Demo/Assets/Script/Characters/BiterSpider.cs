@@ -1,26 +1,39 @@
 using UnityEngine;
 
 
-public class BiterSpider : SpiderBase
+[RequireComponent(typeof(Theater))]
+public class BiterSpider : MonoBehaviour, IDamageable
 {
-    // Public Properties
+    // Private Properties
     [SerializeField] bool isVenomous = false;
-    [SerializeField] GameObject venomPrefab = null;
-    [SerializeField] EventfulAnimator eventfulAnimator = null;
+    [SerializeField] GameObject venomPrefab;
+    [SerializeField] HealthSystem healthSystem = new();
+    [SerializeField] EventfulAnimator eventfulAnimator;
+    Transform playerTransform;
 
 
     // Animation Properties
-    [SerializeField] public AnimationClip idleAnim = null;
-    [SerializeField] public AnimationClip walkAnim = null;
+    [SerializeField] AnimationClip idleAnim;
+    [SerializeField] AnimationClip walkAnim;
 
 
     // Act Properties
+    [SerializeField] Theater theater;
     [SerializeField] PerpetualAct liveAct = new();
-    [SerializeField] PerpetualAct lookPerpAct = new();
     [SerializeField] GotoAct chaseAct = new();
+    [SerializeField] PerpetualAct lookPerpAct = new();
     [SerializeField] LookAct lookAct = new();
     [SerializeField] WaitAct delayAttackAct = new();
     [SerializeField] AttackAct biteAct = new();
+    [SerializeField] DamageAct damageAct = new();
+
+
+    // Interface Methods
+    public void TakeDamage(float amount)
+    {
+        damageAct.amount = amount;
+        damageAct.Perform();
+    }
 
 
     // Override Properties
@@ -46,21 +59,36 @@ public class BiterSpider : SpiderBase
             eventfulAnimator.Play(idleAnim);
         }
     }
-    protected override void Awake()
+    void Awake()
     {
-        // Animate when damaged
-        damageAct.toFlash = true;
-        damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damage animation is being played
-
-
-        base.Awake();
+        // Get Player
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            playerTransform = playerObj.transform;
+        }
+        else
+        {
+            enabled = false;  // Disable if player not found
+        }
 
 
         // Setup Animator
         eventfulAnimator = GetComponentInChildren<EventfulAnimator>();
 
 
-        // Setup Live Act
+        // Setup Acts
+        theater = GetComponent<Theater>();
+
+        damageAct.OnPostEnter += (Act act) =>
+        {
+            Debug.Log($"Spider damaged -{damageAct.amount}");
+        };
+        damageAct.toFlash = true;
+        damageAct.healthSystem = healthSystem;
+        damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damaged
+        damageAct.Init(theater, "Damage Act");
+
         liveAct.prologue += (Act act) =>
         {
             // Attack then Wait
@@ -74,23 +102,17 @@ public class BiterSpider : SpiderBase
         };
         liveAct.Init(theater, "Live Act");
 
-
-        // Setup Look & Look Perp Act
         lookAct.turnType = LookAct.TurnType.Continuous;
         lookAct.turnSpeed = -1.0f;
         lookAct.targetTransform = playerTransform;
         lookAct.Init(theater, "Turn Act");
+
         lookPerpAct.prologue += (Act act) => new() { lookAct };
         lookPerpAct.Init(theater, "Look Act");
 
-
-        // Setup Chase Act
         chaseAct.target = playerTransform;
         chaseAct.Init(theater, "Chase Act");
 
-
-        // Setup Attack Act
-        biteAct.target = playerTransform;
         biteAct.OnPostEnter += (Act act) =>
         {
             if (isVenomous)
@@ -98,10 +120,9 @@ public class BiterSpider : SpiderBase
                 Instantiate(venomPrefab, biteAct.target);
             }
         };
+        biteAct.target = playerTransform;
         biteAct.Init(theater, "Bite Attack Act");
 
-
-        // Setup Wait Act
         delayAttackAct.Init(theater, "Wait Act");
     }
 }

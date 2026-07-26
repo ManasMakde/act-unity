@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+
 [RequireComponent(typeof(Theater))]
 public class Player : MonoBehaviour, IDamageable, ITrappable
 {
@@ -8,17 +9,17 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
     public event Action OnDeath;
 
 
-    // Act Properties
-    private Theater theater;
-    public MoveAct moveAct = new();
-    public ShootAct shootAct = new();
-    public DamageAct damageAct = new();
-    public LookAct lookAct = new();
-
-
     // Private Properties
-    [SerializeField] private HealthSystem healthSystem;
-    [SerializeField] private float barrelLength = 1f; // Distance from player center to barrel tip
+    [SerializeField] HealthSystem healthSystem = new();
+    [SerializeField] float barrelLength = 1f;  // Distance from player center to barrel tip
+
+
+    // Act Properties
+    [SerializeField] Theater theater;
+    [SerializeField] MoveAct moveAct = new();
+    [SerializeField] ShootAct shootAct = new();
+    [SerializeField] DamageAct damageAct = new();
+    [SerializeField] LookAct lookAct = new();
 
 
     // Interface Methods
@@ -63,28 +64,25 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
     }
     void Awake()
     {
-        // Setup Health System
-        healthSystem = new HealthSystem();
-
-
         // Setup acts
         theater = GetComponent<Theater>();
 
-        moveAct.Init(theater, "Move Act");
-        
-        shootAct.spawnAtOwner = false;
-        shootAct.Init(theater, "Shoot Act");
-        
-        damageAct.OnPostEnter += (Act act) =>
-        {
-            Debug.Log($"OUCH! Player was damaged -{damageAct.amount}");
-        };
-        damageAct.healthSystem = healthSystem;
-        damageAct.Init(theater, "Damage Act");
-      
         lookAct.turnType = LookAct.TurnType.Continuous;
         lookAct.turnSpeed = -1.0f;
         lookAct.Init(theater, "Look Act");
         lookAct.Perform();
+
+        moveAct.Init(theater, "Move Act");
+
+        shootAct.spawnAtOwner = false;
+        shootAct.Init(theater, "Shoot Act");
+
+        damageAct.OnPostEnter += (Act act) =>
+        {
+            Debug.Log($"OUCH! Player was damaged -{damageAct.amount}");
+        };
+        damageAct.toFlash = true;
+        damageAct.healthSystem = healthSystem;
+        damageAct.Init(theater, "Damage Act");
     }
 }

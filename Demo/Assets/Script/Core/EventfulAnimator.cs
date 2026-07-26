@@ -120,7 +120,6 @@ public class EventfulAnimator : MonoBehaviour
     }
 
 
-
     // Override Methods
     void Awake()
     {
@@ -134,7 +133,7 @@ public class EventfulAnimator : MonoBehaviour
         // Iterate and prepare each clip
         foreach (var clip in runtimeAnimatorController.animationClips)
         {
-            // Remove only this scripts previously added events, keep custom ones
+            // Remove previously added events
             string startedName = nameof(OnClipStarted);
             string endedName = nameof(OnClipEnded);
             clip.events = clip.events.Where(e => e.functionName != startedName && e.functionName != endedName).ToArray();
