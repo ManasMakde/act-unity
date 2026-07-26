@@ -38,11 +38,29 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
     }
 
 
+    // Private Methods
+    private Rect GetBorderFromCamera()
+    {
+        Camera mainCamera = Camera.main;
+        if (mainCamera == null)
+        {
+            return new Rect();
+        }
+
+        float cameraHeight = 2f * mainCamera.orthographicSize;
+        float cameraWidth = cameraHeight * mainCamera.aspect;
+        Vector2 cameraCenter = mainCamera.transform.position;
+        return new Rect(cameraCenter.x - cameraWidth * 0.5f, cameraCenter.y - cameraHeight * 0.5f, cameraWidth, cameraHeight);
+    }
+
+
     // Override Methods
     void Update()
     {
         // Move
+        moveAct.border = GetBorderFromCamera();
         moveAct.direction = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+        moveAct.Perform();
 
 
         // Look towards mouse constantly
@@ -58,10 +76,6 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
             shootAct.Perform();
         }
     }
-    void FixedUpdate()
-    {
-        moveAct.Perform();
-    }
     void Awake()
     {
         // Setup acts
@@ -72,6 +86,8 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
         lookAct.Init(theater, "Look Act");
         lookAct.Perform();
 
+        moveAct.border = GetBorderFromCamera();
+        moveAct.useBorder = true;
         moveAct.Init(theater, "Move Act");
 
         shootAct.spawnAtOwner = false;

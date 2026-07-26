@@ -133,26 +133,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7cb2a23cbcf93a348970b3d44b90c3b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BiterSpider
-  damageAct:
-    isVerbose: 1
-    animation: {fileID: 7400000, guid: 911f4d53354ace142b8c6d24ebdbc014, type: 2}
-    amount: 5
-    canDie: 1
-    toFlash: 0
-    flashDuration: 0.5
-    flashInterval: 0.1
-    flashAlpha: 0.3
-    eventfulAnimator: {fileID: 0}
-    spriteRenderer: {fileID: 0}
   isVenomous: 0
   venomPrefab: {fileID: 0}
   eventfulAnimator: {fileID: 2113793283981003656}
   idleAnim: {fileID: 7400000, guid: a1eccbddce5026443b11de023945ffd7, type: 2}
   walkAnim: {fileID: 7400000, guid: 4159312316071484f9014bb6ace86943, type: 2}
+  theater: {fileID: 0}
   liveAct:
-    isVerbose: 0
-    toPerpetuate: 1
-  lookPerpAct:
     isVerbose: 0
     toPerpetuate: 1
   chaseAct:
@@ -162,6 +149,9 @@ MonoBehaviour:
     location: {x: 0, y: 0}
     target: {fileID: 0}
     rb: {fileID: 0}
+  lookPerpAct:
+    isVerbose: 0
+    toPerpetuate: 1
   lookAct:
     isVerbose: 0
     targetTransform: {fileID: 0}
@@ -180,6 +170,17 @@ MonoBehaviour:
     animation: {fileID: 7400000, guid: f135535b47ce4ce4cab0b0534afd4b5a, type: 2}
     target: {fileID: 0}
     eventfulAnimator: {fileID: 0}
+  damageAct:
+    isVerbose: 1
+    animation: {fileID: 7400000, guid: 911f4d53354ace142b8c6d24ebdbc014, type: 2}
+    amount: 5
+    canDie: 1
+    toFlash: 0
+    flashDuration: 0.5
+    flashInterval: 0.1
+    flashAlpha: 0.3
+    eventfulAnimator: {fileID: 0}
+    spriteRenderer: {fileID: 0}
 --- !u!1 &8356448613740198683
 GameObject:
   m_ObjectHideFlags: 0
@@ -264,7 +265,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 4723107735738678597, guid: e20ef19bb20e4e042b8d669fecfdabda, type: 3}
-  m_Color: {r: 1, g: 0, b: 0.026891708, a: 1}
+  m_Color: {r: 0.9716981, g: 0.23299871, b: 0.19708972, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

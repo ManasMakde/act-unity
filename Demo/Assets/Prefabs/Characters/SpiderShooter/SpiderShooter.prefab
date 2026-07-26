@@ -54,15 +54,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6005052005793894462, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
       propertyPath: m_Color.b
-      value: 1
+      value: 0.9245283
       objectReference: {fileID: 0}
     - target: {fileID: 6005052005793894462, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
       propertyPath: m_Color.g
-      value: 0.86256146
+      value: 0.679301
       objectReference: {fileID: 0}
     - target: {fileID: 6005052005793894462, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
       propertyPath: m_Color.r
-      value: 0
+      value: 0.047970813
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 7134527181943191076, guid: fa71c0d64f881794d95792ed4c1f7516, type: 3}
@@ -101,18 +101,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5cfb08ebcf0b3da49b7268bc25f8882e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShooterSpider
-  damageAct:
-    isVerbose: 0
-    animation: {fileID: 7400000, guid: 911f4d53354ace142b8c6d24ebdbc014, type: 2}
-    amount: 5
-    canDie: 1
-    toFlash: 0
-    flashDuration: 0.5
-    flashInterval: 0.1
-    flashAlpha: 0.3
-    eventfulAnimator: {fileID: 0}
-    spriteRenderer: {fileID: 0}
   eventfulAnimator: {fileID: 1802680986873559215}
+  idleAnim: {fileID: 7400000, guid: a1eccbddce5026443b11de023945ffd7, type: 2}
+  walkAnim: {fileID: 7400000, guid: 4159312316071484f9014bb6ace86943, type: 2}
+  theater: {fileID: 0}
   liveAct:
     isVerbose: 0
     toPerpetuate: 1
@@ -148,10 +140,19 @@ MonoBehaviour:
     isVerbose: 0
     projectilePrefab: {fileID: 2910026093151187665, guid: 130b1cd27160d2748ad4fff91b56351b, type: 3}
     delayAmount: 0
-    animation: {fileID: 7400000, guid: f135535b47ce4ce4cab0b0534afd4b5a, type: 2}
     spawnLocation: {x: 0, y: 0}
     spawnAtOwner: 1
     direction: {x: 0, y: 0}
+    animation: {fileID: 7400000, guid: f135535b47ce4ce4cab0b0534afd4b5a, type: 2}
     eventfulAnimator: {fileID: 0}
-  idleAnim: {fileID: 7400000, guid: a1eccbddce5026443b11de023945ffd7, type: 2}
-  walkAnim: {fileID: 7400000, guid: 4159312316071484f9014bb6ace86943, type: 2}
+  damageAct:
+    isVerbose: 0
+    animation: {fileID: 7400000, guid: 911f4d53354ace142b8c6d24ebdbc014, type: 2}
+    amount: 5
+    canDie: 1
+    toFlash: 0
+    flashDuration: 0.5
+    flashInterval: 0.1
+    flashAlpha: 0.3
+    eventfulAnimator: {fileID: 0}
+    spriteRenderer: {fileID: 0}

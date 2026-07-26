@@ -228,6 +228,8 @@ public class MoveAct : Act
 {
     // Public Properties
     [SerializeField] public float speed = 5f;
+    [SerializeField] public bool useBorder = false;
+    [SerializeField] public Rect border = new Rect(-10f, -10f, 20f, 20f);
     [HideInInspector] public Vector2 direction = new();
     [HideInInspector] public Rigidbody2D rb;
 
@@ -247,7 +249,15 @@ public class MoveAct : Act
     }
     protected override Outcome Enter()
     {
-        rb.MovePosition(rb.position + direction * speed * GetPhysicsDelta());
+        Vector2 nextPosition = rb.position + direction * speed * GetPhysicsDelta();
+
+        if (useBorder)
+        {
+            nextPosition.x = Mathf.Clamp(nextPosition.x, border.xMin, border.xMax);
+            nextPosition.y = Mathf.Clamp(nextPosition.y, border.yMin, border.yMax);
+        }
+
+        rb.MovePosition(nextPosition);
         return Outcome.Success;
     }
     protected override void Exit()
