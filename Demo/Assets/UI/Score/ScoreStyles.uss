@@ -1,0 +1,43 @@
+:root {
+    /* shared spacing and sizing variables */
+    --score-tracker-edge-gap-top: 1%;
+    --score-tracker-edge-gap-left: 1%;
+    --score-tracker-padding-vertical: 6px;
+    --score-tracker-padding-horizontal: 10px;
+    --score-tracker-border-radius: 4px;
+    --score-tracker-border-width: 1px;
+    --score-label-font-size: 12px;
+    --score-value-font-size: 14px;
+    --score-value-margin-left: 4px;
+    --root-background-color: rgba(0, 0, 0, 0.5);
+    --text-color: white;
+    --button-border-color: rgba(255, 255, 255, 0.3);
+}
+.score-tracker-root {
+    position: absolute;
+    top: var(--score-tracker-edge-gap-top);
+    left: var(--score-tracker-edge-gap-left);
+    padding-top: var(--score-tracker-padding-vertical);
+    padding-bottom: var(--score-tracker-padding-vertical);
+    padding-left: var(--score-tracker-padding-horizontal);
+    padding-right: var(--score-tracker-padding-horizontal);
+    background-color: var(--root-background-color);
+    border-radius: var(--score-tracker-border-radius);
+    border-width: var(--score-tracker-border-width);
+    border-color: var(--button-border-color);
+    flex-direction: row;
+    align-items: center;
+}
+.score-label {
+    font-size: var(--score-label-font-size);
+    color: var(--text-color);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+.score-value {
+    font-size: var(--score-value-font-size);
+    color: var(--text-color);
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    margin-left: var(--score-value-margin-left);
+}

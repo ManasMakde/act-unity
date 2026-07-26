@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Score/ScoreStyles.uss?fileID=7433441132597879392&amp;guid=43ca1f32d5e4ba048b828ad288565ec7&amp;type=3#ScoreStyles"/>
+    <ui:VisualElement name="score-tracker-root" class="score-tracker-root">
+        <ui:Label name="score-label" text="Score:" class="score-label"/>
+        <ui:Label name="score-value" text="0" class="score-value"/>
+    </ui:VisualElement>
+</ui:UXML>

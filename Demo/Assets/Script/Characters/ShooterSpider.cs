@@ -1,9 +1,14 @@
+using System;
 using UnityEngine;
 
 
 [RequireComponent(typeof(Theater))]
 public class ShooterSpider : MonoBehaviour, IDamageable
 {
+    // Public Actions
+    public event Action OnKilled;
+
+
     // Private Properties
     [SerializeField] HealthSystem healthSystem = new();
     [SerializeField] EventfulAnimator eventfulAnimator;
@@ -69,7 +74,7 @@ public class ShooterSpider : MonoBehaviour, IDamageable
         float totalArea = areaA + areaB;
 
         Vector3 a, b, c;
-        if (Random.value < (areaA / totalArea))
+        if (UnityEngine.Random.value < (areaA / totalArea))
         {
             a = p0; b = p1; c = p2;
         }
@@ -78,8 +83,8 @@ public class ShooterSpider : MonoBehaviour, IDamageable
             a = p0; b = p2; c = p3;
         }
 
-        float r1 = Random.value;
-        float r2 = Random.value;
+        float r1 = UnityEngine.Random.value;
+        float r2 = UnityEngine.Random.value;
 
         if (r1 + r2 > 1f)
         {
@@ -194,6 +199,13 @@ public class ShooterSpider : MonoBehaviour, IDamageable
         damageAct.healthSystem = healthSystem;
         damageAct.toFlash = true;
         damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played
+        damageAct.OnPostExit += (Act act) =>
+        {
+            if (Mathf.Approximately(healthSystem.currentHealth, 0.0f))
+            {
+                OnKilled?.Invoke();
+            }
+        };
         damageAct.Init(theater, "Damage Act");
 
     }

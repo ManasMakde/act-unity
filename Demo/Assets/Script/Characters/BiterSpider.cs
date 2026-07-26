@@ -1,9 +1,14 @@
+using System;
 using UnityEngine;
 
 
 [RequireComponent(typeof(Theater))]
 public class BiterSpider : MonoBehaviour, IDamageable
 {
+    // Public Actions
+    public event Action OnKilled;
+
+
     // Private Properties
     [SerializeField] bool isVenomous = false;
     [SerializeField] GameObject venomPrefab;
@@ -120,6 +125,13 @@ public class BiterSpider : MonoBehaviour, IDamageable
         damageAct.toFlash = true;
         damageAct.healthSystem = healthSystem;
         damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damaged
+        damageAct.OnPostExit += (Act act) =>
+        {
+            if (Mathf.Approximately(healthSystem.currentHealth, 0.0f))
+            {
+                OnKilled?.Invoke();
+            }
+        };
         damageAct.Init(theater, "Damage Act");
     }
 }

@@ -28,12 +28,19 @@ public class GameManager : MonoBehaviour
     [SerializeField] private UIDocument startGameDocument;
     [SerializeField] private string startGameRootName = "instructions-root";
     [SerializeField] private string startButtonName = "start-button";
+    [SerializeField] private UIDocument scoreDocument;
+    [SerializeField] private string scoreRootName = "score-tracker-root";
+    [SerializeField] private string scoreValueName = "score-value";
+    [SerializeField] private int pointsPerKill = 1;
     private Transform playerTransform;
     private Player player;
     private VisualElement gameOverRoot;
     private Button restartButton;
     private VisualElement startGameRoot;
     private Button startButton;
+    private VisualElement scoreRoot;
+    private Label scoreValueLabel;
+    private int currentScore = 0;
 
 
     // Private Methods
@@ -55,7 +62,8 @@ public class GameManager : MonoBehaviour
             Vector3 spawnPos = playerTransform.position + (Vector3)spawnOffset;
             int prefabIndex = UnityEngine.Random.Range(0, spiderPrefabs.Count);
             GameObject prefabToSpawn = spiderPrefabs[prefabIndex];
-            Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+            GameObject spawnedSpider = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
+            SubscribeToSpiderDeath(spawnedSpider);
         }
 
 
@@ -74,6 +82,37 @@ public class GameManager : MonoBehaviour
         float radians = angle * Mathf.Deg2Rad;
 
         return new Vector2(Mathf.Cos(radians), Mathf.Sin(radians)) * radius;
+    }
+    private void SubscribeToSpiderDeath(GameObject spiderObj)
+    {
+        // Return if spawned spider is not damageable
+        IDamageable damageable = spiderObj.GetComponent<IDamageable>();
+        if (damageable == null)
+        {
+            Debug.LogWarning("SubscribeToSpiderDeath skipped, spawned spider has no IDamageable");
+            return;
+        }
+
+        damageable.OnKilled += OnSpiderKilled;
+    }
+    private void OnSpiderKilled()
+    {
+        AddScore(pointsPerKill);
+    }
+    private void AddScore(int amount)
+    {
+        // Increase score
+        currentScore += amount;
+
+
+        // Return if score label missing
+        if (scoreValueLabel == null)
+        {
+            Debug.LogWarning("AddScore skipped, score value label not found");
+            return;
+        }
+
+        scoreValueLabel.text = currentScore.ToString();
     }
     private void EndGame()
     {
@@ -137,6 +176,13 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
 
 
+        // Show score UI now that game has begun
+        if (scoreRoot != null)
+        {
+            scoreRoot.style.display = DisplayStyle.Flex;
+        }
+
+
         // Enable player now that game has begun
         player.enabled = true;
 
@@ -157,7 +203,7 @@ public class GameManager : MonoBehaviour
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         playerTransform = playerObj.transform;
         player = playerObj.GetComponent<Player>();
-        player.OnDeath += EndGame;
+        player.OnKilled += EndGame;
 
 
         // Disable player until game actually begins
@@ -172,8 +218,37 @@ public class GameManager : MonoBehaviour
         SetupStartGameUI();
 
 
+        // Setup score UI references
+        SetupScoreUI();
+
+
         // Show start screen and wait for player input
         ShowStartGameScreen();
+    }
+    private void SetupScoreUI()
+    {
+        // Return if score document is missing
+        if (scoreDocument == null)
+        {
+            Debug.LogWarning("SetupScoreUI skipped, score document not assigned");
+            return;
+        }
+
+        VisualElement root = scoreDocument.rootVisualElement;
+        scoreRoot = root.Q<VisualElement>(scoreRootName);
+        scoreValueLabel = root.Q<Label>(scoreValueName);
+
+
+        // Return if expected elements are missing
+        if (scoreRoot == null || scoreValueLabel == null)
+        {
+            Debug.LogWarning("SetupScoreUI skipped, expected elements not found in UI document");
+            return;
+        }
+
+
+        // Hide score UI until game actually begins
+        scoreRoot.style.display = DisplayStyle.None;
     }
     private void SetupGameOverUI()
     {

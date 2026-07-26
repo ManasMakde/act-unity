@@ -6,7 +6,7 @@ using UnityEngine;
 public class Player : MonoBehaviour, IDamageable, ITrappable
 {
     // Public Actions
-    public event Action OnDeath;
+    public event Action OnKilled;
 
 
     // Private Properties
@@ -99,7 +99,7 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
         {
             if (Mathf.Approximately(healthSystem.currentHealth, 0.0f))
             {
-                OnDeath?.Invoke();
+                OnKilled?.Invoke();
             }
         };
         damageAct.Init(theater, "Damage Act");
