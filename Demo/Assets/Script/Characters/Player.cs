@@ -77,12 +77,15 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
         shootAct.spawnAtOwner = false;
         shootAct.Init(theater, "Shoot Act");
 
-        damageAct.OnPostEnter += (Act act) =>
-        {
-            Debug.Log($"OUCH! Player was damaged -{damageAct.amount}");
-        };
         damageAct.toFlash = true;
         damageAct.healthSystem = healthSystem;
+        damageAct.OnPostExit += (Act act) =>
+        {
+            if(Mathf.Approximately(healthSystem.currentHealth, 0.0f))
+            {
+                OnDeath?.Invoke();
+            }
+        };
         damageAct.Init(theater, "Damage Act");
     }
 }

@@ -262,10 +262,11 @@ public class ShootAct : Act
     // Public Properties
     [SerializeField] public GameObject projectilePrefab;
     [SerializeField] public float delayAmount = 0f;
-    public AnimationClip animation;
     [HideInInspector] public Vector2 spawnLocation = new();
     [HideInInspector] public bool spawnAtOwner = true;
     [HideInInspector] public Vector2 direction = new();
+    [HideInInspector] public System.Type[] ignoreList;
+    public AnimationClip animation;
 
 
     // Private Properties
@@ -290,10 +291,17 @@ public class ShootAct : Act
         GameObject bullet = MonoBehaviour.Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
 
 
-        // Set bullet direction
+        // Set bullet direction and owner
         ProjectileBase bulletScript = bullet.GetComponent<ProjectileBase>();
         bulletScript.direction = direction;
         bulletScript.SetOwner(GetOwner());
+
+
+        // Set ignore list if any provided
+        if (ignoreList != null)
+        {
+            bulletScript.SetIgnoreList(ignoreList);
+        }
     }
     private void OnAnimationEnded(AnimationClip clip)
     {

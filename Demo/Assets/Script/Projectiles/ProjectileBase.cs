@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
+
 public class ProjectileBase : MonoBehaviour
 {
     // Public Methods
@@ -13,6 +14,7 @@ public class ProjectileBase : MonoBehaviour
 
     // Private Methods
     private Rigidbody2D rb;
+    private System.Type[] ignoreList;
 
 
     // Public Methods
@@ -20,21 +22,53 @@ public class ProjectileBase : MonoBehaviour
     {
         owner = newOwner;
     }
-
-
-    // Protected
-    protected virtual void HitBehaviour(Collider2D other)
+    public void SetIgnoreList(params System.Type[] newIgnoreList)
     {
+        ignoreList = newIgnoreList;
     }
 
 
+    // Protected
+    protected virtual void HitBehaviour(Collider2D other) { }
+
+
     // Private Methods
+    private bool HasIgnoredComponent(Collider2D other)
+    {
+        // Return false if list not set
+        if (ignoreList == null)
+        {
+            return false;
+        }
+
+
+        // Check each ignore type against hit object
+        foreach (System.Type ignoreType in ignoreList)
+        {
+            if (ignoreType == null)
+            {
+                continue;
+            }
+            if (other.GetComponent(ignoreType) != null)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     private void OnTriggerEnter2D(Collider2D other)
     {
         // Return if to ignore owner
         if (other.gameObject == owner && toIgnoreOwner)
         {
-            return;   
+            return;
+        }
+
+
+        // Return if hit object has an ignored component
+        if (HasIgnoredComponent(other))
+        {
+            return;
         }
 
 

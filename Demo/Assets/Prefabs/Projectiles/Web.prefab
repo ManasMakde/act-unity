@@ -173,4 +173,6 @@ MonoBehaviour:
   speed: 10
   toIgnoreOwner: 1
   direction: {x: 0, y: 0}
+  ignoreList:
+  - {fileID: 0}
   stickyEffectPrefab: {fileID: 4735651071687455270, guid: 8e6106f10da1a5244a03c27ac7517bf5, type: 3}

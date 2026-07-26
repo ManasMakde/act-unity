@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
+using UnityEngine.SceneManagement;
 
 
 [Serializable]
@@ -11,8 +13,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float spawnInterval = 2f;
     [SerializeField] private float minSpawnRadius = 6f;
     [SerializeField] private float maxSpawnRadius = 10f;
+    [SerializeField] private UIDocument gameOverDocument;
+    [SerializeField] private string gameOverRootName = "game-over-root";
+    [SerializeField] private string restartButtonName = "restart-button";
     private Transform playerTransform;
     private Player player;
+    private VisualElement gameOverRoot;
+    private Button restartButton;
 
 
     // Private Methods
@@ -21,6 +28,7 @@ public class GameManager : MonoBehaviour
         // Return if conditions for spider spawning are not met
         if (spiderPrefabs == null || spiderPrefabs.Count == 0 || playerTransform == null)
         {
+            Debug.LogWarning("SpawnSpider skipped, missing prefabs or player transform");
             return;
         }
 
@@ -50,8 +58,29 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
 
 
-        // End Game Message
-        Debug.Log("You loose!");
+        // Show game over screen
+        ShowGameOverScreen();
+    }
+    private void ShowGameOverScreen()
+    {
+        // Return if game over root is missing
+        if (gameOverRoot == null)
+        {
+            Debug.LogWarning("ShowGameOverScreen skipped, game over root not found");
+            return;
+        }
+
+        gameOverRoot.style.display = DisplayStyle.Flex;
+    }
+    private void RestartGame()
+    {
+        // Unfreeze game before reload
+        Time.timeScale = 1f;
+
+
+        // Reload current scene
+        Scene currentScene = SceneManager.GetActiveScene();
+        SceneManager.LoadScene(currentScene.name);
     }
 
 
@@ -70,5 +99,26 @@ public class GameManager : MonoBehaviour
 
         // Spawn Spiders in fixed intervals
         InvokeRepeating(nameof(SpawnSpider), spawnInterval, spawnInterval);
+
+
+        // Setup game over UI references
+        SetupGameOverUI();
+    }
+    private void SetupGameOverUI()
+    {
+        gameOverDocument = GetComponent<UIDocument>();
+        VisualElement root = gameOverDocument.rootVisualElement;
+        gameOverRoot = root.Q<VisualElement>(gameOverRootName);
+        restartButton = root.Q<Button>(restartButtonName);
+
+
+        // Return if expected elements are missing
+        if (gameOverRoot == null || restartButton == null)
+        {
+            Debug.LogWarning("SetupGameOverUI skipped, expected elements not found in UI document");
+            return;
+        }
+
+        restartButton.clicked += RestartGame;
     }
 }

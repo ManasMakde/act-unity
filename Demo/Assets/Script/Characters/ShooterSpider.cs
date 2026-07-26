@@ -154,10 +154,6 @@ public class ShooterSpider : MonoBehaviour, IDamageable
 
         liveAct.prologue += (Act act) =>
         {
-            // Do not shoot if player is already stuck
-            bool isPlayerStuck = playerTransform == null || (playerTransform.GetComponentInChildren<StickyEffect>() != null);
-
-
             // Set random location to wander & look towards
             Vector2 randomPosition = GetRandomPointInView(Camera.main);
             wanderAct.location = randomPosition;
@@ -167,8 +163,8 @@ public class ShooterSpider : MonoBehaviour, IDamageable
             // Wander to Random positions -> Aim -> Shoot -> Wait
             return Act.Seq(new() {
                 new() { wanderAct, lookAct },
-                isPlayerStuck? new() {} : new() { aimAct },  // Don't aim if player is already stuck
-                isPlayerStuck ? new() {} : new() { shootAct },  // Don't shoot if player is already stuck
+                new() { aimAct },
+                new() { shootAct },
                 new() { waitAct }
             });
         };
@@ -192,12 +188,9 @@ public class ShooterSpider : MonoBehaviour, IDamageable
         {
             shootAct.direction = GetLookDirection();
         };
+        shootAct.ignoreList = new System.Type[] { typeof(ShooterSpider), typeof(BiterSpider) };
         shootAct.Init(theater, "Shoot Act");
 
-        damageAct.OnPostEnter += (Act act) =>
-        {
-            Debug.Log($"Spider damaged -{damageAct.amount}");
-        };
         damageAct.healthSystem = healthSystem;
         damageAct.toFlash = true;
         damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played

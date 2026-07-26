@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/GameOverStyles.uss?fileID=7433441132597879392&amp;guid=55d3fe87e93fefb4da53dee021889e8a&amp;type=3#GameOverStyles"/>
+    <ui:VisualElement name="game-over-root" enabled="true" class="game-over-root" style="display: none;">
+        <ui:VisualElement name="game-over-bar" class="game-over-bar">
+            <ui:Label name="game-over-text" text="Game Over" class="game-over-text"/>
+        </ui:VisualElement>
+        <ui:Button name="restart-button" text="Restart" class="restart-button"/>
+    </ui:VisualElement>
+</ui:UXML>

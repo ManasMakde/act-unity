@@ -117,10 +117,6 @@ public class BiterSpider : MonoBehaviour, IDamageable
 
         delayAttackAct.Init(theater, "Wait Act");
 
-        damageAct.OnPostEnter += (Act act) =>
-        {
-            Debug.Log($"Spider damaged -{damageAct.amount}");
-        };
         damageAct.toFlash = true;
         damageAct.healthSystem = healthSystem;
         damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damaged

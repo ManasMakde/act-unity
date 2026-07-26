@@ -1,5 +1,6 @@
 using UnityEngine;
 
+
 public class Web : ProjectileBase
 {
     [SerializeField] private GameObject stickyEffectPrefab;
@@ -11,16 +12,16 @@ public class Web : ProjectileBase
         if(existingSticky != null)
         {
             existingSticky.Restart();
-            return;
+            // return;
         }
 
 
         // Return if not trappable
-        ITrappable trappable = other.GetComponent<ITrappable>();
-        if (trappable == null)
-        {
-            return;
-        }
+        // ITrappable trappable = other.GetComponent<ITrappable>();
+        // if (trappable == null)
+        // {
+        //     return;
+        // }
 
 
         // Apply sticky effect

@@ -11,6 +11,7 @@ public class StickyEffect : MonoBehaviour
     [SerializeField] private float trapDuration = 3f;
     private ITrappable target;
     private float lockedZRotation;
+    private bool isEnding = false;  // Marked true right before this sticky untraps or bails
 
 
     // Public Methods
@@ -25,6 +26,22 @@ public class StickyEffect : MonoBehaviour
     // Private Methods
     private void UntrapAndDestroy()
     {
+        // Mark self as ending before checking siblings
+        isEnding = true;
+
+
+        // Skip untrap if another non ending sticky exists on target
+        StickyEffect[] siblingStickies = transform.parent.GetComponentsInChildren<StickyEffect>();
+        foreach (StickyEffect sticky in siblingStickies)
+        {
+            if (sticky != this && !sticky.isEnding)
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
+
+
         target.Untrap();
         OnEffectEnd?.Invoke();  // Broadcast before destroy so listeners can react
         Destroy(gameObject);
