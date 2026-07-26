@@ -1,0 +1,209 @@
+:root {
+    /* shared spacing and sizing variables */
+    --instructions-edge-gap: 24px;
+    --instructions-title-font-size: 40px;
+    --instructions-title-letter-spacing: 2px;
+    --content-padding-horizontal: 4%;
+    --panel-flex-grow: 1;
+    --controls-section-margin: 24px;
+    --control-label-font-size: 16px;
+    --control-label-margin-top: 12px;
+    --control-label-max-width: 160px;
+    --divider-width: 2px;
+    --divider-margin-vertical: 100px;
+    --divider-margin-horizontal: 6%;
+    --legend-item-margin-bottom: 24px;
+    --legend-circle-size: 18px;
+    --legend-circle-margin-right: 12px;
+    --legend-circle-border-radius: 50%;
+    --legend-circle-red-color: rgb(200, 40, 40);
+    --legend-circle-green-color: rgb(40, 160, 70);
+    --legend-circle-blue-color: rgb(40, 100, 200);
+    --legend-label-font-size: 18px;
+    --arrow-key-size: 40px;
+    --arrow-key-gap: 4px;
+    --arrow-key-border-width: 2px;
+    --arrow-key-label-font-size: 16px;
+    --mouse-icon-width: 56px;
+    --mouse-icon-height: 90px;
+    --mouse-icon-border-width: 2px;
+    --mouse-icon-border-radius: 24px;
+    --mouse-buttons-row-height: 40%;
+    --start-button-width: 160px;
+    --start-button-height: 48px;
+    --start-button-font-size: 20px;
+    --start-button-border-radius: 6px;
+    --start-button-border-width: 2px;
+    --root-background-color: rgba(0, 0, 0, 0.95);
+    --text-color: white;
+    --button-background-color: rgba(30, 30, 30, 0.9);
+    --button-hover-background-color: rgba(50, 50, 50, 0.9);
+    --button-active-background-color: rgba(70, 70, 70, 0.9);
+    --button-border-color: rgba(255, 255, 255, 0.4);
+    --transition-duration: 0.15s;
+}
+.instructions-root {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: var(--root-background-color);
+}
+.instructions-title {
+    font-size: var(--instructions-title-font-size);
+    color: var(--text-color);
+    -unity-font-style: bold;
+    letter-spacing: var(--instructions-title-letter-spacing);
+    -unity-text-align: middle-center;
+    margin-top: var(--instructions-edge-gap);
+}
+.instructions-content {
+    width: 100%;
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding-left: var(--content-padding-horizontal);
+    padding-right: var(--content-padding-horizontal);
+}
+.controls-panel {
+    flex-grow: var(--panel-flex-grow);
+    flex-basis: 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+.controls-section {
+    align-items: center;
+    justify-content: center;
+    margin-left: var(--controls-section-margin);
+    margin-right: var(--controls-section-margin);
+}
+/* arrow key layout */
+.arrow-keys-group {
+    align-items: center;
+    justify-content: center;
+}
+.arrow-key-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+.arrow-key {
+    width: var(--arrow-key-size);
+    height: var(--arrow-key-size);
+    border-width: var(--arrow-key-border-width);
+    border-color: var(--text-color);
+    margin: var(--arrow-key-gap);
+    align-items: center;
+    justify-content: center;
+}
+.arrow-key-label {
+    font-size: var(--arrow-key-label-font-size);
+    color: var(--text-color);
+    -unity-text-align: middle-center;
+}
+/* mouse icon layout */
+.mouse-icon {
+    width: var(--mouse-icon-width);
+    height: var(--mouse-icon-height);
+    border-width: var(--mouse-icon-border-width);
+    border-color: var(--text-color);
+    border-radius: var(--mouse-icon-border-radius);
+    overflow: hidden;
+    flex-direction: column;
+}
+.mouse-buttons-row {
+    height: var(--mouse-buttons-row-height);
+    flex-direction: row;
+    border-bottom-width: var(--mouse-icon-border-width);
+    border-bottom-color: var(--text-color);
+}
+.mouse-left-button {
+    flex-grow: 1;
+    background-color: var(--text-color);
+    border-right-width: var(--mouse-icon-border-width);
+    border-right-color: var(--text-color);
+}
+.mouse-right-button {
+    flex-grow: 1;
+}
+.mouse-body-lower {
+    flex-grow: 1;
+}
+.control-label {
+    font-size: var(--control-label-font-size);
+    color: var(--text-color);
+    -unity-text-align: middle-center;
+    margin-top: var(--control-label-margin-top);
+    max-width: var(--control-label-max-width);
+    white-space: normal;
+}
+.divider {
+    width: var(--divider-width);
+    align-self: stretch;
+    background-color: var(--text-color);
+    margin-top: var(--divider-margin-vertical);
+    margin-bottom: var(--divider-margin-vertical);
+    margin-left: var(--divider-margin-horizontal);
+    margin-right: var(--divider-margin-horizontal);
+}
+.legend-section {
+    flex-grow: var(--panel-flex-grow);
+    flex-basis: 0;
+    align-items: stretch;
+    justify-content: center;
+    padding-left: 2%;
+}
+.legend-item {
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--legend-item-margin-bottom);
+}
+.legend-circle {
+    width: var(--legend-circle-size);
+    height: var(--legend-circle-size);
+    border-radius: var(--legend-circle-border-radius);
+    flex-shrink: 0;
+    margin-right: var(--legend-circle-margin-right);
+}
+.legend-circle-red {
+    background-color: var(--legend-circle-red-color);
+}
+.legend-circle-green {
+    background-color: var(--legend-circle-green-color);
+}
+.legend-circle-blue {
+    background-color: var(--legend-circle-blue-color);
+}
+.legend-label {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 0;
+    font-size: var(--legend-label-font-size);
+    color: var(--text-color);
+    -unity-text-align: middle-left;
+    white-space: normal;
+}
+.start-button {
+    width: var(--start-button-width);
+    height: var(--start-button-height);
+    font-size: var(--start-button-font-size);
+    align-self: center;
+    background-color: var(--button-background-color);
+    border-radius: var(--start-button-border-radius);
+    border-width: var(--start-button-border-width);
+    border-color: var(--button-border-color);
+    color: var(--text-color);
+    margin-bottom: var(--instructions-edge-gap);
+    transition-duration: var(--transition-duration);
+}
+.start-button:hover {
+    background-color: var(--button-hover-background-color);
+}
+.start-button:active {
+    background-color: var(--button-active-background-color);
+}

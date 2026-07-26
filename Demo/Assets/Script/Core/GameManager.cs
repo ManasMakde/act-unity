@@ -25,10 +25,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] private UIDocument gameOverDocument;
     [SerializeField] private string gameOverRootName = "game-over-root";
     [SerializeField] private string restartButtonName = "restart-button";
+    [SerializeField] private UIDocument startGameDocument;
+    [SerializeField] private string startGameRootName = "instructions-root";
+    [SerializeField] private string startButtonName = "start-button";
     private Transform playerTransform;
     private Player player;
     private VisualElement gameOverRoot;
     private Button restartButton;
+    private VisualElement startGameRoot;
+    private Button startButton;
 
 
     // Private Methods
@@ -104,6 +109,45 @@ public class GameManager : MonoBehaviour
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
     }
+    private void ShowStartGameScreen()
+    {
+        // Freeze game until player starts
+        Time.timeScale = 0f;
+
+
+        // Return if start game root is missing
+        if (startGameRoot == null)
+        {
+            Debug.LogWarning("ShowStartGameScreen skipped, start game root not found");
+            return;
+        }
+
+        startGameRoot.style.display = DisplayStyle.Flex;
+    }
+    private void BeginGame()
+    {
+        // Hide start game screen if present
+        if (startGameRoot != null)
+        {
+            startGameRoot.style.display = DisplayStyle.None;
+        }
+
+
+        // Unfreeze game
+        Time.timeScale = 1f;
+
+
+        // Enable player now that game has begun
+        player.enabled = true;
+
+
+        // Spawn spiders with random interval between spawns
+        ScheduleNextSpawn();
+
+
+        // Spawn first wave instantly
+        SpawnSpider();
+    }
 
 
     // Override Methods
@@ -115,22 +159,31 @@ public class GameManager : MonoBehaviour
         player = playerObj.GetComponent<Player>();
         player.OnDeath += EndGame;
 
-    
+
+        // Disable player until game actually begins
+        player.enabled = false;
+
+
         // Setup game over UI references
         SetupGameOverUI();
 
 
-        // Spawn spiders with random interval between spawns
-        ScheduleNextSpawn();
+        // Setup start game UI references
+        SetupStartGameUI();
 
 
-        // Spawn first wave instantly
-        SpawnSpider();
-
+        // Show start screen and wait for player input
+        ShowStartGameScreen();
     }
     private void SetupGameOverUI()
     {
-        gameOverDocument = GetComponent<UIDocument>();
+        // Return if game over document is missing
+        if (gameOverDocument == null)
+        {
+            Debug.LogWarning("SetupGameOverUI skipped, game over document not assigned");
+            return;
+        }
+
         VisualElement root = gameOverDocument.rootVisualElement;
         gameOverRoot = root.Q<VisualElement>(gameOverRootName);
         restartButton = root.Q<Button>(restartButtonName);
@@ -144,5 +197,28 @@ public class GameManager : MonoBehaviour
         }
 
         restartButton.clicked += RestartGame;
+    }
+    private void SetupStartGameUI()
+    {
+        // Return if start game document is missing
+        if (startGameDocument == null)
+        {
+            Debug.LogWarning("SetupStartGameUI skipped, start game document not assigned");
+            return;
+        }
+
+        VisualElement root = startGameDocument.rootVisualElement;
+        startGameRoot = root.Q<VisualElement>(startGameRootName);
+        startButton = root.Q<Button>(startButtonName);
+
+
+        // Return if expected elements are missing
+        if (startGameRoot == null || startButton == null)
+        {
+            Debug.LogWarning("SetupStartGameUI skipped, expected elements not found in UI document");
+            return;
+        }
+
+        startButton.clicked += BeginGame;
     }
 }

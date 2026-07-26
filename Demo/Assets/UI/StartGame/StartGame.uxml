@@ -1,0 +1,57 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/StartGame/StartGameStyles.uss?fileID=7433441132597879392&amp;guid=772fc37fb8f91cd4090d616ec2f367b7&amp;type=3#StartGameStyles"/>
+    <ui:VisualElement name="instructions-root" class="instructions-root" style="display: flex;">
+        <ui:Label name="instructions-title" text="Instructions" class="instructions-title"/>
+        <ui:VisualElement name="instructions-content" class="instructions-content">
+            <ui:VisualElement name="controls-panel" class="controls-panel">
+                <ui:VisualElement name="move-section" class="controls-section">
+                    <ui:VisualElement name="arrow-keys-group" class="arrow-keys-group">
+                        <ui:VisualElement name="arrow-up-row" class="arrow-key-row">
+                            <ui:VisualElement name="arrow-up" class="arrow-key">
+                                <ui:Label text="▲" class="arrow-key-label"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="arrow-bottom-row" class="arrow-key-row">
+                            <ui:VisualElement name="arrow-left" class="arrow-key">
+                                <ui:Label text="◀" class="arrow-key-label"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="arrow-down" class="arrow-key">
+                                <ui:Label text="▼" class="arrow-key-label"/>
+                            </ui:VisualElement>
+                            <ui:VisualElement name="arrow-right" class="arrow-key">
+                                <ui:Label text="▶" class="arrow-key-label"/>
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label text="Use arrow keys to move around" class="control-label"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="shoot-section" class="controls-section">
+                    <ui:VisualElement name="mouse-icon" class="mouse-icon">
+                        <ui:VisualElement name="mouse-buttons-row" class="mouse-buttons-row">
+                            <ui:VisualElement name="mouse-left-button" class="mouse-left-button"/>
+                            <ui:VisualElement name="mouse-right-button" class="mouse-right-button"/>
+                        </ui:VisualElement>
+                        <ui:VisualElement name="mouse-body-lower" class="mouse-body-lower"/>
+                    </ui:VisualElement>
+                    <ui:Label text="Use left mouse click to shoot" class="control-label"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="divider" class="divider"/>
+            <ui:VisualElement name="legend-section" class="legend-section">
+                <ui:VisualElement name="red-spider-row" class="legend-item">
+                    <ui:VisualElement class="legend-circle legend-circle-red"/>
+                    <ui:Label text="The red spiders will bite you" class="legend-label"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="green-spider-row" class="legend-item">
+                    <ui:VisualElement class="legend-circle legend-circle-green"/>
+                    <ui:Label text="The green spiders will bite and poison you" class="legend-label"/>
+                </ui:VisualElement>
+                <ui:VisualElement name="blue-spider-row" class="legend-item">
+                    <ui:VisualElement class="legend-circle legend-circle-blue"/>
+                    <ui:Label text="The blue spider will shoot webs and trap you" class="legend-label"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:Button name="start-button" text="Start Game" class="start-button"/>
+    </ui:VisualElement>
+</ui:UXML>
