@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 1379797063375036009}
   - component: {fileID: 6225557386175135137}
   - component: {fileID: 7766098079088368457}
-  - component: {fileID: 5607604400439526008}
   - component: {fileID: 4020967471088464063}
+  - component: {fileID: 5607604400439526008}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -109,6 +109,18 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
+--- !u!114 &4020967471088464063
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 477854944724777956}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11a5455cb898a5549b70827a893bdd49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Theater
 --- !u!114 &5607604400439526008
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -121,6 +133,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6517358ee54105c4b95c3adecc667d56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActBot
+  barrelLength: 1
+  theater: {fileID: 0}
   moveAct:
     isVerbose: 0
     speed: 5
@@ -155,18 +169,6 @@ MonoBehaviour:
     turnSpeed: 150
     acceptanceAngle: 0.5
     rb: {fileID: 0}
---- !u!114 &4020967471088464063
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 477854944724777956}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 11a5455cb898a5549b70827a893bdd49, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Theater
 --- !u!1 &1135448919680596255
 GameObject:
   m_ObjectHideFlags: 0
@@ -246,7 +248,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: -1
+  m_SortingOrder: 1
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2311659948842064771, guid: c37d5d51b42adbc4abb15b5384342424, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

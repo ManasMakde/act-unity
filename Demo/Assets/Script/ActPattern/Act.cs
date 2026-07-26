@@ -466,7 +466,15 @@ public class Act
 			}
 		}
 	}
+	protected virtual void WriteLog(string message, string overrideName = "")
+	{
+		if (!isVerbose)
+		{
+			return;
+		}
 
+		Debug.LogWarning((overrideName != "" ? overrideName : _name) + " " + message);
+	}
 
 
 	// Private
@@ -1077,14 +1085,5 @@ public class Act
 			_outcome = newOutcome;
 			ExitImpl();
 		}
-	}
-	private void WriteLog(string message, string overrideName = "")
-	{
-		if (!isVerbose)
-		{
-			return;
-		}
-
-		Debug.LogWarning((overrideName != "" ? overrideName : _name) + " " + message);
 	}
 }

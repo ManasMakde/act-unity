@@ -80,24 +80,16 @@ public class BiterSpider : MonoBehaviour, IDamageable
         // Setup Acts
         theater = GetComponent<Theater>();
 
-        damageAct.OnPostEnter += (Act act) =>
-        {
-            Debug.Log($"Spider damaged -{damageAct.amount}");
-        };
-        damageAct.toFlash = true;
-        damageAct.healthSystem = healthSystem;
-        damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damaged
-        damageAct.Init(theater, "Damage Act");
-
         liveAct.prologue += (Act act) =>
         {
-            // Attack then Wait
+            // Attack -> Wait
             if (chaseAct.IsWithinRange())
             {
                 return Act.Seq(new() { new() { biteAct }, new() { delayAttackAct } });
             }
 
-            // Goto player then Wait
+
+            // Goto player -> Wait
             return Act.Seq(new() { new() { chaseAct }, new() { delayAttackAct } });
         };
         liveAct.Init(theater, "Live Act");
@@ -124,5 +116,14 @@ public class BiterSpider : MonoBehaviour, IDamageable
         biteAct.Init(theater, "Bite Attack Act");
 
         delayAttackAct.Init(theater, "Wait Act");
+
+        damageAct.OnPostEnter += (Act act) =>
+        {
+            Debug.Log($"Spider damaged -{damageAct.amount}");
+        };
+        damageAct.toFlash = true;
+        damageAct.healthSystem = healthSystem;
+        damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damaged
+        damageAct.Init(theater, "Damage Act");
     }
 }

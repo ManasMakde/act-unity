@@ -135,16 +135,43 @@ public class AttackAct : Act
     }
     protected override bool CanPerform()
     {
-        return target != null && target.GetComponent<IDamageable>() != null && !(animation != null && eventfulAnimator == null);
+        // Failed if no target
+        if (target == null)
+        {
+            WriteLog("Failed to perform! No target provided!");
+            return false;
+        }
+
+
+        // Fail if no damage interface
+        if (target.GetComponent<IDamageable>() == null)
+        {
+            WriteLog("Failed to perform! Target has no damageable interface");
+            return false;
+        }
+
+
+        // Fail if to animate and no eventful animator found
+        if (animation != null && eventfulAnimator == null)
+        {
+            WriteLog("Failed to perform! No eventful animator provided!");
+            return false;
+        }
+
+        return true;
     }
     protected override Outcome Enter()
     {
         var damageable = target.GetComponent<IDamageable>();
         damageable.TakeDamage(damageAmount);
+
+
+        // Return if not to animate
         if (animation == null)
         {
             return Outcome.Success;
         }
+
 
         // Play animation
         eventfulAnimator.OnAnimationEnded += OnAnimationEnded;
@@ -446,7 +473,31 @@ public class DamageAct : Act
     }
     protected override bool CanPerform()
     {
-        return healthSystem != null && (!toFlash || spriteRenderer != null) && (animation != null || eventfulAnimator != null);
+        // Return false if invalid health system
+        if (healthSystem == null)
+        {
+            WriteLog("Failed to perform! No health system assigned");
+            return false;
+        }
+
+
+        // Return false if invalid  sprite renderer
+        if (toFlash && spriteRenderer == null)
+        {
+            WriteLog("Failed to perform! Flash requested but no sprite renderer found");
+            return false;
+        }
+
+
+        // Return false if invalid  sprite renderer
+        if (animation != null && eventfulAnimator == null)
+        {
+            WriteLog("Failed to perform! Invalid Eventful animator");
+            return false;
+        }
+
+
+        return true;
     }
     protected override Outcome Enter()
     {
@@ -455,7 +506,7 @@ public class DamageAct : Act
 
 
         // Death
-        if (canDie && Mathf.Approximately(healthSystem.CurrentHealth, 0f))
+        if (canDie && Mathf.Approximately(healthSystem.currentHealth, 0f))
         {
             _toDie = true;
         }
