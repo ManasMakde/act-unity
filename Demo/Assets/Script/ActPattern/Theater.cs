@@ -97,7 +97,7 @@ public class Theater : MonoBehaviour
 
 
     // Private Staging Methods
-    public void AddAct(Act newAct)
+    private void AddAct(Act newAct)
     {
         // Return if null act
         if (newAct == null)
@@ -115,7 +115,7 @@ public class Theater : MonoBehaviour
 
         _allActs.Add(newAct);
     }
-    public void RemoveAct(Act oldAct)
+    private void RemoveAct(Act oldAct)
     {
         // Return if null act
         if (oldAct == null)
@@ -133,7 +133,7 @@ public class Theater : MonoBehaviour
 
         _allActs.Remove(oldAct);
     }
-    public void StageOngoing(Act act)
+    private void StageOngoing(Act act)
     {
         // Return if invalid act or already ongoing
         if (act == null || _ongoingActs.Contains(act))
@@ -153,7 +153,7 @@ public class Theater : MonoBehaviour
         // Broadcast act started
         OnPerformStart?.Invoke(this, act);
     }
-    public void UnstageOngoing(Act act)
+    private void UnstageOngoing(Act act)
     {
         // Return if act is null or was never staged ongoing
         if (act == null || !_ongoingActs.Contains(act))
@@ -176,7 +176,7 @@ public class Theater : MonoBehaviour
             OnAllPerformEnd?.Invoke(this);
         }
     }
-    public void StageDeferred(Act act, Act.TickFlags flag)
+    private void StageDeferred(Act act, Act.TickFlags flag)
     {
         if (act == null)
         {
@@ -185,7 +185,7 @@ public class Theater : MonoBehaviour
 
         _deferredActs[act] = _deferredActs.ContainsKey(act) ? (_deferredActs[act] | flag) : flag;
     }
-    public void UnstageDeferred(Act act)
+    private void UnstageDeferred(Act act)
     {
         if (act == null)
         {
@@ -194,7 +194,7 @@ public class Theater : MonoBehaviour
 
         _deferredActs.Remove(act);
     }
-    public void StageTick(Act act)
+    private void StageTick(Act act)
     {
         if (act == null)
         {
@@ -203,7 +203,7 @@ public class Theater : MonoBehaviour
 
         _stagedTickActs[act] = true;
     }
-    public void UnstageTick(Act act)
+    private void UnstageTick(Act act)
     {
         if (act == null)
         {
@@ -221,7 +221,7 @@ public class Theater : MonoBehaviour
             _stagedTickActs.Remove(act);
         }
     }
-    public void StagePhysicsTick(Act act)
+    private void StagePhysicsTick(Act act)
     {
         if (act == null)
         {
@@ -230,7 +230,7 @@ public class Theater : MonoBehaviour
 
         _stagedPhysicsTickActs[act] = true;
     }
-    public void UnstagePhysicsTick(Act act)
+    private void UnstagePhysicsTick(Act act)
     {
         if (act == null)
         {
@@ -248,7 +248,7 @@ public class Theater : MonoBehaviour
             _stagedPhysicsTickActs.Remove(act);
         }
     }
-    public void StageLateTick(Act act)
+    private void StageLateTick(Act act)
     {
 
         if (act == null)
@@ -258,7 +258,7 @@ public class Theater : MonoBehaviour
 
         _stagedLateTickActs[act] = true;
     }
-    public void UnstageLateTick(Act act)
+    private void UnstageLateTick(Act act)
     {
         if (act == null)
         {
@@ -298,15 +298,15 @@ public class Theater : MonoBehaviour
         {
             if (flag == Act.TickFlags.Tick)
             {
-                act.TickImpl();
+                Act.Friend.TickImpl(act);
             }
             else if (flag == Act.TickFlags.PhysicsTick)
             {
-                act.PhysicsTickImpl();
+                Act.Friend.PhysicsTickImpl(act);
             }
             else if (flag == Act.TickFlags.LateTick)
             {
-                act.LateTickImpl();
+                Act.Friend.LateTickImpl(act);
             }
         }
 
@@ -393,5 +393,55 @@ public class Theater : MonoBehaviour
     {
         TickActs(ref _stagedLateTickActs, ref _actsToLateTick, Act.TickFlags.LateTick);
         DeferActs(Act.TickFlags.LateTick);
+    }
+
+
+    // Friend Class
+    public class Friend
+    {
+        static public void AddAct(Theater theater, Act newAct)
+        {
+            theater.AddAct(newAct);
+        }
+        static public void RemoveAct(Theater theater, Act oldAct)
+        {
+            theater.RemoveAct(oldAct);
+        }
+        static public void StageOngoing(Theater theater, Act act)
+        {
+            theater.StageOngoing(act);
+        }
+        static public void UnstageOngoing(Theater theater, Act act)
+        {
+            theater.UnstageOngoing(act);
+        }
+        static public void StageDeferred(Theater theater, Act act, Act.TickFlags flag)
+        {
+            theater.StageDeferred(act, flag);
+        }
+        static public void StageTick(Theater theater, Act act)
+        {
+            theater.StageTick(act);
+        }
+        static public void UnstageTick(Theater theater, Act act)
+        {
+            theater.UnstageTick(act);
+        }
+        static public void StagePhysicsTick(Theater theater, Act act)
+        {
+            theater.StagePhysicsTick(act);
+        }
+        static public void UnstagePhysicsTick(Theater theater, Act act)
+        {
+            theater.UnstagePhysicsTick(act);
+        }
+        static public void StageLateTick(Theater theater, Act act)
+        {
+            theater.StageLateTick(act);
+        }
+        static public void UnstageLateTick(Theater theater, Act act)
+        {
+            theater.UnstageLateTick(act);
+        }
     }
 }

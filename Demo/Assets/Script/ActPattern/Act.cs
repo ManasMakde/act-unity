@@ -41,10 +41,10 @@ public class Act
 
 
 	// Public
-	public event Action<Act /* act */> OnPerformStart;
-	public event Action<Act /* act */> OnPerformEnd;
 	public event Action<Act /* act */> OnPreSetup;
 	public event Action<Act /* act */> OnPostSetup;
+	public event Action<Act /* act */> OnPerformStart;
+	public event Action<Act /* act */> OnPerformEnd;
 	public event Action<Act /* act */> OnPrePrologue;
 	public event Action<Act /* act */> OnPostPrologue;
 	public event Action<Act /* act */> OnPreEnter;
@@ -66,6 +66,7 @@ public class Act
 	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();  // Externally extendable conditions for CanPerform()
 	public bool isVerbose = false;  // Toggle for warning messages
 
+
 	public void Init(string newName = "", Theater newTheater = null, bool initiallyEnabled = true)
 	{
 		// Assign new name
@@ -76,7 +77,7 @@ public class Act
 		if (newTheater != null)
 		{
 			_theater = newTheater;
-			_theater.AddAct(this);
+			Theater.Friend.AddAct(_theater, this);
 		}
 
 
@@ -119,7 +120,7 @@ public class Act
 		// Unassign owning theater
 		if (_theater != null)
 		{
-			_theater.RemoveAct(this);
+			Theater.Friend.RemoveAct(_theater, this);
 			_theater = null;
 		}
 
@@ -145,7 +146,7 @@ public class Act
 			return;
 		}
 
-		_theater.StageDeferred(this, tickFlag);
+		Theater.Friend.StageDeferred(_theater, this, tickFlag);
 	}
 	public void Retry()
 	{
@@ -478,7 +479,7 @@ public class Act
 			return;
 		}
 
-		Debug.LogWarning((overrideName != "" ? overrideName : _name) + " " + message);
+		Debug.LogWarning("[" + (overrideName != "" ? overrideName : _name) + "] " + message);
 	}
 
 
@@ -679,7 +680,7 @@ public class Act
 		// Let theater know this act has started
 		if (_theater != null)
 		{
-			_theater.StageOngoing(this);
+			Theater.Friend.StageOngoing(_theater, this);
 		}
 		if (_status != Status.Prologuing)
 		{
@@ -849,22 +850,22 @@ public class Act
 		// Start ticking
 		if (CanTick(TickFlags.Tick) && _theater != null)
 		{
-			_theater.StageTick(this);
+			Theater.Friend.StageTick(_theater, this);
 		}
 		if (CanTick(TickFlags.PhysicsTick) && _theater != null)
 		{
-			_theater.StagePhysicsTick(this);
+			Theater.Friend.StagePhysicsTick(_theater, this);
 		}
 		if (CanTick(TickFlags.LateTick) && _theater != null)
 		{
-			_theater.StageLateTick(this);
+			Theater.Friend.StageLateTick(_theater, this);
 		}
 
 
 		// Redirect to ticking
 		Redirect(Status.Ticking);
 	}
-	public void TickImpl()
+	private void TickImpl()
 	{
 		// Guard
 		if (_status != Status.Ticking)
@@ -903,7 +904,7 @@ public class Act
 			Redirect(Status.Exiting, newOutcome);
 		}
 	}
-	public void PhysicsTickImpl()
+	private void PhysicsTickImpl()
 	{
 		// Guard
 		if (_status != Status.Ticking)
@@ -942,7 +943,7 @@ public class Act
 			Redirect(Status.Exiting, newOutcome);
 		}
 	}
-	public void LateTickImpl()
+	private void LateTickImpl()
 	{
 		// Guard
 		if (_status != Status.Ticking)
@@ -989,15 +990,15 @@ public class Act
 			// Stop ticking
 			if (CanTick(TickFlags.Tick) && _theater != null)
 			{
-				_theater.UnstageTick(this);
+				Theater.Friend.UnstageTick(_theater, this);
 			}
 			if (CanTick(TickFlags.PhysicsTick) && _theater != null)
 			{
-				_theater.UnstagePhysicsTick(this);
+				Theater.Friend.UnstagePhysicsTick(_theater, this);
 			}
 			if (CanTick(TickFlags.LateTick) && _theater != null)
 			{
-				_theater.UnstageLateTick(this);
+				Theater.Friend.UnstageLateTick(_theater, this);
 			}
 
 
@@ -1055,7 +1056,7 @@ public class Act
 		// Let theater know this act has ended
 		if (_theater != null)
 		{
-			_theater.UnstageOngoing(this);
+			Theater.Friend.UnstageOngoing(_theater, this);
 		}
 
 
@@ -1095,6 +1096,24 @@ public class Act
 			_status = Status.Exiting;
 			_outcome = newOutcome;
 			ExitImpl();
+		}
+	}
+
+
+	// Friend Class
+	public class Friend
+	{
+		static public void TickImpl(Act act)
+		{
+			act.TickImpl();
+		}
+		static public void PhysicsTickImpl(Act act)
+		{
+			act.PhysicsTickImpl();
+		}
+		static public void LateTickImpl(Act act)
+		{
+			act.LateTickImpl();
 		}
 	}
 }
