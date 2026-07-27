@@ -179,7 +179,7 @@ public class Act
 
 
 			// Block if ongoing
-			if (IsOngoing() && bAct.IsOngoing())
+			if (IsOngoing())
 			{
 				bAct.BlockSelf(this, blockType);
 			}
