@@ -83,15 +83,15 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
 
         lookAct.turnType = LookAct.TurnType.Continuous;
         lookAct.turnSpeed = -1.0f;
-        lookAct.Init(theater, "Look Act");
+        lookAct.Init("Look Act", theater);
         lookAct.Perform();
 
         moveAct.border = GetBorderFromCamera(Camera.main);
         moveAct.useBorder = true;
-        moveAct.Init(theater, "Move Act");
+        moveAct.Init("Move Act", theater);
 
         shootAct.spawnAtOwner = false;
-        shootAct.Init(theater, "Shoot Act");
+        shootAct.Init("Shoot Act", theater);
 
         damageAct.toFlash = true;
         damageAct.healthSystem = healthSystem;
@@ -102,6 +102,6 @@ public class Player : MonoBehaviour, IDamageable, ITrappable
                 OnKilled?.Invoke();
             }
         };
-        damageAct.Init(theater, "Damage Act");
+        damageAct.Init("Damage Act", theater);
     }
 }

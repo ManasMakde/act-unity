@@ -173,28 +173,28 @@ public class ShooterSpider : MonoBehaviour, IDamageable
                 new() { waitAct }
             });
         };
-        liveAct.Init(theater, "Live Act");
+        liveAct.Init("Live Act", theater);
 
-        wanderAct.Init(theater, "Wander Act");
+        wanderAct.Init("Wander Act", theater);
 
-        waitAct.Init(theater, "Wander Wait Act");
+        waitAct.Init("Wander Wait Act", theater);
 
         lookAct.turnType = LookAct.TurnType.UntilFacing;
         lookAct.turnSpeed = -1.0f;
-        lookAct.Init(theater, "look Act");
+        lookAct.Init("look Act", theater);
 
         aimAct.targetTransform = playerTransform;
         aimAct.turnSpeed = -1.0f;
         aimAct.turnType = LookAct.TurnType.Continuous;
         aimAct.followTimeout = 2.0f;
-        aimAct.Init(theater, "Aim Act");
+        aimAct.Init("Aim Act", theater);
 
         shootAct.OnPreEnter += (Act act) =>
         {
             shootAct.direction = GetLookDirection();
         };
         shootAct.ignoreList = new System.Type[] { typeof(ShooterSpider), typeof(BiterSpider) };
-        shootAct.Init(theater, "Shoot Act");
+        shootAct.Init("Shoot Act", theater);
 
         damageAct.healthSystem = healthSystem;
         damageAct.toFlash = true;
@@ -206,7 +206,6 @@ public class ShooterSpider : MonoBehaviour, IDamageable
                 OnKilled?.Invoke();
             }
         };
-        damageAct.Init(theater, "Damage Act");
-
+        damageAct.Init("Damage Act", theater);
     }
 }

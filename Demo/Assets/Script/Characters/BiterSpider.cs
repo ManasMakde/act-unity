@@ -97,18 +97,18 @@ public class BiterSpider : MonoBehaviour, IDamageable
             // Goto player -> Wait
             return Act.Seq(new() { new() { chaseAct }, new() { delayAttackAct } });
         };
-        liveAct.Init(theater, "Live Act");
+        liveAct.Init("Live Act", theater);
 
         lookAct.turnType = LookAct.TurnType.Continuous;
         lookAct.turnSpeed = -1.0f;
         lookAct.targetTransform = playerTransform;
-        lookAct.Init(theater, "Turn Act");
+        lookAct.Init("Turn Act", theater);
 
         lookPerpAct.prologue += (Act act) => new() { lookAct };
-        lookPerpAct.Init(theater, "Look Act");
+        lookPerpAct.Init("Look Act", theater);
 
         chaseAct.target = playerTransform;
-        chaseAct.Init(theater, "Chase Act");
+        chaseAct.Init("Chase Act", theater);
 
         biteAct.OnPostEnter += (Act act) =>
         {
@@ -118,9 +118,9 @@ public class BiterSpider : MonoBehaviour, IDamageable
             }
         };
         biteAct.target = playerTransform;
-        biteAct.Init(theater, "Bite Attack Act");
+        biteAct.Init("Bite Attack Act", theater);
 
-        delayAttackAct.Init(theater, "Wait Act");
+        delayAttackAct.Init("Wait Act", theater);
 
         damageAct.toFlash = true;
         damageAct.healthSystem = healthSystem;
@@ -132,6 +132,6 @@ public class BiterSpider : MonoBehaviour, IDamageable
                 OnKilled?.Invoke();
             }
         };
-        damageAct.Init(theater, "Damage Act");
+        damageAct.Init("Damage Act", theater);
     }
 }

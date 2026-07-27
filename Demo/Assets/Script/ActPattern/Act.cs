@@ -66,23 +66,18 @@ public class Act
 	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();  // Externally extendable conditions for CanPerform()
 	public bool isVerbose = false;  // Toggle for warning messages
 
-	public void Init(Theater theater, string name = "", bool initiallyEnabled = true)
+	public void Init(string newName = "", Theater newTheater = null, bool initiallyEnabled = true)
 	{
-		// Warn if null theater provided
-		if (theater == null)
+		// Assign new owning theater
+		if (newTheater != null)
 		{
-			WriteLog("Null theater provided for initialization!", name);
-			return;
+			_theater = newTheater;
+			_theater.AddAct(this);
 		}
 
 
-		// Assign new owning theater
-		_theater = theater;
-		_theater.AddAct(this);
-
-
 		// Assign new name
-		_name = name;
+		_name = newName;
 
 
 		// Disable Initially
@@ -146,7 +141,7 @@ public class Act
 		// Warn if null theater provided
 		if (_theater == null)
 		{
-			WriteLog("Cannot perform deferred, Theater is null! Have you initialized act?");
+			WriteLog("Cannot perform deferred, Assign a theater first!");
 			return;
 		}
 
@@ -615,16 +610,8 @@ public class Act
 	}
 	private bool CanPerformImpl(bool skipOngoingCheck = false)
 	{
-		// Return if null theater
-		if (_theater == null)
-		{
-			WriteLog("Cannot perform, Theater is null! Have you initialized act?");
-			return false;
-		}
-
-
-		// Return if disabled
-		if (!IsEnabled() || !_theater.IsEnabled())
+		// Return if disabled or theater is disabled
+		if (!IsEnabled() || (_theater != null && !_theater.IsEnabled()))
 		{
 			WriteLog("Cannot perform, act or theater is disabled!");
 			return false;
@@ -655,6 +642,7 @@ public class Act
 				return false;
 			}
 		}
+
 
 		return CanPerform();
 	}
@@ -828,6 +816,14 @@ public class Act
 		if (_status != Status.Entering)
 		{
 			return;  // Guard
+		}
+
+
+		// Fail if trying to tick without theater
+		if (newOutcome == Outcome.Pending && _theater == null)
+		{
+			newOutcome = Outcome.Failure;
+			WriteLog("Cannot tick, Assign a theater first!");
 		}
 
 
