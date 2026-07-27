@@ -212,13 +212,13 @@ public class Theater : MonoBehaviour
 
 
         // Remove if not reference swapped yet else mark as pending removal
-        if (_stagedTickActs.ContainsKey(act))
-        {
-            _stagedTickActs.Remove(act);
-        }
-        else if (_actsToTick.ContainsKey(act))
+        if (_actsToTick.ContainsKey(act))
         {
             _stagedTickActs[act] = false;
+        }
+        else if (_stagedTickActs.ContainsKey(act))
+        {
+            _stagedTickActs.Remove(act);
         }
     }
     public void StagePhysicsTick(Act act)
@@ -239,13 +239,13 @@ public class Theater : MonoBehaviour
 
 
         // Remove if not reference swapped yet else mark as pending removal
-        if (_stagedPhysicsTickActs.ContainsKey(act))
-        {
-            _stagedPhysicsTickActs.Remove(act);
-        }
-        else if (_actsToPhysicsTick.ContainsKey(act))
+        if (_actsToPhysicsTick.ContainsKey(act))
         {
             _stagedPhysicsTickActs[act] = false;
+        }
+        else if (_stagedPhysicsTickActs.ContainsKey(act))
+        {
+            _stagedPhysicsTickActs.Remove(act);
         }
     }
     public void StageLateTick(Act act)
@@ -267,13 +267,13 @@ public class Theater : MonoBehaviour
 
 
         // Remove if not reference swapped yet else mark as pending removal
-        if (_stagedLateTickActs.ContainsKey(act))
-        {
-            _stagedLateTickActs.Remove(act);
-        }
-        else if (_actsToLateTick.ContainsKey(act))
+        if (_actsToLateTick.ContainsKey(act))
         {
             _stagedLateTickActs[act] = false;
+        }
+        else if (_stagedLateTickActs.ContainsKey(act))
+        {
+            _stagedLateTickActs.Remove(act);
         }
     }
 

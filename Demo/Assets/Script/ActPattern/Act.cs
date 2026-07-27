@@ -68,16 +68,16 @@ public class Act
 
 	public void Init(string newName = "", Theater newTheater = null, bool initiallyEnabled = true)
 	{
+		// Assign new name
+		_name = newName;
+
+
 		// Assign new owning theater
 		if (newTheater != null)
 		{
 			_theater = newTheater;
 			_theater.AddAct(this);
 		}
-
-
-		// Assign new name
-		_name = newName;
 
 
 		// Disable Initially
