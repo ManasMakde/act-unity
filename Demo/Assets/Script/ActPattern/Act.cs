@@ -1037,6 +1037,11 @@ public class Act
 				return;
 			}
 
+
+			// Change outcome to failure since could not retry
+			_outcome = Outcome.Failure;
+
+
 			// Continue epilogues & unblock which were previously skipped
 			ContinueEpilogues(this, _outcome);
 			UnblockOthers();
