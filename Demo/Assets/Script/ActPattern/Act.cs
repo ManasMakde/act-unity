@@ -176,6 +176,13 @@ public class Act
 
 			// Add to block list
 			_actsToBlock[bAct] = blockType;
+
+
+			// Block if ongoing
+			if (IsOngoing() && bAct.IsOngoing())
+			{
+				bAct.BlockSelf(this, blockType);
+			}
 		}
 	}
 	public void RemoveFromBlock(List<Act> acts)
@@ -188,6 +195,10 @@ public class Act
 				WriteLog("Trying to unblock self!");
 				continue;
 			}
+
+
+			// Unblock if ongoing
+			bAct.UnblockSelf(this);
 
 
 			// Remove from block list
@@ -429,7 +440,6 @@ public class Act
 		// Return if not currently blocked by act
 		if (!_blockedByActs.Contains(byAct))
 		{
-			WriteLog("Failed to unblock, Act is not blocked by " + byAct._name);
 			return;
 		}
 
@@ -470,6 +480,7 @@ public class Act
 
 		Debug.LogWarning((overrideName != "" ? overrideName : _name) + " " + message);
 	}
+
 
 
 	// Private
@@ -1034,7 +1045,6 @@ public class Act
 
 		// Reset status
 		_status = Status.None;
-
 
 
 		// Let theater know this act has ended
