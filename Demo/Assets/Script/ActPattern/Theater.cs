@@ -178,7 +178,7 @@ public class Theater : MonoBehaviour
     }
     private void StageDeferred(Act act, Act.TickFlags flag)
     {
-        if (act == null)
+        if (act == null || flag == Act.TickFlags.None)
         {
             return;
         }
@@ -211,7 +211,7 @@ public class Theater : MonoBehaviour
         }
 
 
-        // Remove if not reference swapped yet else mark as pending removal
+        // Mark as pending removal if reference swapped else Remove
         if (_actsToTick.ContainsKey(act))
         {
             _stagedTickActs[act] = false;
@@ -278,7 +278,7 @@ public class Theater : MonoBehaviour
     }
 
 
-    // Private Methods
+    // Private Static Methods
     private static void TickActs(ref Dictionary<Act, bool> stagedActs, ref Dictionary<Act, bool> actsToTick, Act.TickFlags flag)
     {
         // Return if no act to process
@@ -330,28 +330,18 @@ public class Theater : MonoBehaviour
             stagedActs.Remove(act);
         }
     }
-    private static void MergeDict<TKey, TValue>(Dictionary<TKey, TValue> dict, Dictionary<TKey, TValue> other, bool overwrite)
-    {
-        foreach (var pair in other)
-        {
-            if (overwrite || !dict.ContainsKey(pair.Key))
-            {
-                dict[pair.Key] = pair.Value;
-            }
-        }
-    }
-    private void DeferActs(Act.TickFlags flag)
+    private static void DeferActs(ref Dictionary<Act, Act.TickFlags> deferredActs, Act.TickFlags flag)
     {
         // Return if no acts to defer
-        if (_deferredActs.Count == 0)
+        if (deferredActs.Count == 0)
         {
             return;
         }
 
 
         // Reference swap to avoid mutation
-        var actsToDefer = _deferredActs;
-        _deferredActs = new();
+        var actsToDefer = deferredActs;
+        deferredActs = new();
 
 
         // Defer perform acts
@@ -374,7 +364,17 @@ public class Theater : MonoBehaviour
 
 
         // Merge back unperformed
-        MergeDict(_deferredActs, actsToDefer, false);
+        MergeDict(deferredActs, actsToDefer, false);
+    }
+    private static void MergeDict<TKey, TValue>(Dictionary<TKey, TValue> dict, Dictionary<TKey, TValue> other, bool overwrite)
+    {
+        foreach (var pair in other)
+        {
+            if (overwrite || !dict.ContainsKey(pair.Key))
+            {
+                dict[pair.Key] = pair.Value;
+            }
+        }
     }
 
 
@@ -382,17 +382,17 @@ public class Theater : MonoBehaviour
     private void Update()
     {
         TickActs(ref _stagedTickActs, ref _actsToTick, Act.TickFlags.Tick);
-        DeferActs(Act.TickFlags.Tick);
+        DeferActs(ref _deferredActs, Act.TickFlags.Tick);
     }
     private void FixedUpdate()
     {
         TickActs(ref _stagedPhysicsTickActs, ref _actsToPhysicsTick, Act.TickFlags.PhysicsTick);
-        DeferActs(Act.TickFlags.PhysicsTick);
+        DeferActs(ref _deferredActs, Act.TickFlags.PhysicsTick);
     }
     private void LateUpdate()
     {
         TickActs(ref _stagedLateTickActs, ref _actsToLateTick, Act.TickFlags.LateTick);
-        DeferActs(Act.TickFlags.LateTick);
+        DeferActs(ref _deferredActs, Act.TickFlags.LateTick);
     }
 
 
@@ -418,6 +418,10 @@ public class Theater : MonoBehaviour
         static public void StageDeferred(Theater theater, Act act, Act.TickFlags flag)
         {
             theater.StageDeferred(act, flag);
+        }
+        static public void UnstageDeferred(Theater theater, Act act)
+        {
+            theater.UnstageDeferred(act);
         }
         static public void StageTick(Theater theater, Act act)
         {

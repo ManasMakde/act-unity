@@ -126,6 +126,7 @@ public class Act
 
 
 		// Reset performed on ticks
+		_performCount = 0;
 		_performedOnTick = -1;
 		_performedOnPhysicsTick = -1;
 		_performedOnLateTick = -1;
@@ -162,6 +163,14 @@ public class Act
 	public void Abort()
 	{
 		Redirect(Status.Exiting, Outcome.Interrupted);
+
+
+		// Clear deferred
+		if (_theater != null)
+		{
+			Theater.Friend.UnstageDeferred(_theater, this);
+			return;
+		}
 	}
 	public void AddToBlock(List<Act> acts, BlockType blockType = BlockType.Persistent)
 	{
@@ -255,10 +264,6 @@ public class Act
 
 		return performed;
 	}
-	public bool DidPerformEver()  // True if act was performed atleast once since it was initialized
-	{
-		return _performedOnTick != -1 || _performedOnPhysicsTick != -1 || _performedOnLateTick != -1;
-	}
 	public bool IsOngoing()
 	{
 		return _status != Status.None;
@@ -300,6 +305,22 @@ public class Act
 	public Outcome GetOutcome()
 	{
 		return _outcome;
+	}
+	public int GetPerformCount()
+	{
+		return _performCount;
+	}
+	public int GetTickCount()
+	{
+		return _tickCount;
+	}
+	public int GetPhysicsTickCount()
+	{
+		return _physicsTickCount;
+	}
+	public int GetLateTickCount()
+	{
+		return _lateTickCount;
 	}
 	static public float GetDelta()
 	{
@@ -366,15 +387,15 @@ public class Act
 	}
 	protected virtual Outcome Tick()
 	{
-		return Outcome.Pending;
+		return Outcome.Success;
 	}
 	protected virtual Outcome PhysicsTick()
 	{
-		return Outcome.Pending;
+		return Outcome.Success;
 	}
 	protected virtual Outcome LateTick()
 	{
-		return Outcome.Pending;
+		return Outcome.Success;
 	}
 	protected virtual void Exit()
 	{
@@ -495,6 +516,16 @@ public class Act
 	private HashSet<Act> _epilogueActs = new();
 	private HashSet<Act> _prologueActs = new();
 	private HashSet<Act> _pendingPrologueActs = new();
+
+	private int _performCount = 0;
+	private int _tickCount = 0;
+	private int _physicsTickCount = 0;
+	private int _lateTickCount = 0;
+
+	private int _tickReqCount = 0;
+	private int _physicsTickReqCount = 0;
+	private int _lateTickReqCount = 0;
+
 	private int _performedOnTick = -1;
 	private int _performedOnPhysicsTick = -1;
 	private int _performedOnLateTick = -1;
@@ -689,6 +720,7 @@ public class Act
 
 
 		// Store during which tick act was performed
+		_performCount++;
 		_performedOnTick = Time.frameCount;
 		_performedOnPhysicsTick = Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
 		_performedOnLateTick = Time.frameCount;
@@ -831,14 +863,6 @@ public class Act
 		}
 
 
-		// Fail if trying to tick without theater
-		if (newOutcome == Outcome.Pending && _theater == null)
-		{
-			newOutcome = Outcome.Failure;
-			WriteLog("Cannot tick, Assign a theater first!");
-		}
-
-
 		// Redirect to exit
 		if (newOutcome != Outcome.Pending)
 		{
@@ -847,23 +871,41 @@ public class Act
 		}
 
 
-		// Start ticking
-		if (CanTick(TickFlags.Tick) && _theater != null)
+		// Return if no ticking
+		if (_tickFlags == TickFlags.None)
 		{
-			Theater.Friend.StageTick(_theater, this);
+			return;
 		}
-		if (CanTick(TickFlags.PhysicsTick) && _theater != null)
+
+
+		// Return if no theater assigned for ticking
+		if (_theater == null)
 		{
-			Theater.Friend.StagePhysicsTick(_theater, this);
-		}
-		if (CanTick(TickFlags.LateTick) && _theater != null)
-		{
-			Theater.Friend.StageLateTick(_theater, this);
+			WriteLog("Cannot tick, Assign a theater first!");
+			return;
 		}
 
 
 		// Redirect to ticking
 		Redirect(Status.Ticking);
+	}
+	private void HandleTickingImpl()
+	{
+		if (CanTick(TickFlags.Tick) && _theater != null)
+		{
+			_tickReqCount++;
+			Theater.Friend.StageTick(_theater, this);
+		}
+		if (CanTick(TickFlags.PhysicsTick) && _theater != null)
+		{
+			_physicsTickReqCount++;
+			Theater.Friend.StagePhysicsTick(_theater, this);
+		}
+		if (CanTick(TickFlags.LateTick) && _theater != null)
+		{
+			_lateTickReqCount++;
+			Theater.Friend.StageLateTick(_theater, this);
+		}
 	}
 	private void TickImpl()
 	{
@@ -874,9 +916,17 @@ public class Act
 		}
 
 
+		// Increment tick count
+		_tickCount++;
+
+
+		// Save tick request count
+		int currTickReqCount = _tickReqCount;
+
+
 		// Broadcast pre tick
 		OnPreTick?.Invoke(this);
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currTickReqCount != _tickReqCount)
 		{
 			return;  // Guard
 		}
@@ -884,7 +934,7 @@ public class Act
 
 		// Core tick
 		var newOutcome = Tick();
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currTickReqCount != _tickReqCount)
 		{
 			return;  // Guard
 		}
@@ -892,7 +942,7 @@ public class Act
 
 		// Broadcast post tick
 		OnPostTick?.Invoke(this);
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currTickReqCount != _tickReqCount)
 		{
 			return;  // Guard
 		}
@@ -913,9 +963,17 @@ public class Act
 		}
 
 
+		// Increment physics tick count
+		_physicsTickCount++;
+
+
+		// Save physics tick request count
+		int currPhysicsTickReqCount = _physicsTickReqCount;
+
+
 		// Broadcast pre physics tick
 		OnPrePhysicsTick?.Invoke(this);
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount)
 		{
 			return;  // Guard
 		}
@@ -923,7 +981,7 @@ public class Act
 
 		// Core tick
 		var newOutcome = PhysicsTick();
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount)
 		{
 			return;  // Guard
 		}
@@ -931,7 +989,7 @@ public class Act
 
 		// Broadcast post physics tick
 		OnPostPhysicsTick?.Invoke(this);
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount)
 		{
 			return;  // Guard
 		}
@@ -952,9 +1010,17 @@ public class Act
 		}
 
 
+		// Increment late tick count
+		_lateTickCount++;
+
+
+		// Save late tick request count
+		int currLateTickReqCount = _lateTickReqCount;
+
+
 		// Broadcast pre late tick
 		OnPreLateTick?.Invoke(this);
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount)
 		{
 			return;  // Guard
 		}
@@ -962,7 +1028,7 @@ public class Act
 
 		// Core tick
 		var newOutcome = LateTick();
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount)
 		{
 			return;  // Guard
 		}
@@ -970,7 +1036,7 @@ public class Act
 
 		// Broadcast post late tick
 		OnPostLateTick?.Invoke(this);
-		if (_status != Status.Ticking)
+		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount)
 		{
 			return;  // Guard
 		}
@@ -1087,6 +1153,7 @@ public class Act
 		{
 			_prevStatus = _status;
 			_status = Status.Ticking;
+			HandleTickingImpl();
 		}
 
 		// prologue or Enter or Tick -> Exit
