@@ -158,9 +158,14 @@ public class SingleTickAct : Act
 }
 public class ManualFinishAct : Act
 {
+    public bool canReperformOverride = false;
     public void ManualFinish(Outcome outcome = Outcome.Success)
     {
         Finish(outcome);
+    }
+    protected override void Setup()
+    {
+        _canReperform = canReperformOverride;
     }
     protected override Outcome Enter()
     {
