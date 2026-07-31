@@ -522,10 +522,14 @@ public class Act
 	private Outcome _outcome = Outcome.Pending;  // Denotes how the act ended
 	private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();  // Which acts to block when performing this act
 	private HashSet<Act> _blockedByActs = new();  // Which acts are blocking this act
+
 	private HashSet<Act> _epilogueActs = new();
+	private HashSet<Act> _pendingEpilogueActs = new();
+	
 	private HashSet<Act> _prologueActs = new();
 	private HashSet<Act> _pendingPrologueActs = new();
 	private HashSet<Act> _completedPrologueActs = new();
+	private bool _hasPrecomputedPrologues = false;
 
 	private int _performCount = 0;
 	private int _tickCount = 0;
@@ -550,6 +554,7 @@ public class Act
 				Act actA = arrayA[j];
 				actB._prologueActs.Add(actA);
 				actA._epilogueActs.Add(actB);
+				actA._pendingEpilogueActs.Add(actB);
 			}
 		}
 	}
@@ -586,7 +591,7 @@ public class Act
 
 		return result;
 	}
-	private static void AssignPrologueChain(Act ofAct)
+	private static void PrecomputePrologueChain(Act ofAct)
 	{
 		foreach (Act pAct in ofAct.prologue.Invoke(ofAct))
 		{
@@ -608,7 +613,15 @@ public class Act
 			// Assign prologue and epilogue
 			ofAct._prologueActs.Add(pAct);
 			pAct._epilogueActs.Add(ofAct);
+
+
+			// Recurse into prologue
+			PrecomputePrologueChain(pAct);
 		}
+
+
+		// Mark as precomputed
+		ofAct._hasPrecomputedPrologues = true;
 	}
 	private static void FinishPrologues(Act ofAct, Outcome newOutcome)
 	{
@@ -627,10 +640,10 @@ public class Act
 	private static void ContinueEpilogues(Act ofAct, Outcome newOutcome)
 	{
 		// Continue and clear out epilogues
-		while (ofAct._epilogueActs.Count != 0)
+		while (ofAct._pendingEpilogueActs.Count != 0)
 		{
-			Act eAct = ofAct._epilogueActs.First();
-			ofAct._epilogueActs.Remove(eAct);
+			Act eAct = ofAct._pendingEpilogueActs.First();
+			ofAct._pendingEpilogueActs.Remove(eAct);
 			eAct._completedPrologueActs.Add(ofAct);
 			eAct.CompletedPrologue(ofAct, newOutcome);
 		}
@@ -653,6 +666,7 @@ public class Act
 
 			// Remove self from epilogue
 			pAct._epilogueActs.Remove(ofAct);
+			pAct._pendingEpilogueActs.Remove(ofAct);
 
 
 			// Recurse down, Incase Seq() linked stale acts that were never performed
@@ -739,11 +753,21 @@ public class Act
 		}
 
 
-		// Assign prologues & epilogues
-		AssignPrologueChain(this);
+		// Precompute prologue chain
+		if (!_hasPrecomputedPrologues)
+		{
+			PrecomputePrologueChain(this);
+		}
 		if (_status != Status.Prologuing)
 		{
 			return;  // Guard
+		}
+
+
+		// Assign self as pending epilogue
+		foreach (Act pAct in _prologueActs)
+		{
+			pAct._pendingEpilogueActs.Add(this);
 		}
 
 
@@ -1103,9 +1127,10 @@ public class Act
 		}
 
 
-		// Finish Prologues if any pending & Clear prologue chain 
+		// Cleanup prologues
 		FinishPrologues(this, _outcome);
 		ClearPrologueChain(this);
+		_hasPrecomputedPrologues = false;
 
 
 		// Retry
@@ -1127,7 +1152,6 @@ public class Act
 		// Continue Epilogues & Unblock 
 		ContinueEpilogues(this, _outcome);
 		UnblockOthers();
-
 
 
 		// Reset status
