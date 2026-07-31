@@ -94,6 +94,13 @@ public class WaitInfiniAct : Act
         return Outcome.Pending;
     }
 }
+public class ReperformableAct : Act
+{
+    protected override void Setup()
+    {
+        _canReperform = true;
+    }
+}
 public class NonReperformableInfiAct : Act
 {
     protected override void Setup()
@@ -117,13 +124,6 @@ public class ReperformableInfiAct : Act
     protected override Outcome Enter()
     {
         return Outcome.Pending;
-    }
-}
-public class ReperformableAct : Act
-{
-    protected override void Setup()
-    {
-        _canReperform = true;
     }
 }
 public class FalseCanPerformAct : Act

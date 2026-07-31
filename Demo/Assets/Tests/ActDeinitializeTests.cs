@@ -6,10 +6,19 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
+// 1. Are "pre cleanup" & "post cleanup" actions being broadcasted (with correct arguments)?
+// 1. Is Cleanup() being invoked?
+// 1. Is theater set to null after deinitialization?
+// 1. Does act abort on deinitialization?
+// 1. Does prologue act abort on deinitialization?
+// 1. Does PerformCount() reset to 0 after deinitialization?
+// 1. After Deinit() is the act removed from the theater's allActs & ongoing acts?
+
+
 public class ActDeinitializeTests
 {
     [UnityTest]
-    public IEnumerator OnPreAndPostCleanup()  // Checks OnPreCleanup & OnPostCleanup
+    public IEnumerator OnPreAndPostCleanup()
     {
         // Prerequisites
         bool wasPreCleanupInvoked = false;
@@ -36,7 +45,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator Cleanup()  // Checks Cleanup()
+    public IEnumerator Cleanup()
     {
         // Perform Act
         var act = new CleanupAct();
@@ -51,7 +60,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator TheaterNullAfterDeinit()  // Checks theater is null after deinitialization
+    public IEnumerator TheaterNullAfterDeinit()
     {
         // Perform Act
         var theater = new GameObject().AddComponent<Theater>();
@@ -67,7 +76,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortsOnDeinit()  // Checks act aborts on deinitialization
+    public IEnumerator AbortOnDeinit()
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -83,26 +92,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator DidPerformEverResetAfterDeinit()  // Checks DidPerformEver() resets after deinitialization
-    {
-        // Perform Act
-        var act = new Act();
-        act.Init("Test Act");
-        act.Perform();
-        var performCountBeforeDeinit = act.GetPerformCount();
-        act.Deinit();
-        var performCountAfterDeinit = act.GetPerformCount();
-
-
-        // Assertions
-        Assert.IsTrue(performCountBeforeDeinit == 1, "DidPerformEver() was false despite act having performed!");
-        Assert.IsTrue(performCountAfterDeinit == 0, "DidPerformEver() is still true after Deinit()!");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator DeinitOngoingPrologueAct()  // Checks Deinit() on ongoing prologue act
+    public IEnumerator AbortPrologueOnDeinit()
     {
         // Prerequisites
         var prologueAct = new WaitInfiniAct();
@@ -125,7 +115,26 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RemovedFromTheaterAfterDeinit()  // Checks act removed from theater's tracked sets after deinit
+    public IEnumerator PerformCountResetAfterDeinit()
+    {
+        // Perform Act
+        var act = new Act();
+        act.Init("Test Act");
+        act.Perform();
+        var performCountBeforeDeinit = act.GetPerformCount();
+        act.Deinit();
+        var performCountAfterDeinit = act.GetPerformCount();
+
+
+        // Assertions
+        Assert.IsTrue(performCountBeforeDeinit == 1, $"Act did not perform exactly once before deinit, Perform Count={performCountBeforeDeinit}");
+        Assert.IsTrue(performCountAfterDeinit == 0, $"Perform count did not reset after deinit, Perform Count={performCountAfterDeinit}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator RemovedFromTheaterAfterDeinit()
     {
         // Prerequisites
         var theaterObj = new GameObject().AddComponent<Theater>();

@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -6,10 +5,50 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
+// 1. Are "perform start" & "perform end" actions being broadcasted (with correct arguments)?
+
+// 1. Does perform fail when act disabled?
+// 1. Does perform fail when theater disabled?
+// 1. Does perform fail when act blocked?
+// 1. Does perform fail when already ongoing and cannot reperform?
+// 1. Does perform fail when external condition is false?
+// 1. Does perform fail when overriden CanPerform() is false?
+// 1. Does perform fail when called while exiting?
+
+// 1. Does perform succeed when act enabled?
+// 1. Does perform succeed when theater enabled?
+// 1. Does perform succeed when already ongoing and can reperform?
+// 1. Does perform succeed when external condition is true?
+// 1. Does perform succeed when overriden CanPerform() is true?
+
+// 1. Does _canReperform work correctly?
+
+// 1. Does perform fail from OnPreSetup?
+// 1. Does perform fail from OnPostSetup?
+// 1. Does reperform succeed from OnPerformStart?
+// 1. Does perform succeed from OnPerformEnd?
+// 1. Does reperform succeed from OnPrePrologue?
+// 1. Does reperform fail from OnPostPrologue?
+// 1. Does reperform succeed from OnPreEnter?
+// 1. Does reperform succeed from OnPostEnter?
+// 1. Does reperform succeed from OnPreTick?
+// 1. Does reperform succeed from OnPostTick?
+// 1. Does reperform succeed from OnPrePhysicsTick?
+// 1. Does reperform succeed from OnPostPhysicsTick?
+// 1. Does reperform succeed from OnPreLateTick?
+// 1. Does reperform succeed from OnPostLateTick?
+// 1. Does reperform fail from OnPreExit?
+// 1. Does reperform fail from OnPostExit?
+// 1. Does reperform fail from OnPreCleanup?
+// 1. Does reperform fail from OnPostCleanup?
+// 1. Does perform succeed from OnEnableChanged?
+// 1. Does perform succeed from OnBlockChanged?
+
+
 public class ActPerformTests
 {
     [UnityTest]
-    public IEnumerator OnPerformStartAndEnd()  // Checks OnPerformStart & OnPerformEnd
+    public IEnumerator OnPerformStartAndEnd()
     {
         // Prerequisites
         bool wasStartInvoked = false;
@@ -39,7 +78,7 @@ public class ActPerformTests
 
 
     [UnityTest]
-    public IEnumerator PerformFailsWhenDisabled()  // Checks perform fails when act disabled
+    public IEnumerator PerformWhenDisabled()
     {
         // Perform Act
         var act = new Act();
@@ -61,7 +100,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFailsWhenTheaterDisabled()  // Checks perform fails when theater disabled
+    public IEnumerator PerformWhenTheaterDisabled()
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -82,7 +121,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFailsWhenBlocked()  // Checks perform fails when act blocked
+    public IEnumerator PerformWhenBlocked()
     {
         // Perform First Block Later
         bool isOngoing_PFBL = false;
@@ -131,7 +170,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFailsWhenCannotReperform()  // Checks perform fails when already ongoing & cannot reperform
+    public IEnumerator PerformWhenCannotReperform()
     {
         // Perform Act
         var act = new NonReperformableInfiAct();
@@ -152,7 +191,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFailsWhenExternalConditionFalse()  // Checks perform fails when external condition is false
+    public IEnumerator PerformWhenExternalConditionFalse()
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -168,7 +207,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFailsWhenCanPerformFalse()  // Checks perform fails when overriden CanPerform() is false
+    public IEnumerator PerformWhenCanPerformFalse()
     {
         // Perform Act
         var act = new FalseCanPerformAct();
@@ -182,32 +221,11 @@ public class ActPerformTests
 
         yield return null;
     }
-    [UnityTest]
-    public IEnumerator PerformFailsWhenCalledWhileExiting()  // Checks perform does not reperform act when called during exiting
-    {
-        // Perform Act
-        var act = new ExitAct();
-        var performCountDuringExit = 0;
-        act.OnPreExit += (a) =>
-        {
-            a.Perform();
-            performCountDuringExit = a.GetPerformCount();
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(performCountDuringExit == 1, "Act reperformed despite being called during exiting!");
-
-
-        yield return null;
-    }
 
 
 
     [UnityTest]
-    public IEnumerator PerformSucceedsWhenEnabled()  // Checks perform succeeds when act enabled
+    public IEnumerator PerformWhenEnabled()
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -223,7 +241,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformSucceedsWhenTheaterEnabled()  // Checks perform succeeds when theater enabled
+    public IEnumerator PerformWhenTheaterEnabled()
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -244,7 +262,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformSucceedsWhenCanReperform()  // Checks perform succeeds again when ongoing and can reperform
+    public IEnumerator PerformWhenCanReperform()
     {
         // Perform Act
         var act = new ReperformableInfiAct();
@@ -265,7 +283,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformSucceedsWhenExternalConditionTrue()  // Checks perform succeeds when external condition true
+    public IEnumerator PerformWhenExternalConditionTrue()
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -281,7 +299,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformSucceedsWhenCanPerformTrue()  // Checks perform succeeds when overriden CanPerform() true
+    public IEnumerator PerformWhenCanPerformTrue()
     {
         // Perform Act
         var act = new CanPerformAct();
@@ -300,586 +318,7 @@ public class ActPerformTests
 
 
     [UnityTest]
-    public IEnumerator PerformDeferredWorks()  // Checks perform deferred performs act on next tick
-    {
-        // Prerequisites
-        var theater = new GameObject().AddComponent<Theater>();
-
-
-        // Physics Tick Deferr Perform Act
-        var physicsAct = new Act();
-        physicsAct.Init("Test Physics Act", theater);
-        physicsAct.PerformDeferred(Act.TickFlags.PhysicsTick);
-        yield return new WaitForFixedUpdate();
-        yield return null;
-
-
-        // Tick Deferr Perform Act
-        var tickAct = new Act();
-        tickAct.Init("Test Tick Act", theater);
-        tickAct.PerformDeferred(Act.TickFlags.Tick);
-        yield return null;
-        yield return null;
-
-
-        // Late Tick Deferr Perform Act
-        var lateTickAct = new Act();
-        lateTickAct.Init("Test Late Tick Act", theater);
-        lateTickAct.PerformDeferred(Act.TickFlags.LateTick);
-        yield return null;
-        yield return null;
-
-
-        // Assertions
-        Assert.IsTrue(physicsAct.GetPerformCount() == 1, "Deferred act did not perform after physics tick!");
-        Assert.IsTrue(tickAct.GetPerformCount() == 1, "Deferred act did not perform after tick!");
-        Assert.IsTrue(lateTickAct.GetPerformCount() == 1, "Deferred act did not perform after late tick!");
-
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-    [UnityTest]
-    public IEnumerator PerformDeferredDoesNotImmediatelyPerform()  // Checks perform deferred does not perform immediately
-    {
-        // Prerequisites
-        var theater = new GameObject().AddComponent<Theater>();
-
-
-        // Perform Act
-        var act = new Act();
-        act.Init("Test Act", theater);
-        act.PerformDeferred(Act.TickFlags.PhysicsTick);
-
-
-        // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, "Act performed immediately despite being deferred!");
-
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformsOnceWhenDeferredTwice()  // Checks act performs once even when deferred twice
-    {
-        // Prerequisites
-        var theater = new GameObject().AddComponent<Theater>();
-
-
-        // Tick Deferred Perform
-        int tickDeferredCount = 0;
-        {
-            var act = new ReperformableInfiAct();
-            act.Init("Test Act", theater);
-            act.PerformDeferred(Act.TickFlags.Tick);
-            act.PerformDeferred(Act.TickFlags.Tick);
-            yield return null;
-            yield return null;
-
-            tickDeferredCount = act.GetPerformCount();
-        }
-
-
-        // Physics Deferred Perform
-        int physicsTickDeferredCount = 0;
-        {
-            var act = new ReperformableInfiAct();
-            act.Init("Test Act", theater);
-            act.PerformDeferred(Act.TickFlags.PhysicsTick);
-            act.PerformDeferred(Act.TickFlags.PhysicsTick);
-            yield return new WaitForFixedUpdate();
-            yield return null;
-
-            physicsTickDeferredCount = act.GetPerformCount();
-        }
-
-
-        // Late Tick Deferred Perform
-        int lateTickDeferredCount = 0;
-        {
-            var act = new ReperformableInfiAct();
-            act.Init("Test Act", theater);
-            act.PerformDeferred(Act.TickFlags.LateTick);
-            act.PerformDeferred(Act.TickFlags.LateTick);
-            yield return null;
-            yield return null;
-
-            lateTickDeferredCount = act.GetPerformCount();
-        }
-
-
-        // Assertions
-        Assert.IsTrue(tickDeferredCount == 1, $"Act did not perform once despite being deferred twice! Count={tickDeferredCount}");
-        Assert.IsTrue(lateTickDeferredCount == 1, $"Act did not perform once despite being deferred twice! Count={lateTickDeferredCount}");
-        Assert.IsTrue(physicsTickDeferredCount == 1, $"Act did not perform once despite being deferred twice! Count={physicsTickDeferredCount}");
-
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-    [UnityTest]
-    public IEnumerator PerformDeferredWithNoneFlagDoesNothing()  // Checks perform deferred with tick flag none does nothing
-    {
-        // Prerequisites
-        var theater = new GameObject().AddComponent<Theater>();
-
-
-        // Perform Act
-        var act = new Act();
-        act.Init("Test Act", theater);
-        act.PerformDeferred(Act.TickFlags.None);
-        yield return new WaitForFixedUpdate();
-        yield return null;
-
-
-        // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, "Act performed despite tick flag being none!");
-
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-    [UnityTest]
-    public IEnumerator PerformDeferredClearedUponPerformingImmediately()  // Checks deferred perform cleared when performed immediately
-    {
-        // Prerequisites
-        var theater = new GameObject().AddComponent<Theater>();
-
-
-        // Perform Act
-        var act = new Act();
-        act.Init("Test Act", theater);
-        act.PerformDeferred(Act.TickFlags.PhysicsTick);
-        act.Perform();
-        var performCountAfterImmediate = act.GetPerformCount();
-        yield return new WaitForFixedUpdate();
-        yield return null;
-        var performCountAfterTick = act.GetPerformCount();
-
-
-        // Assertions
-        Assert.IsTrue(performCountAfterImmediate == 1, "Act did not perform immediately!");
-        Assert.IsTrue(performCountAfterTick == 1, "Deferred perform was not cleared after performing immediately!");
-
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-    [UnityTest]
-    public IEnumerator PerformDeferredClearedOnAbort()  // Checks deferred perform cleared on abort
-    {
-        // Prerequisites
-        var theater = new GameObject().AddComponent<Theater>();
-
-
-        // Perform Act
-        var act = new Act();
-        act.Init("Test Act", theater);
-        act.PerformDeferred();
-        act.Abort();
-        yield return new WaitForFixedUpdate();
-        yield return null;
-
-
-        // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, "Act deferred performed despite being aborted!");
-
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-
-
-
-    [UnityTest]
-    public IEnumerator PerformFromOnPerformStart()  // Checks act reperforms when Perform() called from OnPerformStart
-    {
-        // Perform Act
-        var performStartCount = 0;
-        var act = new ReperformableInfiAct();
-        act.OnPerformStart += (a) =>
-        {
-            performStartCount++;
-            if (performStartCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(performStartCount == 2, $"Act did not reperform when Perform() called from OnPerformStart! Perform Count={performStartCount}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPrePrologue()  // Checks act reperforms when Perform() called from OnPrePrologue
-    {
-        // Perform Act
-        var prePrologueCount = 0;
-        var act = new ReperformableInfiAct();
-        act.prologue = (a) => new List<Act> { new Act() };
-        act.OnPrePrologue += (a) =>
-        {
-            prePrologueCount++;
-            if (prePrologueCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(prePrologueCount == 2, $"Act did not reperform when Perform() called from OnPrePrologue! Perform Count={prePrologueCount}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPostPrologue()  // Checks act reperforms when Perform() called from OnPostPrologue
-    {
-        // Perform Act
-        var postPrologueCount = 0;
-        var act = new ReperformableInfiAct();
-        act.prologue = (a) => new List<Act> { new Act() };
-        act.OnPostPrologue += (a) =>
-        {
-            postPrologueCount++;
-            if (postPrologueCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(postPrologueCount == 2, $"Act did not reperform when Perform() called from OnPostPrologue! Perform Count={postPrologueCount}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPreEnter()  // Checks act reperforms when Perform() called from OnPreEnter
-    {
-        // Perform Act
-        var preEnterCount = 0;
-        var act = new ReperformableInfiAct();
-        act.OnPreEnter += (a) =>
-        {
-            preEnterCount++;
-            if (preEnterCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(preEnterCount == 2, $"Act did not reperform when Perform() called from OnPreEnter! Perform Count={preEnterCount}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPostEnter()  // Checks act reperforms when Perform() called from OnPostEnter
-    {
-        // Perform Act
-        var postEnterCount = 0;
-        var act = new ReperformableInfiAct();
-        act.OnPostEnter += (a) =>
-        {
-            postEnterCount++;
-            if (postEnterCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(postEnterCount == 2, $"Act did not reperform when Perform() called from OnPostEnter! Perform Count={postEnterCount}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPreTick()  // Checks act reperforms when Perform() called from OnPreTick
-    {
-        // Prerequisites
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-
-        // Perform Act
-        var preTickCount = 0;
-        var act = new ReperformableInfiAct();
-        act.isVerbose = true;
-        act.overrideTickFlag = Act.TickFlags.Tick;
-        act.OnPreTick += (a) =>
-        {
-            preTickCount++;
-            if (preTickCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act", theater);
-        act.Perform();
-        yield return null;
-        yield return null;
-
-
-        // Assertions
-        Assert.IsTrue(preTickCount == 2, $"Act did not reperform when Perform() called from OnPreTick! Perform Count={preTickCount}");
-
-
-        UnityEngine.Object.Destroy(theaterObj);
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPostTick()  // Checks act reperforms when Perform() called from OnPostTick
-    {
-        // Prerequisites
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-
-        // Perform Act
-        var postTickCount = 0;
-        var act = new ReperformableInfiAct();
-        act.overrideTickFlag = Act.TickFlags.Tick;
-        act.OnPostTick += (a) =>
-        {
-            postTickCount++;
-            if (postTickCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act", theater);
-        act.Perform();
-        yield return null;
-        yield return null;
-
-
-        // Assertions
-        Assert.IsTrue(postTickCount == 2, $"Act did not reperform when Perform() called from OnPostTick! Perform Count={postTickCount}");
-
-
-        UnityEngine.Object.Destroy(theaterObj);
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPrePhysicsTick()  // Checks act reperforms when Perform() called from OnPrePhysicsTick
-    {
-        // Prerequisites
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-
-        // Perform Act
-        var prePhysicsTickCount = 0;
-        var act = new ReperformableInfiAct();
-        act.overrideTickFlag = Act.TickFlags.PhysicsTick;
-        act.OnPrePhysicsTick += (a) =>
-        {
-            prePhysicsTickCount++;
-            if (prePhysicsTickCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act", theater);
-        act.Perform();
-        yield return new WaitForFixedUpdate();
-        yield return new WaitForFixedUpdate();
-
-
-        // Assertions
-        Assert.IsTrue(prePhysicsTickCount == 2, $"Act did not reperform when Perform() called from OnPrePhysicsTick! Perform Count={prePhysicsTickCount}");
-
-
-        UnityEngine.Object.Destroy(theaterObj);
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPostPhysicsTick()  // Checks act reperforms when Perform() called from OnPostPhysicsTick
-    {
-        // Prerequisites
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-
-        // Perform Act
-        var postPhysicsTickCount = 0;
-        var act = new ReperformableInfiAct();
-        act.overrideTickFlag = Act.TickFlags.PhysicsTick;
-        act.OnPostPhysicsTick += (a) =>
-        {
-            postPhysicsTickCount++;
-            if (postPhysicsTickCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act", theater);
-        act.Perform();
-        yield return new WaitForFixedUpdate();
-        yield return new WaitForFixedUpdate();
-
-
-        // Assertions
-        Assert.IsTrue(postPhysicsTickCount == 2, $"Act did not reperform when Perform() called from OnPostPhysicsTick! Perform Count={postPhysicsTickCount}");
-
-
-        UnityEngine.Object.Destroy(theaterObj);
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPreLateTick()  // Checks act reperforms when Perform() called from OnPreLateTick
-    {
-        // Prerequisites
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-
-        // Perform Act
-        var preLateTickCount = 0;
-        var act = new ReperformableInfiAct();
-        act.overrideTickFlag = Act.TickFlags.LateTick;
-        act.OnPreLateTick += (a) =>
-        {
-            preLateTickCount++;
-            if (preLateTickCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act", theater);
-        act.Perform();
-        yield return null;
-        yield return null;
-
-
-        // Assertions
-        Assert.IsTrue(preLateTickCount == 2, $"Act did not reperform when Perform() called from OnPreLateTick! Perform Count={preLateTickCount}");
-
-
-        UnityEngine.Object.Destroy(theaterObj);
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPostLateTick()  // Checks act reperforms when Perform() called from OnPostLateTick
-    {
-        // Prerequisites
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-
-        // Perform Act
-        var postLateTickCount = 0;
-        var act = new ReperformableInfiAct();
-        act.overrideTickFlag = Act.TickFlags.LateTick;
-        act.OnPostLateTick += (a) =>
-        {
-            postLateTickCount++;
-            if (postLateTickCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act", theater);
-        act.Perform();
-        yield return null;
-        yield return null;
-
-
-        // Assertions
-        Assert.IsTrue(postLateTickCount == 2, $"Act did not reperform when Perform() called from OnPostLateTick! Perform Count={postLateTickCount}");
-
-
-        UnityEngine.Object.Destroy(theaterObj);
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPerformEnd()  // Checks act reperforms when Perform() called from OnPerformEnd
-    {
-        // Perform Act
-        var performEndCount = 0;
-        var act = new ReperformableAct();
-        act.isVerbose = true;
-        act.OnPerformEnd += (a) =>
-        {
-            performEndCount++;
-            if (performEndCount == 1)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(performEndCount == 2, $"Act did not reperform when Perform() called from OnPerformEnd! Perform Count={performEndCount}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformsFromOnEnableChanged()  // Checks act performs when Perform() called from OnEnableChanged
-    {
-        // Perform Act
-        var act = new WaitInfiniAct();
-        act.OnEnableChanged += (a, isEnabled) =>
-        {
-            if (isEnabled)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-        act.SetEnabled(false);
-        act.SetEnabled(true);
-
-
-        // Assertions
-        Assert.IsTrue(act.IsOngoing(), "Act did not perform when Perform() called from OnEnableChanged!");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformsFromOnBlockChanged()  // Checks act performs when Perform() called from OnBlockChanged
-    {
-        // Perform Act
-        var act = new WaitInfiniAct();
-        act.OnBlockChanged += (a, blockingAct, blockType, didBlock) =>
-        {
-            if (!didBlock)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-
-        var blockerAct = new Act();
-        blockerAct.Init("Blocker Act");
-        blockerAct.AddToBlock(new List<Act> { act });
-        blockerAct.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(act.IsOngoing(), "Act did not perform when Perform() called from OnBlockChanged!");
-
-
-        yield return null;
-    }
-
-
-
-    [UnityTest]
-    public IEnumerator CanReperformWorksCorrectly()  // Checks _canReperform works correctly
+    public IEnumerator CanReperformWorksCorrectly()
     {
         // Perform Act
         var cannotReperformAct = new NonReperformableInfiAct();
@@ -896,6 +335,562 @@ public class ActPerformTests
         // Assertions
         Assert.IsTrue(cannotReperformAct.GetPerformCount() == 1, $"Act reperformed despite _canReperform being false! Count={cannotReperformAct.GetPerformCount()}");
         Assert.IsTrue(canReperformAct.GetPerformCount() == 2, $"Act did not reperform despite _canReperform being true! Count={canReperformAct.GetPerformCount()}");
+
+
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator PerformFromOnPreSetup()
+    {
+        // Perform Act
+        var act = new Act();
+        act.OnPreSetup += (a) =>
+        {
+            a.Perform();
+        };
+        act.Init("Test Act");
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPreSetup! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPostSetup()
+    {
+        // Perform Act
+        var act = new Act();
+        act.OnPostSetup += (a) =>
+        {
+            a.Perform();
+        };
+        act.Init("Test Act");
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPostSetup! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPerformStart()
+    {
+
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPerformStart += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform from OnPerformStart! Perform Count={act.GetPerformCount()}");
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPerformEnd()
+    {
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPerformEnd += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPerformEnd! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPrePrologue()
+    {
+        // Prologue act so the prologue signal actually fires
+        var prologueAct = new ReperformableAct();
+        prologueAct.Init("Prologue Act");
+
+
+        // Perform Act
+        var act = new ReperformableAct();
+        act.prologue = (a) => new List<Act> { prologueAct };
+        act.OnPrePrologue += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPrePrologue! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPostPrologue()
+    {
+        // Prologue act so the prologue signal actually fires
+        var prologueAct = new ReperformableAct();
+        prologueAct.Init("Prologue Act");
+
+
+        // Perform Act
+        var act = new ReperformableAct();
+        act.prologue = (a) => new List<Act> { prologueAct };
+        act.OnPostPrologue += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                act.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() != 3, $"Act reperform thrice from OnPostPrologue! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPreEnter()
+    {
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPreEnter += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPreEnter! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPostEnter()
+    {
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPostEnter += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostEnter! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPreTick()
+    {
+        // Real theater needed to drive ticks
+        var theaterGO = new GameObject("TestTheater");
+        var theater = theaterGO.AddComponent<Theater>();
+
+
+        // Perform Act
+        var act = new ReperformableInfiAct();
+        act.overrideTickFlag = Act.TickFlags.Tick;
+        act.OnPreTick += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act", theater);
+        act.Perform();
+
+
+        // Wait for tick cascade
+        int frame = 0;
+        while (act.GetPerformCount() < 3 && frame < 10)
+        {
+            yield return null;
+            frame++;
+        }
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPreTick! Perform Count={act.GetPerformCount()}");
+
+
+        // Cleanup
+        Object.Destroy(theaterGO);
+
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPostTick()
+    {
+        // Real theater needed to drive ticks
+        var theaterGO = new GameObject("TestTheater");
+        var theater = theaterGO.AddComponent<Theater>();
+
+
+        // Perform Act
+        var act = new ReperformableInfiAct();
+        act.overrideTickFlag = Act.TickFlags.Tick;
+        act.OnPostTick += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act", theater);
+        act.Perform();
+
+
+        // Wait for tick cascade
+        int frame = 0;
+        while (act.GetPerformCount() < 3 && frame < 10)
+        {
+            yield return null;
+            frame++;
+        }
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostTick! Perform Count={act.GetPerformCount()}");
+
+
+        // Cleanup
+        Object.Destroy(theaterGO);
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPrePhysicsTick()
+    {
+        // Real theater needed to drive ticks
+        var theaterGO = new GameObject("TestTheater");
+        var theater = theaterGO.AddComponent<Theater>();
+
+
+        // Perform Act
+        var act = new ReperformableInfiAct();
+        act.overrideTickFlag = Act.TickFlags.PhysicsTick;
+        act.OnPrePhysicsTick += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act", theater);
+        act.Perform();
+
+
+        // Wait for physics tick cascade
+        int frame = 0;
+        while (act.GetPerformCount() < 3 && frame < 10)
+        {
+            yield return new WaitForFixedUpdate();
+            frame++;
+        }
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPrePhysicsTick! Perform Count={act.GetPerformCount()}");
+
+
+        // Cleanup
+        Object.Destroy(theaterGO);
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPostPhysicsTick()
+    {
+        // Real theater needed to drive ticks
+        var theaterGO = new GameObject("TestTheater");
+        var theater = theaterGO.AddComponent<Theater>();
+
+
+        // Perform Act
+        var act = new ReperformableInfiAct();
+        act.overrideTickFlag = Act.TickFlags.PhysicsTick;
+        act.OnPostPhysicsTick += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act", theater);
+        act.Perform();
+
+
+        // Wait for physics tick cascade
+        int frame = 0;
+        while (act.GetPerformCount() < 3 && frame < 10)
+        {
+            yield return new WaitForFixedUpdate();
+            frame++;
+        }
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostPhysicsTick! Perform Count={act.GetPerformCount()}");
+
+
+        // Cleanup
+        Object.Destroy(theaterGO);
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPreLateTick()
+    {
+        // Real theater needed to drive ticks
+        var theaterGO = new GameObject("TestTheater");
+        var theater = theaterGO.AddComponent<Theater>();
+
+
+        // Perform Act
+        var act = new ReperformableInfiAct();
+        act.overrideTickFlag = Act.TickFlags.LateTick;
+        act.OnPreLateTick += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act", theater);
+        act.Perform();
+
+
+        // Wait for late tick cascade
+        int frame = 0;
+        while (act.GetPerformCount() < 3 && frame < 10)
+        {
+            yield return null;
+            frame++;
+        }
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPreLateTick! Perform Count={act.GetPerformCount()}");
+
+
+        // Cleanup
+        Object.Destroy(theaterGO);
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPostLateTick()
+    {
+        // Real theater needed to drive ticks
+        var theaterGO = new GameObject("TestTheater");
+        var theater = theaterGO.AddComponent<Theater>();
+
+
+        // Perform Act
+        var act = new ReperformableInfiAct();
+        act.overrideTickFlag = Act.TickFlags.LateTick;
+        act.OnPostLateTick += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act", theater);
+        act.Perform();
+
+
+        // Wait for late tick cascade
+        int frame = 0;
+        while (act.GetPerformCount() < 3 && frame < 10)
+        {
+            yield return null;
+            frame++;
+        }
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostLateTick! Perform Count={act.GetPerformCount()}");
+
+
+        // Cleanup
+        Object.Destroy(theaterGO);
+
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPreExit()
+    {
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPreExit += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() != 3, $"Act reperformed from OnPreExit! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPostExit()
+    {
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPostExit += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() != 3, $"Act reperformed from OnPostExit! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPreCleanup()
+    {
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPreCleanup += (a) =>
+        {
+            a.Perform();
+        };
+        act.Init("Test Act");
+        act.Deinit();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPreCleanup! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformsFromOnPostCleanup()
+    {
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPostCleanup += (a) =>
+        {
+            a.Perform();
+        };
+        act.Init("Test Act");
+        act.Deinit();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPostCleanup! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnEnableChanged()
+    {
+        // Perform Act
+        var act = new Act();
+        act.OnEnableChanged += (a, newEnabled) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.SetEnabled(false);
+        act.SetEnabled(true);
+        act.SetEnabled(false);
+        act.SetEnabled(true);
+        act.SetEnabled(false);
+        act.SetEnabled(true);
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnEnableChanged! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnBlockChanged()
+    {
+        // Perform Act
+        var act = new Act();
+        act.OnBlockChanged += (a, byAct, blockType, didBlock) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+
+
+        var blocker = new ReperformableAct();
+        blocker.Init("Blocker Act");
+        blocker.AddToBlock(new List<Act> { act });
+        blocker.Perform();
+        blocker.Abort();
+        blocker.Perform();
+        blocker.Abort();
+        blocker.Perform();
+        blocker.Abort();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnBlockChanged! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;

@@ -6,10 +6,17 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
+// 1. Are "pre setup" & "post setup" actions being broadcasted (with correct arguments)?
+// 1. Is Setup() being invoked?
+// 1. Is theater assigned after initialization?
+// 1. Is name assigned after initialization?
+// 1. Is initially enabled/disabled working?
+
+
 public class ActInitializeTests
 {
     [UnityTest]
-    public IEnumerator OnPreAndPostSetup()  // Checks OnPreSetup & OnPostSetup
+    public IEnumerator OnPreAndPostSetup()
     {
         // Prerequisites
         bool wasPreSetupInvoked = false;
@@ -35,7 +42,7 @@ public class ActInitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator Setup()  // Checks Setup()
+    public IEnumerator Setup()
     {
         // Perform Act
         var act = new SetupAct();
@@ -49,7 +56,7 @@ public class ActInitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator TheaterAfterInit()  // Checks theater value after initialization
+    public IEnumerator TheaterAfterInit()
     {
         // Check if theater is invalid if not assigned in init
         var act1 = new Act();
@@ -73,7 +80,7 @@ public class ActInitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator NameAfterInit()  // Checks name value after initialization
+    public IEnumerator NameAfterInit()
     {
         // Perform Act
         var actName = "My Named Act";
@@ -88,7 +95,7 @@ public class ActInitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator InitiallyEnabledOrDisabled()  // Checks initially enabled/disabled works
+    public IEnumerator InitiallyEnabledOrDisabled()
     {
         // Perform Act
         var enabledAct = new Act();

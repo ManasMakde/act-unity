@@ -68,6 +68,18 @@ public class Act
 
 	public void Init(string newName = "", Theater newTheater = null, bool initiallyEnabled = true)
 	{
+		// Return if already initialized
+		if (_isInitializing)
+		{
+			WriteLog("Failed Init(), Already initializing or deinitializing!");
+			return;
+		}
+
+
+		// Mark as initialization started
+		_isInitializing = true;
+
+
 		// Assign new name
 		if (newName != "")
 		{
@@ -100,9 +112,25 @@ public class Act
 
 		// Broadcast post setup
 		OnPostSetup?.Invoke(this);
+
+
+		// Mark as initialization completed
+		_isInitializing = false;
 	}
 	public void Deinit()
 	{
+		// Return if not initialized
+		if (_isInitializing)
+		{
+			WriteLog("Failed Deinit(), Already initializing or deinitializing!");
+			return;
+		}
+
+
+		// Mark as deinitialization started
+		_isInitializing = true;
+
+
 		// Make sure act is not ongoing
 		Abort();
 
@@ -132,6 +160,10 @@ public class Act
 		_performedOnTick = -1;
 		_performedOnPhysicsTick = -1;
 		_performedOnLateTick = -1;
+
+
+		// Mark as deinitialization completed
+		_isInitializing = false;
 	}
 	public void Perform()
 	{
@@ -525,10 +557,12 @@ public class Act
 
 	private HashSet<Act> _epilogueActs = new();
 	private HashSet<Act> _pendingEpilogueActs = new();
-	
+
 	private HashSet<Act> _prologueActs = new();
 	private HashSet<Act> _pendingPrologueActs = new();
 	private HashSet<Act> _completedPrologueActs = new();
+
+	private bool _isInitializing = false;
 	private bool _hasPrecomputedPrologues = false;
 
 	private int _performCount = 0;
@@ -680,6 +714,22 @@ public class Act
 	}
 	private bool CanPerformImpl(bool skipOngoingCheck = false)
 	{
+		// Return if in between initialization
+		if (_isInitializing)
+		{
+			WriteLog("Cannot perform, act is initializing or deinitializing!");
+			return false;
+		}
+
+
+		// Return if exiting
+		if (_status == Status.Exiting)
+		{
+			WriteLog("Cannot perform, act is between exiting!");
+			return false;
+		}
+
+
 		// Return if disabled or theater is disabled
 		if (!IsEnabled() || (_theater != null && !_theater.IsEnabled()))
 		{
@@ -719,7 +769,10 @@ public class Act
 	private void PerformImpl()
 	{
 		// Finish any ongoing perform
-		Finish(Outcome.Interrupted);
+		if (_status != Status.None)
+		{
+			Finish(Outcome.Interrupted);
+		}
 
 
 		// Store during which tick act was performed
@@ -1149,9 +1202,9 @@ public class Act
 		}
 
 
-		// Continue Epilogues & Unblock 
-		ContinueEpilogues(this, _outcome);
+		// Unblock & Continue Epilogues
 		UnblockOthers();
+		ContinueEpilogues(this, _outcome);
 
 
 		// Reset status
