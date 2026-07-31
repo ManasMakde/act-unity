@@ -782,6 +782,13 @@ public class Act
 		_performedOnLateTick = Time.frameCount;
 
 
+		// Clear deferred
+		if (_theater != null)
+		{
+			Theater.Friend.UnstageDeferred(_theater, this);
+		}
+
+
 		// Start prologuing
 		Redirect(Status.Prologuing);
 	}

@@ -243,7 +243,7 @@ public class ActPerformDeferredTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 1, $"Act failed to deferr perform from OnPreSetup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act did not perform deferred from OnPreSetup! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -269,7 +269,7 @@ public class ActPerformDeferredTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 1, $"Act failed to deferr perform from OnPostSetup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act did not perform deferred from OnPostSetup! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -300,13 +300,13 @@ public class ActPerformDeferredTests
 
         yield return new WaitForFixedUpdate();
         yield return null;
-        
+
         yield return new WaitForFixedUpdate();
         yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPerformStart (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPerformStart! Perform Count={act.GetPerformCount()}");
 
         UnityEngine.Object.Destroy(theater.gameObject);
     }
@@ -330,18 +330,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return new WaitForFixedUpdate();
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPerformEnd (deferred)! Perform Count={act.GetPerformCount()}");
-
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPerformEnd! Perform Count={act.GetPerformCount()}");
 
         UnityEngine.Object.Destroy(theater.gameObject);
     }
@@ -371,17 +371,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return new WaitForFixedUpdate();
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPrePrologue (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPrePrologue! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -411,13 +412,19 @@ public class ActPerformDeferredTests
         act.Init("Test Act", theater);
         act.Perform();
 
+
         yield return new WaitForFixedUpdate();
+        yield return null;
+
         yield return new WaitForFixedUpdate();
+        yield return null;
+
         yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() != 3, $"Act reperform thrice from OnPostPrologue (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPostPrologue! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -442,17 +449,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return new WaitForFixedUpdate();
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPreEnter (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPreEnter! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -477,17 +485,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return new WaitForFixedUpdate();
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostEnter (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPostEnter! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -514,17 +523,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return null;
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPreTick (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPreTick! Perform Count={act.GetPerformCount()}");
 
 
         // Cleanup
@@ -552,17 +562,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return null;
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostTick (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPostTick! Perform Count={act.GetPerformCount()}");
 
 
         // Cleanup
@@ -590,17 +601,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return new WaitForFixedUpdate();
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPrePhysicsTick (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPrePhysicsTick! Perform Count={act.GetPerformCount()}");
 
 
         // Cleanup
@@ -628,17 +640,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return new WaitForFixedUpdate();
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostPhysicsTick (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPostPhysicsTick! Perform Count={act.GetPerformCount()}");
 
 
         // Cleanup
@@ -666,17 +679,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return null;
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPreLateTick (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPreLateTick! Perform Count={act.GetPerformCount()}");
 
 
         // Cleanup
@@ -704,17 +718,18 @@ public class ActPerformDeferredTests
         act.Perform();
 
 
-        // Wait for defer
-        int frame = 0;
-        while (act.GetPerformCount() < 3 && frame < 30)
-        {
-            yield return null;
-            frame++;
-        }
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostLateTick (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPostLateTick! Perform Count={act.GetPerformCount()}");
 
 
         // Cleanup
@@ -739,13 +754,19 @@ public class ActPerformDeferredTests
         act.Init("Test Act", theater);
         act.Perform();
 
+
         yield return new WaitForFixedUpdate();
+        yield return null;
+
         yield return new WaitForFixedUpdate();
+        yield return null;
+
         yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() != 3, $"Act reperformed from OnPreExit (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPreExit! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -769,13 +790,19 @@ public class ActPerformDeferredTests
         act.Init("Test Act", theater);
         act.Perform();
 
+
         yield return new WaitForFixedUpdate();
+        yield return null;
+
         yield return new WaitForFixedUpdate();
+        yield return null;
+
         yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() != 3, $"Act reperformed from OnPostExit (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPostExit! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -801,8 +828,7 @@ public class ActPerformDeferredTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPreCleanup (deferred)! Perform Count={act.GetPerformCount()}");
-
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPreCleanup! Perform Count={act.GetPerformCount()}");
 
         UnityEngine.Object.Destroy(theater.gameObject);
     }
@@ -822,13 +848,13 @@ public class ActPerformDeferredTests
         act.Init("Test Act", theater);
         act.Deinit();
 
+
         yield return new WaitForFixedUpdate();
         yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPostCleanup (deferred)! Perform Count={act.GetPerformCount()}");
-
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPostCleanup! Perform Count={act.GetPerformCount()}");
 
         UnityEngine.Object.Destroy(theater.gameObject);
     }
@@ -854,20 +880,26 @@ public class ActPerformDeferredTests
         // Toggle with a wait between each, so all deferred performs should happen before next toggle
         act.SetEnabled(false);
         yield return new WaitForFixedUpdate();
+        yield return null;
         act.SetEnabled(true);
         yield return new WaitForFixedUpdate();
+        yield return null;
         act.SetEnabled(false);
         yield return new WaitForFixedUpdate();
+        yield return null;
         act.SetEnabled(true);
         yield return new WaitForFixedUpdate();
+        yield return null;
         act.SetEnabled(false);
         yield return new WaitForFixedUpdate();
+        yield return null;
         act.SetEnabled(true);
         yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnEnableChanged (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnEnableChanged! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -899,20 +931,26 @@ public class ActPerformDeferredTests
         // Toggle with a wait between each, so all deferred performs should happen before next toggle
         blocker.Perform();
         yield return new WaitForFixedUpdate();
+        yield return null;
         blocker.Abort();
         yield return new WaitForFixedUpdate();
+        yield return null;
         blocker.Perform();
         yield return new WaitForFixedUpdate();
+        yield return null;
         blocker.Abort();
         yield return new WaitForFixedUpdate();
+        yield return null;
         blocker.Perform();
         yield return new WaitForFixedUpdate();
+        yield return null;
         blocker.Abort();
         yield return new WaitForFixedUpdate();
+        yield return null;
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnBlockChanged (deferred)! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnBlockChanged! Perform Count={act.GetPerformCount()}");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);

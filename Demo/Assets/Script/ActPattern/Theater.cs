@@ -113,6 +113,7 @@ public class Theater : MonoBehaviour
             return;
         }
 
+
         _allActs.Add(newAct);
     }
     private void RemoveAct(Act oldAct)
@@ -131,6 +132,14 @@ public class Theater : MonoBehaviour
             return;
         }
 
+
+        // Unstage from everything
+        UnstageDeferred(oldAct);
+        UnstageTick(oldAct);
+        UnstagePhysicsTick(oldAct);
+        UnstageLateTick(oldAct);
+
+
         _allActs.Remove(oldAct);
     }
     private void StageOngoing(Act act)
@@ -144,10 +153,6 @@ public class Theater : MonoBehaviour
 
         // Mark as ongoing act
         _ongoingActs.Add(act);
-
-
-        // Clear defer
-        UnstageDeferred(act);
 
 
         // Broadcast act started
@@ -370,10 +375,12 @@ public class Theater : MonoBehaviour
     {
         foreach (var pair in other)
         {
-            if (overwrite || !dict.ContainsKey(pair.Key))
+            if (dict.ContainsKey(pair.Key) && !overwrite)
             {
-                dict[pair.Key] = pair.Value;
+                continue;
             }
+
+            dict[pair.Key] = pair.Value;
         }
     }
 
