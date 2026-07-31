@@ -39,7 +39,7 @@ public class ActDeinitializeTests
     public IEnumerator Cleanup()  // Checks Cleanup()
     {
         // Perform Act
-        var act = new TestCleanupAct();
+        var act = new CleanupAct();
         act.Init("Test Act");
         act.Deinit();
 

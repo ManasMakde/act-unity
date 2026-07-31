@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-public class TestSetupAct : Act
+public class SetupAct : Act
 {
     public int callCount = 0;
     protected override void Setup()
@@ -14,7 +14,7 @@ public class TestSetupAct : Act
         callCount++;
     }
 }
-public class TestCanPerformAct : Act
+public class CanPerformAct : Act
 {
     public int callCount = 0;
     protected override bool CanPerform()
@@ -23,7 +23,7 @@ public class TestCanPerformAct : Act
         return base.CanPerform();
     }
 }
-public class TestEnterAct : Act
+public class EnterAct : Act
 {
     public int callCount = 0;
     protected override Outcome Enter()
@@ -32,7 +32,7 @@ public class TestEnterAct : Act
         return base.Enter();
     }
 }
-public class TestTickAct : Act
+public class TickAct : Act
 {
     public int callCount = 0;
     protected override void Setup()
@@ -45,7 +45,7 @@ public class TestTickAct : Act
         return Outcome.Pending;
     }
 }
-public class TestPhysicsTickAct : Act
+public class PhysicsTickAct : Act
 {
     public int callCount = 0;
     protected override void Setup()
@@ -58,7 +58,7 @@ public class TestPhysicsTickAct : Act
         return Outcome.Pending;
     }
 }
-public class TestLateTickAct : Act
+public class LateTickAct : Act
 {
     public int callCount = 0;
     protected override void Setup()
@@ -71,7 +71,7 @@ public class TestLateTickAct : Act
         return Outcome.Pending;
     }
 }
-public class TestExitAct : Act
+public class ExitAct : Act
 {
     public int callCount = 0;
     protected override void Exit()
@@ -79,7 +79,7 @@ public class TestExitAct : Act
         callCount++;
     }
 }
-public class TestCleanupAct : Act
+public class CleanupAct : Act
 {
     public int callCount = 0;
     protected override void Cleanup()
@@ -135,5 +135,24 @@ public class FalseCanPerformAct : Act
     protected override Outcome Enter()
     {
         return Outcome.Pending;
+    }
+}
+public class FailingAct : Act
+{
+    protected override Outcome Enter()
+    {
+        return Outcome.Failure;
+    }
+}
+public class SingleTickAct : Act
+{
+    protected override void Setup()
+    {
+        _tickFlags = TickFlags.Tick;
+    }
+
+    protected override Outcome Tick()
+    {
+        return GetTickCount() >= 1 ? Outcome.Success : Outcome.Pending;
     }
 }

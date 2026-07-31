@@ -186,7 +186,7 @@ public class ActPerformTests
     public IEnumerator PerformFailsWhenCalledWhileExiting()  // Checks perform does not reperform act when called during exiting
     {
         // Perform Act
-        var act = new TestExitAct();
+        var act = new ExitAct();
         var performCountDuringExit = 0;
         act.OnPreExit += (a) =>
         {
@@ -284,7 +284,7 @@ public class ActPerformTests
     public IEnumerator PerformSucceedsWhenCanPerformTrue()  // Checks perform succeeds when overriden CanPerform() true
     {
         // Perform Act
-        var act = new TestCanPerformAct();
+        var act = new CanPerformAct();
         act.Init("Test Act");
         act.Perform();
 

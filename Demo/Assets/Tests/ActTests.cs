@@ -6,78 +6,78 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// Waits pending on Enter, exposes Finish() publicly for tests
-public class FinishableAct : Act
-{
-    protected override Outcome Enter()
-    {
-        return Outcome.Pending;
-    }
-    public void CallFinish(Outcome outcome = Outcome.Success)
-    {
-        Finish(outcome);
-    }
-}
-// Waits pending on Enter but allows reperforming
+// // Waits pending on Enter, exposes Finish() publicly for tests
+// public class FinishableAct : Act
+// {
+//     protected override Outcome Enter()
+//     {
+//         return Outcome.Pending;
+//     }
+//     public void CallFinish(Outcome outcome = Outcome.Success)
+//     {
+//         Finish(outcome);
+//     }
+// }
+// // Waits pending on Enter but allows reperforming
 
-// Retries once internally then succeeds
-public class RetryOnceAct : Act
-{
-    public int enterCount = 0;
-    protected override Outcome Enter()
-    {
-        enterCount++;
-        return enterCount == 1 ? Outcome.Retry : Outcome.Success;
-    }
-}
-// Retries internally but fails to reperform since CanPerform only true once
-public class FailRetryAct : Act
-{
-    private int _canPerformCount = 0;
-    protected override bool CanPerform()
-    {
-        _canPerformCount++;
-        return _canPerformCount == 1;
-    }
-    protected override Outcome Enter()
-    {
-        return Outcome.Retry;
-    }
-}
-// Fails immediately on entering
-public class FailOnEnterAct : Act
-{
-    protected override Outcome Enter()
-    {
-        return Outcome.Failure;
-    }
-}
-// Ticks on all 3 tick types
-public class TestAllTicksAct : Act
-{
-    public int tickCount = 0;
-    public int physicsTickCount = 0;
-    public int lateTickCount = 0;
-    protected override void Setup()
-    {
-        _tickFlags = TickFlags.Tick | TickFlags.PhysicsTick | TickFlags.LateTick;
-    }
-    protected override Outcome Tick()
-    {
-        tickCount++;
-        return Outcome.Pending;
-    }
-    protected override Outcome PhysicsTick()
-    {
-        physicsTickCount++;
-        return Outcome.Pending;
-    }
-    protected override Outcome LateTick()
-    {
-        lateTickCount++;
-        return Outcome.Pending;
-    }
-}
+// // Retries once internally then succeeds
+// public class RetryOnceAct : Act
+// {
+//     public int enterCount = 0;
+//     protected override Outcome Enter()
+//     {
+//         enterCount++;
+//         return enterCount == 1 ? Outcome.Retry : Outcome.Success;
+//     }
+// }
+// // Retries internally but fails to reperform since CanPerform only true once
+// public class FailRetryAct : Act
+// {
+//     private int _canPerformCount = 0;
+//     protected override bool CanPerform()
+//     {
+//         _canPerformCount++;
+//         return _canPerformCount == 1;
+//     }
+//     protected override Outcome Enter()
+//     {
+//         return Outcome.Retry;
+//     }
+// }
+// // Fails immediately on entering
+// public class FailOnEnterAct : Act
+// {
+//     protected override Outcome Enter()
+//     {
+//         return Outcome.Failure;
+//     }
+// }
+// // Ticks on all 3 tick types
+// public class TestAllTicksAct : Act
+// {
+//     public int tickCount = 0;
+//     public int physicsTickCount = 0;
+//     public int lateTickCount = 0;
+//     protected override void Setup()
+//     {
+//         _tickFlags = TickFlags.Tick | TickFlags.PhysicsTick | TickFlags.LateTick;
+//     }
+//     protected override Outcome Tick()
+//     {
+//         tickCount++;
+//         return Outcome.Pending;
+//     }
+//     protected override Outcome PhysicsTick()
+//     {
+//         physicsTickCount++;
+//         return Outcome.Pending;
+//     }
+//     protected override Outcome LateTick()
+//     {
+//         lateTickCount++;
+//         return Outcome.Pending;
+//     }
+// }
 
 
 // Tests
@@ -697,7 +697,7 @@ public class TestAllTicksAct : Act
 //     public IEnumerator EnterIsInvoked()  // Checks Enter() is invoked
 //     {
 //         // Perform Act
-//         var act = new TestEnterAct();
+//         var act = new EnterAct();
 //         act.Init("Test Act");
 //         act.Perform();
 
@@ -767,7 +767,7 @@ public class TestAllTicksAct : Act
 
 
 //         // Perform Act
-//         var act = new TestTickAct();
+//         var act = new TickAct();
 //         act.OnPreTick += (a) => { statusDuringTick = a.GetStatus(); };
 //         act.Init("Test Act", theater);
 //         act.Perform();
@@ -792,7 +792,7 @@ public class TestAllTicksAct : Act
 
 
 //         // Perform Act
-//         var act = new TestTickAct();
+//         var act = new TickAct();
 //         act.OnPreTick += (a) => { wasPreTickInvoked = true; preTickArg1 = a; };
 //         act.OnPostTick += (a) => { wasPostTickInvoked = true; postTickArg1 = a; };
 //         act.Init("Test Act", theater);
@@ -840,15 +840,15 @@ public class TestAllTicksAct : Act
 
 
 //         // Perform Act
-//         var tickAct = new TestTickAct();
+//         var tickAct = new TickAct();
 //         tickAct.Init("Tick Act", theater);
 //         tickAct.Perform();
 
-//         var physicsAct = new TestPhysicsTickAct();
+//         var physicsAct = new PhysicsTickAct();
 //         physicsAct.Init("Physics Act", theater);
 //         physicsAct.Perform();
 
-//         var lateAct = new TestLateTickAct();
+//         var lateAct = new LateTickAct();
 //         lateAct.Init("Late Act", theater);
 //         lateAct.Perform();
 
@@ -950,7 +950,7 @@ public class TestAllTicksAct : Act
 //     public IEnumerator ExitIsInvoked()  // Checks Exit() is invoked
 //     {
 //         // Perform Act
-//         var act = new TestExitAct();
+//         var act = new ExitAct();
 //         act.Init("Test Act");
 //         act.Perform();
 
@@ -965,7 +965,7 @@ public class TestAllTicksAct : Act
 //     public IEnumerator PerformDuringExitDoesNotReperform()  // Checks perform while exiting does not reperform with canReperform true or false
 //     {
 //         // Perform Act
-//         var nonReperformAct = new TestExitAct();
+//         var nonReperformAct = new ExitAct();
 //         nonReperformAct.OnPreExit += (a) => { a.Perform(); };
 //         nonReperformAct.Init("Non Reperform Act");
 //         nonReperformAct.Perform();
@@ -993,7 +993,7 @@ public class TestAllTicksAct : Act
 //     public IEnumerator AbortDuringExitDoesNotExitAgain()  // Checks abort while exiting does not exit act again
 //     {
 //         // Perform Act
-//         var act = new TestExitAct();
+//         var act = new ExitAct();
 //         act.OnPreExit += (a) => { a.Abort(); };
 //         act.Init("Test Act");
 //         act.Perform();
@@ -1863,7 +1863,7 @@ public class TestAllTicksAct : Act
 //     public IEnumerator CanTickReturnsAccurateValues()  // Checks CanTick true or false for all flag combinations
 //     {
 //         // Perform Act
-//         var tickAct = new TestTickAct();
+//         var tickAct = new TickAct();
 //         tickAct.Init("Tick Act");
 
 //         var allAct = new TestAllTicksAct();
@@ -2130,7 +2130,7 @@ public class TestAllTicksAct : Act
 //     public IEnumerator ActFailsTickingWithoutTheater()  // Checks act fails ticking without theater
 //     {
 //         // Perform Act
-//         var act = new TestTickAct();
+//         var act = new TickAct();
 //         act.Init("Test Act");
 //         act.Perform();
 //         yield return null;

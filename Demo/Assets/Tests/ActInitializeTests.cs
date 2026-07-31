@@ -38,7 +38,7 @@ public class ActInitializeTests
     public IEnumerator Setup()  // Checks Setup()
     {
         // Perform Act
-        var act = new TestSetupAct();
+        var act = new SetupAct();
         act.Init("Test Act");
 
 
