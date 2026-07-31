@@ -6,10 +6,30 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
+// 1. Is "pre prologue" action being broadcasted (with correct arguments)?
+// 1. Is "pre prologue" action not being broadcasted when no prologue acts assigned?
+// 1. Is "pre prologue" action not being broadcasted when assigned empty prologue acts list?
+
+// 1. Is "post prologue" action being broadcasted (with correct arguments)?
+// 1. Is "post prologue" action not being broadcasted when no prologue acts assigned?
+// 1. Is "post prologue" action not being broadcasted when assigned empty prologue acts list?
+// 1. Is "post prologue" action not being broadcasted when null passed to prologue?
+// 1. Is "post prologue" action not being broadcasted when any prologue act fails?
+
+// 1. Does an act calling itself as one of the prologues get skipped?
+// 1. Does an act only calling itself as prologue get skipped?
+
+// 1. Does main act perform when a prologue act blocks it?
+// 1. Does prologue act perform when main act blocks it?
+// 1. Does grandchild prologue act perform when main act blocks it?
+// 1. Does main act perform when grandchild prologue act blocks it?
+// 1. Do sibling acts perform when they block each other?
+
+
 public class ActPrologueTests
 {
     [UnityTest]
-    public IEnumerator OnPrePrologue()  // Checks OnPrePrologue broadcasting with correct arguments
+    public IEnumerator OnPrePrologue()
     {
         // Prerequisites
         bool wasPrePrologueInvoked = false;
@@ -32,7 +52,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPrePrologueBroadcastWithNoPrologues()  // Checks pre prologue not broadcasting when no prologue acts assigned
+    public IEnumerator OnPrePrologueBroadcastWithNoPrologues()
     {
         // Prerequisites
         bool wasPrePrologueInvoked = false;
@@ -52,7 +72,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPrePrologueBroadcastWithEmptyPrologues()  // Checks pre prologue not broadcasting when empty prologue list assigned
+    public IEnumerator OnPrePrologueBroadcastWithEmptyPrologues()
     {
         // Prerequisites
         bool wasPrePrologueInvoked = false;
@@ -76,7 +96,7 @@ public class ActPrologueTests
 
 
     [UnityTest]
-    public IEnumerator OnPostPrologue()  // Checks OnPostPrologue broadcasting with correct arguments
+    public IEnumerator OnPostPrologue()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -99,7 +119,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPostPrologueBroadcastWithNoPrologues()  // Checks post prologue not broadcasting when no prologue acts assigned
+    public IEnumerator OnPostPrologueBroadcastWithNoPrologues()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -119,7 +139,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPostPrologueBroadcastWithEmptyPrologues()  // Checks post prologue not broadcasting when empty prologue list assigned
+    public IEnumerator OnPostPrologueBroadcastWithEmptyPrologues()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -140,7 +160,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPostPrologueBroadcastWithNullPrologue()  // Checks post prologue not broadcasting when null passed to prologue
+    public IEnumerator OnPostPrologueBroadcastWithNullPrologue()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -162,7 +182,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPostPrologueBroadcastWhenPrologueFails()  // Checks post prologue not broadcasting when a prologue act fails
+    public IEnumerator OnPostPrologueBroadcastWhenPrologueFails()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -187,7 +207,7 @@ public class ActPrologueTests
 
 
     [UnityTest]
-    public IEnumerator SelfAsOnlyPrologueSkipped()  // Checks act only passing itself as prologue
+    public IEnumerator SelfAsOnlyPrologueSkipped()
     {
         // Perform Act
         var act = new Act();
@@ -203,7 +223,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator SelfAsPrologueSkipped()  // Checks act passing itself as one of the prologues
+    public IEnumerator SelfAsPrologueSkipped()
     {
         // Prologue Act
         var didProloguePerform = false;
@@ -238,7 +258,7 @@ public class ActPrologueTests
 
 
     [UnityTest]
-    public IEnumerator MainActBlockingPrologue()  // Checks main act blocking prologue
+    public IEnumerator MainActBlockingPrologue()
     {
         // Prerequisites
         var prologueAct = new Act();
@@ -262,7 +282,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PrologueBlockingMainChain()  // Checks prologue blocking main act
+    public IEnumerator PrologueBlockingMainChain()
     {
         // Prerequisites
         var mainAct = new Act();
@@ -286,7 +306,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator MainActBlockingGrandchildPrologue()  // Checks main act blocking deep prologue
+    public IEnumerator MainActBlockingGrandchildPrologue()
     {
         var grandchildAct = new Act();
         grandchildAct.Init("Grandchild Act");
@@ -299,7 +319,7 @@ public class ActPrologueTests
         mainAct.prologue = (a) => new() { childAct };
         mainAct.AddToBlock(new() { grandchildAct });
         mainAct.Init("Main Act");
-        
+
         mainAct.Perform();
 
 
@@ -312,7 +332,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GrandchildPrologueBlockingMainAct()  // Checks deep prologue blocking main act
+    public IEnumerator GrandchildPrologueBlockingMainAct()
     {
         // Prerequisites
         var mainAct = new Act();
@@ -340,27 +360,56 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator ProloguesBlockingSiblings()  // Checks prologue blocking sibling prologue of the same chain
+    public IEnumerator ProloguesBlockingSiblings()
     {
-        var siblingActB = new Act();
-        siblingActB.Init("Sibling Act B");
+        // One sibling blocks other
+        {
+            var siblingActB = new Act();
+            siblingActB.Init("Sibling Act B");
 
-        var siblingActA = new Act();
-        siblingActA.AddToBlock(new() { siblingActB });
-        siblingActA.Init("Sibling Act A");
+            var siblingActA = new Act();
+            siblingActA.AddToBlock(new() { siblingActB });
+            siblingActA.Init("Sibling Act A");
 
-        var mainAct = new Act();
-        mainAct.prologue = (a) => new() { siblingActA, siblingActB };
-        mainAct.Init("Main Act");
+            var mainAct = new Act();
+            mainAct.prologue = (a) => new() { siblingActA, siblingActB };
+            mainAct.Init("Main Act");
 
-        mainAct.Perform();
+            mainAct.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(siblingActA.GetPerformCount() == 1, $"siblingActA did not perform exactly once, Perform Count={siblingActA.GetPerformCount()}");
-        Assert.IsTrue(siblingActB.GetPerformCount() == 1, $"siblingActB did not perform exactly once, Perform Count={siblingActB.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
+            // Assertions
+            Assert.IsTrue(siblingActA.GetPerformCount() == 1, $"siblingActA did not perform exactly once, Perform Count={siblingActA.GetPerformCount()}");
+            Assert.IsTrue(siblingActB.GetPerformCount() == 1, $"siblingActB did not perform exactly once, Perform Count={siblingActB.GetPerformCount()}");
+            Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
 
-        yield return null;
+            yield return null;
+        }
+
+
+        // Both siblings blocks each other
+        {
+            var siblingActA = new Act();
+            var siblingActB = new Act();
+            siblingActB.AddToBlock(new() { siblingActA });
+            siblingActB.Init("Sibling Act B");
+
+            siblingActA.AddToBlock(new() { siblingActB });
+            siblingActA.Init("Sibling Act A");
+
+            var mainAct = new Act();
+            mainAct.prologue = (a) => new() { siblingActA, siblingActB };
+            mainAct.Init("Main Act");
+
+            mainAct.Perform();
+
+
+            // Assertions
+            Assert.IsTrue(siblingActA.GetPerformCount() == 1, $"siblingActA did not perform exactly once (both siblings block each other), Perform Count={siblingActA.GetPerformCount()}");
+            Assert.IsTrue(siblingActB.GetPerformCount() == 1, $"siblingActB did not perform exactly once (both siblings block each other), Perform Count={siblingActB.GetPerformCount()}");
+            Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
+
+            yield return null;
+        }
     }
 }

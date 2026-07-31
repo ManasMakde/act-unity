@@ -6,10 +6,15 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
+// 1. Does prologue chain {{actA1, actA2}} work?
+// 1. Does prologue chain {{actA1, actA2}, {actB1, actB2}} work?
+// 1. Does prologue chain {{actA1, actA2}, {actB1, actB2}, {actC1, actC2}} work?
+
+
 public class ActPrologues2Tests
 {
     [UnityTest]
-    public IEnumerator Prologues2()  // Checks {{actA1, actA2}} 
+    public IEnumerator Prologues2()
     {
         // Seq variation
         {
@@ -66,7 +71,7 @@ public class ActPrologues2Tests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator Prologues2x2()  // Checks {{actA1, actA2}, {actB1, actB2}} 
+    public IEnumerator Prologues2x2()
     {
         // Seq variation instant acts
         {
@@ -249,7 +254,7 @@ public class ActPrologues2Tests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator Prologues2x2x2()  // Checks {{actA1, actA2}, {actB1, actB2}, {actC1, actC2}}
+    public IEnumerator Prologues2x2x2()
     {
         // Seq variation instant acts
         {
