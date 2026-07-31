@@ -156,3 +156,21 @@ public class SingleTickAct : Act
         return GetTickCount() >= 1 ? Outcome.Success : Outcome.Pending;
     }
 }
+public class ManualFinishAct : Act
+{
+    public void ManualFinish(Outcome outcome = Outcome.Success)
+    {
+        Finish(outcome);
+    }
+    protected override Outcome Enter()
+    {
+        return Outcome.Pending;
+    }
+}
+public class NoneTickAct : Act
+{
+    protected override void Setup()
+    {
+        _tickFlags = TickFlags.None;
+    }
+}
