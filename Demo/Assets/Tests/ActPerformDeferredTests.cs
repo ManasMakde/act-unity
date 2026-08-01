@@ -9,6 +9,7 @@ using UnityEngine.TestTools;
 // 1. Does perform deferred fail without theater?
 // 1. Does perform deferred not immediately perform the act?
 // 1. Does act perform once when deferred twice?
+// 1. Does perform deferred combined tick flags fire once only for whichever comes first?
 // 1. Does perform deferred with tick flag as none do nothing?
 // 1. Is perform deferred cleared upon performing immediately?
 // 1. Is perform deferred cleared on aborting?
@@ -170,6 +171,99 @@ public class ActPerformDeferredTests
         Assert.IsTrue(tickDeferredCount == 1, $"Act did not perform once despite being deferred twice! Count={tickDeferredCount}");
         Assert.IsTrue(lateTickDeferredCount == 1, $"Act did not perform once despite being deferred twice! Count={lateTickDeferredCount}");
         Assert.IsTrue(physicsTickDeferredCount == 1, $"Act did not perform once despite being deferred twice! Count={physicsTickDeferredCount}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+    }
+    [UnityTest]
+    public IEnumerator PerformDeferredCombinedFlagsFireOnFirstAndClearOther()
+    {
+        // Prerequisites
+        var theater = new GameObject().AddComponent<Theater>();
+
+
+        // Tick and PhysicsTick combo
+        {
+            var act = new Act();
+            act.Init("Test Act", theater);
+            act.PerformDeferred(Act.TickFlags.Tick | Act.TickFlags.PhysicsTick);
+
+            yield return new WaitForFixedUpdate();
+
+            var performCountAfterPhysicsTick = act.GetPerformCount();
+
+            yield return null;
+
+            var performCountAfterTick = act.GetPerformCount();
+
+
+            // Assertions
+            Assert.IsTrue(performCountAfterPhysicsTick == 1, $"Tick|PhysicsTick: Act did not perform on first tick type to fire! Perform Count={performCountAfterPhysicsTick}");
+            Assert.IsTrue(performCountAfterTick == 1, $"Tick|PhysicsTick: Act performed again on second tick type despite being cleared! Perform Count={performCountAfterTick}");
+        }
+
+
+        // Tick and LateTick combo
+        {
+            var act = new Act();
+            act.Init("Test Act", theater);
+            act.PerformDeferred(Act.TickFlags.Tick | Act.TickFlags.LateTick);
+
+            yield return null;
+
+            var performCountAfterTick = act.GetPerformCount();
+
+            yield return null;
+
+            var performCountAfterLateTick = act.GetPerformCount();
+
+
+            // Assertions
+            Assert.IsTrue(performCountAfterTick == 1, $"Tick|LateTick: Act did not perform on first tick type to fire! Perform Count={performCountAfterTick}");
+            Assert.IsTrue(performCountAfterLateTick == 1, $"Tick|LateTick: Act performed again on second tick type despite being cleared! Perform Count={performCountAfterLateTick}");
+        }
+
+
+        // PhysicsTick and LateTick combo
+        {
+            var act = new Act();
+            act.Init("Test Act", theater);
+            act.PerformDeferred(Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick);
+
+            yield return new WaitForFixedUpdate();
+
+            var performCountAfterPhysicsTick = act.GetPerformCount();
+
+            yield return null;
+
+            var performCountAfterLateTick = act.GetPerformCount();
+
+
+            // Assertions
+            Assert.IsTrue(performCountAfterPhysicsTick == 1, $"PhysicsTick|LateTick: Act did not perform on first tick type to fire! Perform Count={performCountAfterPhysicsTick}");
+            Assert.IsTrue(performCountAfterLateTick == 1, $"PhysicsTick|LateTick: Act performed again on second tick type despite being cleared! Perform Count={performCountAfterLateTick}");
+        }
+
+
+        // Tick, PhysicsTick and LateTick combo
+        {
+            var act = new Act();
+            act.Init("Test Act", theater);
+            act.PerformDeferred(Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick);
+
+            yield return new WaitForFixedUpdate();
+
+            var performCountAfterPhysicsTick = act.GetPerformCount();
+
+            yield return null;
+
+            var performCountAfterTickAndLateTick = act.GetPerformCount();
+
+
+            // Assertions
+            Assert.IsTrue(performCountAfterPhysicsTick == 1, $"Tick|PhysicsTick|LateTick: Act did not perform on first tick type to fire! Perform Count={performCountAfterPhysicsTick}");
+            Assert.IsTrue(performCountAfterTickAndLateTick == 1, $"Tick|PhysicsTick|LateTick: Act performed again on remaining tick types despite being cleared! Perform Count={performCountAfterTickAndLateTick}");
+        }
 
 
         UnityEngine.Object.Destroy(theater.gameObject);

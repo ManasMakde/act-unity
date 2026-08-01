@@ -8,6 +8,7 @@ using UnityEngine.TestTools;
 
 // 1. Are "pre cleanup" & "post cleanup" actions being broadcasted (with correct arguments)?
 // 1. Is Cleanup() being invoked?
+// 1. Does calling Deinit() twice fail?
 // 1. Is theater set to null after deinitialization?
 // 1. Does act abort on deinitialization?
 // 1. Does prologue act abort on deinitialization?
@@ -56,6 +57,28 @@ public class ActDeinitializeTests
         // Assertions
         Assert.IsTrue(act.callCount == 1, $"Cleanup() not invoked exactly once! Call count={act.callCount}");
 
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator DeinitCalledTwiceFails()
+    {
+        // Prerequisites
+        var preCleanupCount = 0;
+        var postCleanupCount = 0;
+
+        // Perform Act
+        var act = new Act();
+        act.OnPreCleanup += (a) => { preCleanupCount++; };
+        act.OnPostCleanup += (a) => { postCleanupCount++; };
+        act.Init("Test Act");
+        act.Deinit();
+        act.Deinit();
+
+
+        // Assertions
+        Assert.IsTrue(preCleanupCount == 1, $"OnPreCleanup invoked more than once despite calling Deinit() twice! Count={preCleanupCount}");
+        Assert.IsTrue(postCleanupCount == 1, $"OnPostCleanup invoked more than once despite calling Deinit() twice! Count={postCleanupCount}");
 
         yield return null;
     }

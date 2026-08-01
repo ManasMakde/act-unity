@@ -8,6 +8,7 @@ using UnityEngine.TestTools;
 
 // 1. Are "pre setup" & "post setup" actions being broadcasted (with correct arguments)?
 // 1. Is Setup() being invoked?
+// 1. Does calling Init() twice fail?
 // 1. Is theater assigned after initialization?
 // 1. Is name assigned after initialization?
 // 1. Is initially enabled/disabled working?
@@ -52,6 +53,27 @@ public class ActInitializeTests
         // Assertions
         Assert.IsTrue(act.callCount == 1, $"Setup() not invoked exactly once! Call count={act.callCount}");
 
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator InitCalledTwice()
+    {
+        // Prerequisites
+        var preSetupCount = 0;
+        var postSetupCount = 0;
+
+        // Perform Act
+        var act = new Act();
+        act.OnPreSetup += (a) => { preSetupCount++; };
+        act.OnPostSetup += (a) => { postSetupCount++; };
+        act.Init("Test Act");
+        act.Init("Test Act");
+
+
+        // Assertions
+        Assert.IsTrue(preSetupCount == 1, $"OnPreSetup invoked more than once despite calling Init() twice! Count={preSetupCount}");
+        Assert.IsTrue(postSetupCount == 1, $"OnPostSetup invoked more than once despite calling Init() twice! Count={postSetupCount}");
 
         yield return null;
     }

@@ -69,6 +69,14 @@ public class Act
 
 	public void Init(string newName = "", Theater newTheater = null, bool initiallyEnabled = true)
 	{
+		// Return if trying to reinitialize
+		if (_hasInitialized)
+		{
+			WriteLog("Failed Init(), Already initialized!");
+			return;
+		}
+
+
 		// Return if already initialized
 		if (_isInitializing)
 		{
@@ -113,13 +121,21 @@ public class Act
 
 		// Mark as initialization completed
 		_isInitializing = false;  // Intentionally before OnPostSetup DO NOT CHANGE
-
+		_hasInitialized = true;
 
 		// Broadcast post setup
 		OnPostSetup?.Invoke(this);
 	}
 	public void Deinit()
 	{
+		// Return if trying to redeinitialize
+		if (!_hasInitialized)
+		{
+			WriteLog("Failed Init(), Already deinitialized!");
+			return;
+		}
+
+
 		// Return if not initialized
 		if (_isInitializing)
 		{
@@ -165,6 +181,7 @@ public class Act
 
 		// Mark as deinitialization completed
 		_isInitializing = false;
+		_hasInitialized = false;
 	}
 	public void Perform()
 	{
@@ -571,6 +588,7 @@ public class Act
 	private HashSet<Act> _pendingPrologueActs = new();
 	private HashSet<Act> _completedPrologueActs = new();
 
+	private bool _hasInitialized = false;
 	private bool _isInitializing = false;
 	private bool _hasPrecomputedPrologues = false;
 
@@ -636,7 +654,17 @@ public class Act
 	}
 	private static void PrecomputePrologueChain(Act ofAct)
 	{
-		foreach (Act pAct in ofAct.prologue.Invoke(ofAct))
+		// Fail Incase directly null provided
+		var prologueActs =  ofAct.prologue.Invoke(ofAct);
+		if (prologueActs == null)
+		{
+			ofAct.Redirect(Status.Exiting, Outcome.Failure);
+			return;
+		}
+
+
+		// Iterate through prologue acts		
+		foreach (Act pAct in prologueActs)
 		{
 			// Skip self
 			if (pAct == ofAct)

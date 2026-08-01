@@ -21,6 +21,9 @@ using UnityEngine.TestTools;
 // 1. Does GetOwner() return accurate owner?
 // 1. Does GetOwner() return null when no theater is assigned?
 
+// 1. Does GetBlockedByActs() return accurate acts?
+// 1. Does GetActsToBlock() return accurate acts?
+
 // 1. Does GetStatus() valid everywhere?
 // 1. Does GetStatus() return None before & after perform?
 
@@ -517,7 +520,6 @@ public class ActMiscTests
 
         yield return null;
     }
-
     [UnityTest]
     public IEnumerator GetOwnerNullWhenNotAssigned()
     {
@@ -528,6 +530,62 @@ public class ActMiscTests
 
         // Assertions
         Assert.IsTrue(act.GetOwner() == null, "GetOwner() not null despite no theater assigned!");
+
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator GetBlockedByActsValid()
+    {
+        // Prerequisites
+        var blockedAct = new Act();
+        var blockerAct1 = new ManualFinishAct();
+        var blockerAct2 = new ManualFinishAct();
+
+        blockedAct.Init("Blocked Act");
+        blockerAct1.Init("Blocker Act 1");
+        blockerAct2.Init("Blocker Act 2");
+        blockerAct1.AddToBlock(new() { blockedAct });
+        blockerAct2.AddToBlock(new() { blockedAct });
+
+        // Perform Act
+        blockerAct1.Perform();
+        blockerAct2.Perform();
+
+        var blockedByActs = blockedAct.GetBlockedByActs();
+
+
+        // Assertions
+        Assert.IsTrue(blockedByActs.Contains(blockerAct1), "GetBlockedByActs() does not contain blockerAct1!");
+        Assert.IsTrue(blockedByActs.Contains(blockerAct2), "GetBlockedByActs() does not contain blockerAct2!");
+        Assert.IsTrue(blockedByActs.Count == 2, $"GetBlockedByActs() returned incorrect count! Count={blockedByActs.Count}");
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator GetActsToBlockValid()
+    {
+        // Prerequisites
+        var targetAct1 = new Act();
+        var targetAct2 = new Act();
+        var mainAct = new ManualFinishAct();
+
+        targetAct1.Init("Target Act 1");
+        targetAct2.Init("Target Act 2");
+        mainAct.Init("Main Act");
+        mainAct.AddToBlock(new() { targetAct1 }, Act.BlockType.Persistent);
+        mainAct.AddToBlock(new() { targetAct2 }, Act.BlockType.Interrupt);
+
+        // Perform Act
+        var actsToBlock = mainAct.GetActsToBlock();
+
+
+        // Assertions
+        Assert.IsTrue(actsToBlock.ContainsKey(targetAct1) && actsToBlock[targetAct1] == Act.BlockType.Persistent, "GetActsToBlock() invalid for persistent entry!");
+        Assert.IsTrue(actsToBlock.ContainsKey(targetAct2) && actsToBlock[targetAct2] == Act.BlockType.Interrupt, "GetActsToBlock() invalid for interrupt entry!");
+        Assert.IsTrue(actsToBlock.Count == 2, $"GetActsToBlock() returned incorrect count! Count={actsToBlock.Count}");
 
         yield return null;
     }
@@ -628,7 +686,6 @@ public class ActMiscTests
 
         yield return null;
     }
-
     [UnityTest]
     public IEnumerator GetOutcomeAccurateForAllOutcomes()
     {

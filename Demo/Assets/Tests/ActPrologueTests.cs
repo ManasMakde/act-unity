@@ -25,6 +25,9 @@ using UnityEngine.TestTools;
 // 1. Does an act calling itself as one of the prologues get skipped?
 // 1. Does an act only calling itself as prologue get skipped?
 
+// 1. Does prologue {null} & null both fail the act?
+// 1. Does Seq() {{null}}, {null} & null all fail the act?
+
 // 1. Does main act perform when a prologue act blocks it?
 // 1. Does prologue act perform when main act blocks it?
 // 1. Does grandchild prologue act perform when main act blocks it?
@@ -378,6 +381,74 @@ public class ActPrologueTests
         Assert.IsTrue(didPerform, $"Act could not perform when passing itself as one of the prologues!");
         Assert.IsTrue(didProloguePerform, $"Passing self as prologue interfered with other prologue");
 
+
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator PrologueNull()
+    {
+        // Null prologue list
+        {
+            var act = new Act();
+            act.prologue = (a) => null;
+            act.Init("Test Act");
+            act.Perform();
+
+            // Assertions
+            Assert.IsTrue(act.GetOutcome() == Act.Outcome.Failure, $"Act did not fail when prologue returned null! Outcome={act.GetOutcome()}");
+        }
+
+        // Prologue list containing null
+        {
+            var act = new Act();
+            act.prologue = (a) => new() { null };
+            act.Init("Test Act");
+            act.Perform();
+
+            // Assertions
+            Assert.IsTrue(act.GetOutcome() == Act.Outcome.Failure, $"Act did not fail when prologue list contained null! Outcome={act.GetOutcome()}");
+        }
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator SeqPrologueNull()
+    {
+        // Seq with inner list containing null
+        {
+            var act = new Act();
+            act.prologue = (a) => Act.Seq(new() { new() { null } });
+            act.Init("Test Act");
+            act.Perform();
+
+            // Assertions
+            Assert.IsTrue(act.GetOutcome() == Act.Outcome.Failure, $"Act did not fail for Seq() with inner null! Outcome={act.GetOutcome()}");
+        }
+
+        // Seq with null inner list
+        {
+            var act = new Act();
+            act.prologue = (a) => Act.Seq(new() { null });
+            act.Init("Test Act");
+            act.Perform();
+
+            // Assertions
+            Assert.IsTrue(act.GetOutcome() == Act.Outcome.Failure, $"Act did not fail for Seq() with null inner list! Outcome={act.GetOutcome()}");
+        }
+
+        // Seq with null passed directly
+        {
+            var act = new Act();
+            act.prologue = (a) => Act.Seq(null);
+            act.Init("Test Act");
+            act.Perform();
+
+            // Assertions
+            Assert.IsTrue(act.GetOutcome() == Act.Outcome.Failure, $"Act did not fail for Seq(null)! Outcome={act.GetOutcome()}");
+        }
 
         yield return null;
     }
