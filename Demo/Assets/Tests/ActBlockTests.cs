@@ -22,7 +22,7 @@ using UnityEngine.TestTools;
 public class ActBlockTests
 {
     [UnityTest]
-    public IEnumerator OnBlockUnblock()
+    public IEnumerator OnBlockChanged()
     {
         // Prerequisites
         bool wasBlockChangedInvoked = false;
