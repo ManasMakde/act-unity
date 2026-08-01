@@ -16,6 +16,12 @@ using UnityEngine.TestTools;
 // 1. Is "post prologue" action not being broadcasted when null passed to prologue?
 // 1. Is "post prologue" action not being broadcasted when any prologue act fails?
 
+// 1. Is "prologue complete" action being broadcasted (with correct arguments)?
+// 1. Is "prologue complete" action not being broadcasted when no prologue acts assigned?
+// 1. Is "prologue complete" action not being broadcasted when assigned empty prologue acts list?
+// 1. Is "prologue complete" action not being broadcasted when null passed to prologue?
+// 1. Is "prologue complete" action not being broadcasted when any prologue act fails?
+
 // 1. Does an act calling itself as one of the prologues get skipped?
 // 1. Does an act only calling itself as prologue get skipped?
 
@@ -119,7 +125,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPostPrologueBroadcastWithNoPrologues()
+    public IEnumerator OnPostPrologueWithNoPrologues()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -139,7 +145,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPostPrologueBroadcastWithEmptyPrologues()
+    public IEnumerator OnPostPrologueWithEmptyPrologues()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -160,7 +166,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPostPrologueBroadcastWithNullPrologue()
+    public IEnumerator OnPostPrologueWithNullPrologue()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -182,7 +188,7 @@ public class ActPrologueTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPostPrologueBroadcastWhenPrologueFails()
+    public IEnumerator OnPostPrologueWhenPrologueFails()
     {
         // Prerequisites
         bool wasPostPrologueInvoked = false;
@@ -204,6 +210,127 @@ public class ActPrologueTests
         yield return null;
     }
 
+
+
+    [UnityTest]
+    public IEnumerator OnPrologueComplete()
+    {
+        // Prerequisites
+        bool wasPrologueCompleteInvoked = false;
+        Act prologueCompleteArg1 = null;
+        Act prologueCompleteArg2 = null;
+        Act.Outcome prologueCompleteArg3 = Act.Outcome.Pending;
+
+
+        // Prologue Act
+        var pAct = new Act();
+        pAct.Init("Prologue Act");
+
+
+        // Perform Act
+        var act = new Act();
+        act.prologue = (a) => new() { pAct };
+        act.OnPrologueComplete += (a, p, o) => { wasPrologueCompleteInvoked = true; prologueCompleteArg1 = a; prologueCompleteArg2 = p; prologueCompleteArg3 = o; };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(wasPrologueCompleteInvoked, "OnPrologueComplete not invoked!");
+        Assert.IsTrue(prologueCompleteArg1 == act, $"OnPrologueComplete first argument is invalid! Arg1=`{prologueCompleteArg1}`");
+        Assert.IsTrue(prologueCompleteArg2 == pAct, $"OnPrologueComplete second argument is invalid! Arg2=`{prologueCompleteArg2}`");
+        Assert.IsTrue(prologueCompleteArg3 == Act.Outcome.Success, $"OnPrologueComplete third argument is invalid! Arg3=`{prologueCompleteArg3}`");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator OnPrologueCompleteWithNoPrologues()
+    {
+        // Prerequisites
+        bool wasPrologueCompleteInvoked = false;
+
+
+        // Perform Act
+        var act = new Act();
+        act.OnPrologueComplete += (a, p, o) => { wasPrologueCompleteInvoked = true; };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(!wasPrologueCompleteInvoked, "OnPrologueComplete invoked despite no prologue acts assigned!");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator OnPrologueCompleteWithEmptyPrologues()
+    {
+        // Prerequisites
+        bool wasPrologueCompleteInvoked = false;
+
+
+        // Perform Act
+        var act = new Act();
+        act.prologue = (a) => new List<Act>();
+        act.OnPrologueComplete += (a, p, o) => { wasPrologueCompleteInvoked = true; };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(!wasPrologueCompleteInvoked, "OnPrologueComplete invoked despite empty prologue list assigned!");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator OnPrologueCompleteWithNullPrologue()
+    {
+        // Prerequisites
+        bool wasPrologueCompleteInvoked = false;
+
+
+        // Perform Act
+        var act = new Act();
+        act.prologue = (a) => new() { null };
+        act.OnPrologueComplete += (a, p, o) => { wasPrologueCompleteInvoked = true; };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(!wasPrologueCompleteInvoked, "OnPrologueComplete invoked despite null prologue act!");
+        Assert.IsTrue(act.GetOutcome() == Act.Outcome.Failure, $"Act outcome is not failure despite null prologue act! Outcome={act.GetOutcome()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator OnPrologueCompleteWhenPrologueFails()
+    {
+        // Prerequisites
+        bool wasPrologueCompleteInvoked = false;
+        Act.Outcome prologueCompleteOutcome = Act.Outcome.Pending;
+
+
+        // Perform Act
+        var act = new Act();
+        act.prologue = (a) => new() { new FailingAct() };
+        act.OnPrologueComplete += (a, p, o) => { wasPrologueCompleteInvoked = true; prologueCompleteOutcome = o; };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(wasPrologueCompleteInvoked, "OnPrologueComplete not invoked despite prologue act failing!");
+        Assert.IsTrue(prologueCompleteOutcome == Act.Outcome.Failure, $"OnPrologueComplete outcome is not failure! Outcome={prologueCompleteOutcome}");
+        Assert.IsTrue(act.GetOutcome() == Act.Outcome.Failure, $"Act outcome is not failure despite prologue act failing! Outcome={act.GetOutcome()}");
+
+
+        yield return null;
+    }
 
 
     [UnityTest]

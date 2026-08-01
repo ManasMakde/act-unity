@@ -24,10 +24,10 @@ using UnityEngine.TestTools;
 // 1. Does _canReperform work correctly?
 
 // 1. Does perform fail from OnPreSetup?
-// 1. Does perform fail from OnPostSetup?
+// 1. Does perform succeed from OnPostSetup?
 // 1. Does reperform succeed from OnPerformStart?
-// 1. Does perform succeed from OnPerformEnd?
 // 1. Does reperform succeed from OnPrePrologue?
+// 1. Does reperform succeed from OnPrologueComplete?
 // 1. Does reperform fail from OnPostPrologue?
 // 1. Does reperform succeed from OnPreEnter?
 // 1. Does reperform succeed from OnPostEnter?
@@ -39,6 +39,7 @@ using UnityEngine.TestTools;
 // 1. Does reperform succeed from OnPostLateTick?
 // 1. Does reperform fail from OnPreExit?
 // 1. Does reperform fail from OnPostExit?
+// 1. Does perform succeed from OnPerformEnd?
 // 1. Does reperform fail from OnPreCleanup?
 // 1. Does reperform fail from OnPostCleanup?
 // 1. Does perform succeed from OnEnableChanged?
@@ -373,7 +374,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPostSetup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act performed from OnPostSetup! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;
@@ -397,28 +398,6 @@ public class ActPerformTests
 
         // Assertions
         Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform from OnPerformStart! Perform Count={act.GetPerformCount()}");
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformFromOnPerformEnd()
-    {
-        // Perform Act
-        var act = new ReperformableAct();
-        act.OnPerformEnd += (a) =>
-        {
-            if (act.GetPerformCount() <= 2)
-            {
-                a.Perform();
-            }
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPerformEnd! Perform Count={act.GetPerformCount()}");
-
 
         yield return null;
     }
@@ -449,6 +428,56 @@ public class ActPerformTests
 
 
         yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPrologueComplete()
+    {
+        // Prerequisites
+        var theater = new GameObject().AddComponent<Theater>();
+
+
+        // Prologue act
+        var prologue1Act = new ReperformableAct();
+        prologue1Act.Init("Prologue 1 Act");
+
+        var prologue2Act = new ReperformableAct();
+        prologue2Act.Init("Prologue 2 Act");
+
+
+        // Perform Act
+        var act = new ReperformableAct();
+        act.prologue = (a) => new List<Act> { prologue1Act, prologue2Act };
+        act.OnPrologueComplete += (a, pA, pO) =>
+        {
+            if (pO != Act.Outcome.Success)
+            {
+                return;
+            }
+
+            if (act.GetPerformCount() <= 2)
+            {
+                act.Perform();
+            }
+        };
+        act.Init("Test Act", theater);
+        act.Perform();
+
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPrePrologue! Perform Count={act.GetPerformCount()}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
     }
     [UnityTest]
     public IEnumerator PerformFromOnPostPrologue()
@@ -794,6 +823,28 @@ public class ActPerformTests
 
         // Assertions
         Assert.IsTrue(act.GetPerformCount() != 3, $"Act reperformed from OnPostExit! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformFromOnPerformEnd()
+    {
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPerformEnd += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.Perform();
+            }
+        };
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPerformEnd! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;

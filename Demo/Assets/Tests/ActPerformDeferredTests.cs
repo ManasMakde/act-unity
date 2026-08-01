@@ -15,8 +15,8 @@ using UnityEngine.TestTools;
 // 1. Does perform deferred succeed from OnPreSetup?
 // 1. Does perform deferred succeed from OnPostSetup?
 // 1. Does reperform deferred succeed from OnPerformStart?
-// 1. Does perform deferred succeed from OnPerformEnd?
 // 1. Does reperform deferred succeed from OnPrePrologue?
+// 1. Does reperform deferred succeed from OnPrologueComplete?
 // 1. Does reperform deferred succeed from OnPostPrologue?
 // 1. Does reperform deferred succeed from OnPreEnter?
 // 1. Does reperform deferred succeed from OnPostEnter?
@@ -28,6 +28,7 @@ using UnityEngine.TestTools;
 // 1. Does reperform deferred succeed from OnPostLateTick?
 // 1. Does reperform deferred succeed from OnPreExit?
 // 1. Does reperform deferred succeed from OnPostExit?
+// 1. Does perform deferred succeed from OnPerformEnd?
 // 1. Does reperform deferred fail from OnPreCleanup?
 // 1. Does reperform deferred fail from OnPostCleanup?
 // 1. Does perform deferred succeed from OnEnableChanged?
@@ -311,15 +312,21 @@ public class ActPerformDeferredTests
         UnityEngine.Object.Destroy(theater.gameObject);
     }
     [UnityTest]
-    public IEnumerator PerformDeferredFromOnPerformEnd()
+    public IEnumerator PerformDeferredFromOnPrePrologue()
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
 
 
+        // Prologue act so the prologue signal actually fires
+        var prologueAct = new ReperformableAct();
+        prologueAct.Init("Prologue Act");
+
+
         // Perform Act
         var act = new ReperformableAct();
-        act.OnPerformEnd += (a) =>
+        act.prologue = (a) => new List<Act> { prologueAct };
+        act.OnPrePrologue += (a) =>
         {
             if (act.GetPerformCount() <= 2)
             {
@@ -341,30 +348,39 @@ public class ActPerformDeferredTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPerformEnd! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPrePrologue! Perform Count={act.GetPerformCount()}");
+
 
         UnityEngine.Object.Destroy(theater.gameObject);
     }
     [UnityTest]
-    public IEnumerator PerformDeferredFromOnPrePrologue()
+    public IEnumerator PerformDeferredFromOnPrologueComplete()
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
 
 
-        // Prologue act so the prologue signal actually fires
-        var prologueAct = new ReperformableAct();
-        prologueAct.Init("Prologue Act");
+        // Prologue act
+        var prologue1Act = new ReperformableAct();
+        prologue1Act.Init("Prologue 1 Act");
+
+        var prologue2Act = new ReperformableAct();
+        prologue2Act.Init("Prologue 2 Act");
 
 
         // Perform Act
         var act = new ReperformableAct();
-        act.prologue = (a) => new List<Act> { prologueAct };
-        act.OnPrePrologue += (a) =>
+        act.prologue = (a) => new List<Act> { prologue1Act, prologue2Act };
+        act.OnPrologueComplete += (a, pA, pO) =>
         {
+            if (pO != Act.Outcome.Success)
+            {
+                return;
+            }
+
             if (act.GetPerformCount() <= 2)
             {
-                a.PerformDeferred();
+                act.PerformDeferred();
             }
         };
         act.Init("Test Act", theater);
@@ -804,6 +820,41 @@ public class ActPerformDeferredTests
         // Assertions
         Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPostExit! Perform Count={act.GetPerformCount()}");
 
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+    }
+    [UnityTest]
+    public IEnumerator PerformDeferredFromOnPerformEnd()
+    {
+        // Prerequisites
+        var theater = new GameObject().AddComponent<Theater>();
+
+
+        // Perform Act
+        var act = new ReperformableAct();
+        act.OnPerformEnd += (a) =>
+        {
+            if (act.GetPerformCount() <= 2)
+            {
+                a.PerformDeferred();
+            }
+        };
+        act.Init("Test Act", theater);
+        act.Perform();
+
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+
+        // Assertions
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform deferred thrice from OnPerformEnd! Perform Count={act.GetPerformCount()}");
 
         UnityEngine.Object.Destroy(theater.gameObject);
     }

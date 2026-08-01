@@ -44,8 +44,8 @@ public class Act
 	public event Action<Act /* act */> OnPreSetup;
 	public event Action<Act /* act */> OnPostSetup;
 	public event Action<Act /* act */> OnPerformStart;
-	public event Action<Act /* act */> OnPerformEnd;
 	public event Action<Act /* act */> OnPrePrologue;
+	public event Action<Act /* act */, Act /* pAct */, Outcome /* pOutcome */> OnPrologueComplete;
 	public event Action<Act /* act */> OnPostPrologue;
 	public event Action<Act /* act */> OnPreEnter;
 	public event Action<Act /* act */> OnPostEnter;
@@ -57,6 +57,7 @@ public class Act
 	public event Action<Act /* act */> OnPostLateTick;
 	public event Action<Act /* act */> OnPreExit;
 	public event Action<Act /* act */> OnPostExit;
+	public event Action<Act /* act */> OnPerformEnd;
 	public event Action<Act /* act */> OnPreCleanup;
 	public event Action<Act /* act */> OnPostCleanup;
 	public event Action<Act /* act */, bool /* newIsEnabled */> OnEnableChanged;
@@ -110,12 +111,12 @@ public class Act
 		Setup();
 
 
+		// Mark as initialization completed
+		_isInitializing = false;  // Intentionally before OnPostSetup DO NOT CHANGE
+
+
 		// Broadcast post setup
 		OnPostSetup?.Invoke(this);
-
-
-		// Mark as initialization completed
-		_isInitializing = false;
 	}
 	public void Deinit()
 	{
@@ -915,6 +916,14 @@ public class Act
 
 		// Remove from pending and move to completed
 		_pendingPrologueActs.Remove(pAct);
+
+
+		// Broadcast prologue completed
+		OnPrologueComplete?.Invoke(this, pAct, newOutcome);
+		if (_status != Status.Prologuing)
+		{
+			return;
+		}
 
 
 		// Exit if prologue act did not succeed
