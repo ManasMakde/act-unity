@@ -34,7 +34,7 @@ public class Act
 	}
 	public enum BlockType
 	{
-		Oneshot,
+		Interrupt,
 		Persistent
 	}
 
@@ -530,7 +530,7 @@ public class Act
 	{
 		foreach (Act act in _actsToBlock.Keys)
 		{
-			if (_actsToBlock[act] == BlockType.Persistent)  // Skip oneshot
+			if (_actsToBlock[act] == BlockType.Persistent)
 			{
 				act.UnblockSelf(this);
 			}

@@ -159,6 +159,7 @@ public class SingleTickAct : Act
 public class ManualFinishAct : Act
 {
     public bool canReperformOverride = false;
+    public TickFlags overrideTickFlags = TickFlags.None;
     public void ManualFinish(Outcome outcome = Outcome.Success)
     {
         Finish(outcome);
@@ -166,6 +167,7 @@ public class ManualFinishAct : Act
     protected override void Setup()
     {
         _canReperform = canReperformOverride;
+        _tickFlags = overrideTickFlags;
     }
     protected override Outcome Enter()
     {
@@ -200,5 +202,152 @@ public class RetryOnceThenFailAct : Act
     protected override bool CanPerform()
     {
         return enterCallCount == 0;  // block retry attempt after first enter
+    }
+}
+public class OngoingCheckAct : Act
+{
+    public bool ongoingInSetup = false;
+    public bool ongoingInEnter = false;
+    public bool ongoingInTick = false;
+    public bool ongoingInPhysicsTick = false;
+    public bool ongoingInLateTick = false;
+    public bool ongoingInExit = false;
+    public bool ongoingInCleanup = false;
+    public void ForceFinish(Outcome outcome = Outcome.Success)
+    {
+        Finish(outcome);
+    }
+
+
+    protected override void Setup()
+    {
+        _tickFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
+        ongoingInSetup = IsOngoing();
+    }
+    protected override Outcome Enter()
+    {
+        ongoingInEnter = IsOngoing();
+        return Outcome.Pending;
+    }
+    protected override Outcome Tick()
+    {
+        ongoingInTick = IsOngoing();
+        return Outcome.Pending;
+    }
+    protected override Outcome PhysicsTick()
+    {
+        ongoingInPhysicsTick = IsOngoing();
+        return Outcome.Pending;
+    }
+    protected override Outcome LateTick()
+    {
+        ongoingInLateTick = IsOngoing();
+        return Outcome.Pending;
+    }
+    protected override void Exit()
+    {
+        ongoingInExit = IsOngoing();
+    }
+    protected override void Cleanup()
+    {
+        ongoingInCleanup = IsOngoing();
+    }
+}
+public class ActiveCheckAct : Act
+{
+    public bool activeInSetup = false;
+    public bool activeInEnter = false;
+    public bool activeInTick = false;
+    public bool activeInPhysicsTick = false;
+    public bool activeInLateTick = false;
+    public bool activeInExit = false;
+    public bool activeInCleanup = false;
+    public void ForceFinish(Outcome outcome = Outcome.Success)
+    {
+        Finish(outcome);
+    }
+
+
+    protected override void Setup()
+    {
+        _tickFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
+        activeInSetup = IsActive();
+    }
+    protected override Outcome Enter()
+    {
+        activeInEnter = IsActive();
+        return Outcome.Pending;
+    }
+    protected override Outcome Tick()
+    {
+        activeInTick = IsActive();
+        return Outcome.Pending;
+    }
+    protected override Outcome PhysicsTick()
+    {
+        activeInPhysicsTick = IsActive();
+        return Outcome.Pending;
+    }
+    protected override Outcome LateTick()
+    {
+        activeInLateTick = IsActive();
+        return Outcome.Pending;
+    }
+    protected override void Exit()
+    {
+        activeInExit = IsActive();
+    }
+    protected override void Cleanup()
+    {
+        activeInCleanup = IsActive();
+    }
+}
+public class StatusCheckAct : Act
+{
+    public Status statusInSetup = Status.None;
+    public Status statusInEnter = Status.None;
+    public Status statusInTick = Status.None;
+    public Status statusInPhysicsTick = Status.None;
+    public Status statusInLateTick = Status.None;
+    public Status statusInExit = Status.None;
+    public Status statusInCleanup = Status.None;
+    public void ForceFinish(Outcome outcome = Outcome.Success)
+    {
+        Finish(outcome);
+    }
+
+
+    protected override void Setup()
+    {
+        _tickFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
+        statusInSetup = GetStatus();
+    }
+    protected override Outcome Enter()
+    {
+        statusInEnter = GetStatus();
+        return Outcome.Pending;
+    }
+    protected override Outcome Tick()
+    {
+        statusInTick = GetStatus();
+        return Outcome.Pending;
+    }
+    protected override Outcome PhysicsTick()
+    {
+        statusInPhysicsTick = GetStatus();
+        return Outcome.Pending;
+    }
+    protected override Outcome LateTick()
+    {
+        statusInLateTick = GetStatus();
+        return Outcome.Pending;
+    }
+    protected override void Exit()
+    {
+        statusInExit = GetStatus();
+    }
+    protected override void Cleanup()
+    {
+        statusInCleanup = GetStatus();
     }
 }

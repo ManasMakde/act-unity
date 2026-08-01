@@ -11,8 +11,8 @@ using UnityEngine.TestTools;
 // 1. Does blocking abort the act?
 // 1. Can a persistantly unblocked act perform?
 
-// 1. Does oneshot block stop the act's ongoing perform?
-// 1. Can a oneshot blocked act perform despite blocker act still ongoing?
+// 1. Does interrupt block stop the act's ongoing perform?
+// 1. Can a interrupt blocked act perform despite blocker act still ongoing?
 
 // 1. Does adding an act to the main act (which is ongoing) block the act?
 // 1. Does removing a blocked act from the main act (which is ongoing) unblock that act?
@@ -28,7 +28,7 @@ public class ActBlockTests
         bool wasBlockChangedInvoked = false;
         Act blockChangedArg1 = null;
         Act blockChangedArg2 = null;
-        Act.BlockType blockChangedArg3 = Act.BlockType.Oneshot;
+        Act.BlockType blockChangedArg3 = Act.BlockType.Interrupt;
         bool blockChangedArg4 = false;
 
 
@@ -166,7 +166,7 @@ public class ActBlockTests
 
 
     [UnityTest]
-    public IEnumerator OneshotBlockedActEndsPerform()
+    public IEnumerator InterruptBlockedActEndsPerform()
     {
         // Prerequisites
         var wasAborted = false;
@@ -181,41 +181,41 @@ public class ActBlockTests
         };
         mainAct.Init("Main Act");
         targetAct.Init("Target Act");
-        mainAct.AddToBlock(new List<Act> { targetAct }, Act.BlockType.Oneshot);
+        mainAct.AddToBlock(new List<Act> { targetAct }, Act.BlockType.Interrupt);
 
 
-        // Perform target then main, Main should end target via oneshot block
+        // Perform target then main, Main should end target via interrupt block
         targetAct.Perform();
         mainAct.Perform();
 
 
         // Assertions
-        Assert.IsTrue(wasAborted, "Target act did not go through exit despite oneshot block!");
-        Assert.IsTrue(!targetAct.IsOngoing(), "Target act is still ongoing despite oneshot block!");
+        Assert.IsTrue(wasAborted, "Target act did not go through exit despite interrupt block!");
+        Assert.IsTrue(!targetAct.IsOngoing(), "Target act is still ongoing despite interrupt block!");
 
 
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OneshotBlockedActCanReperform()
+    public IEnumerator InterruptBlockedActCanReperform()
     {
         // Setup main and target act
         var mainAct = new ManualFinishAct();
         var targetAct = new Act();
         mainAct.Init("Main Act");
         targetAct.Init("Target Act");
-        mainAct.AddToBlock(new List<Act> { targetAct }, Act.BlockType.Oneshot);
+        mainAct.AddToBlock(new List<Act> { targetAct }, Act.BlockType.Interrupt);
 
 
-        // Perform main act, Should oneshot block target act once
+        // Perform main act, Should interrupt block target act once
         mainAct.Perform();
         targetAct.Perform();
 
 
         // Assertions
         Assert.IsTrue(mainAct.IsOngoing(), "Main act is not ongoing!");
-        Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite oneshot block!");
-        Assert.IsTrue(targetAct.GetPerformCount() == 1, $"Target act did not perform despite oneshot block being one time only! Perform Count={targetAct.GetPerformCount()}");
+        Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite interrupt block!");
+        Assert.IsTrue(targetAct.GetPerformCount() == 1, $"Target act did not perform despite interrupt block being one time only! Perform Count={targetAct.GetPerformCount()}");
 
 
         yield return null;
