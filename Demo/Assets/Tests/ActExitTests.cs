@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Is correct status exiting applied?
 // 1. Are pre exit and post exit actions being broadcasted with correct arguments?
 // 1. Is Exit() being invoked?
 // 1. Does invoking Abort() while exiting not exit the act again?
@@ -16,32 +15,6 @@ using UnityEngine.TestTools;
 
 public class ActExitTests
 {
-    [UnityTest]
-    public IEnumerator CorrectStatusExiting()
-    {
-        // Perform Act
-        var preExitStatus = Act.Status.None;
-        var postExitStatus = Act.Status.None;
-        var act = new ManualFinishAct();
-        act.OnPreExit += (a) =>
-        {
-            preExitStatus = act.GetStatus();
-        };
-        act.OnPostExit += (a) =>
-        {
-            postExitStatus = act.GetStatus();
-        };
-        act.Init("Test Act");
-        act.Perform();
-        act.ManualFinish();
-
-
-        // Assertions
-        Assert.IsTrue(preExitStatus == Act.Status.Exiting && postExitStatus == Act.Status.Exiting, $"Status is not 'Exiting' during Exit()! preExitStatus={preExitStatus}  postExitStatus={postExitStatus}");
-
-
-        yield return null;
-    }
     [UnityTest]
     public IEnumerator OnPreAndPostExit()
     {

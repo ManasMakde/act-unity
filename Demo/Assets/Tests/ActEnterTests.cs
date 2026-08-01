@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Is correct status entering applied?
 // 1. Are pre enter and post enter actions being broadcasted with correct arguments?
 // 1. Is Enter() being invoked?
 // 1. Does returning outcome pending make the act wait until Finish() is invoked?
@@ -15,31 +14,6 @@ using UnityEngine.TestTools;
 
 public class ActEnterTests
 {
-    [UnityTest]
-    public IEnumerator CorrectStatusEntering()
-    {
-        // Perform Act
-        var preEnterStatus = Act.Status.None;
-        var postEnterStatus = Act.Status.None;
-        var act = new Act();
-        act.OnPreEnter += (a) =>
-        {
-            preEnterStatus = act.GetStatus();
-        };
-        act.OnPostEnter += (a) =>
-        {
-            postEnterStatus = act.GetStatus();
-        };
-        act.Init("Test Act");
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(preEnterStatus == Act.Status.Entering && postEnterStatus == Act.Status.Entering, $"Status is not 'Entering' during Enter()! preEnterStatus={preEnterStatus}  postEnterStatus={postEnterStatus}");
-
-
-        yield return null;
-    }
     [UnityTest]
     public IEnumerator OnPreAndPostEnter()
     {

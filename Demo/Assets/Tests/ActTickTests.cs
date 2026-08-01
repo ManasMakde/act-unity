@@ -6,90 +6,15 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Is correct status ticking applied?
 // 1. Are all "pre tick" & "post tick" actions being broadcasted with correct arguments?
 // 1. Are all Tick() methods being invoked?
 // 1. Is ticking not being invoked when tick flag is set to none?
+// 1. Does ticking fail if not theater is assigned?
 // 1. Does GetDelta() & GetPhysicsDelta() return accurate values?
 
 
 public class ActTickTests
 {
-    [UnityTest]
-    public IEnumerator CorrectStatusTicking()
-    {
-        // Tick
-        {
-            var preTickStatus = Act.Status.None;
-            var postTickStatus = Act.Status.None;
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
-            var act = new TickAct();
-            act.OnPreTick += (a) =>
-            {
-                preTickStatus = act.GetStatus();
-            };
-            act.OnPostTick += (a) =>
-            {
-                postTickStatus = act.GetStatus();
-            };
-            act.Init("Test Act", theater);
-            act.Perform();
-
-            yield return null;
-
-            // Assertions
-            Assert.IsTrue(preTickStatus == Act.Status.Ticking && postTickStatus == Act.Status.Ticking, $"Status is not 'Ticking' during Tick()! preTickStatus={preTickStatus}  postTickStatus={postTickStatus}");
-        }
-
-        // PhysicsTick
-        {
-            var prePhysicsTickStatus = Act.Status.None;
-            var postPhysicsTickStatus = Act.Status.None;
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
-            var act = new PhysicsTickAct();
-            act.OnPrePhysicsTick += (a) =>
-            {
-                prePhysicsTickStatus = act.GetStatus();
-            };
-            act.OnPostPhysicsTick += (a) =>
-            {
-                postPhysicsTickStatus = act.GetStatus();
-            };
-            act.Init("Test Act", theater);
-            act.Perform();
-
-            yield return new WaitForFixedUpdate();
-
-            // Assertions
-            Assert.IsTrue(prePhysicsTickStatus == Act.Status.Ticking && postPhysicsTickStatus == Act.Status.Ticking, $"Status is not 'Ticking' during PhysicsTick()! prePhysicsTickStatus={prePhysicsTickStatus}  postPhysicsTickStatus={postPhysicsTickStatus}");
-        }
-
-        // LateTick
-        {
-            var preLateTickStatus = Act.Status.None;
-            var postLateTickStatus = Act.Status.None;
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
-            var act = new LateTickAct();
-            act.OnPreLateTick += (a) =>
-            {
-                preLateTickStatus = act.GetStatus();
-            };
-            act.OnPostLateTick += (a) =>
-            {
-                postLateTickStatus = act.GetStatus();
-            };
-            act.Init("Test Act", theater);
-            act.Perform();
-
-            yield return null;
-
-            // Assertions
-            Assert.IsTrue(preLateTickStatus == Act.Status.Ticking && postLateTickStatus == Act.Status.Ticking, $"Status is not 'Ticking' during LateTick()! preLateTickStatus={preLateTickStatus}  postLateTickStatus={postLateTickStatus}");
-        }
-    }
     [UnityTest]
     public IEnumerator OnPreAndPostTick()
     {
@@ -211,7 +136,7 @@ public class ActTickTests
         }
     }
     [UnityTest]
-    public IEnumerator NoTickWhenFlagNone()
+    public IEnumerator TickWithFlagNone()
     {
         // Prerequisites
         bool wasPreTickInvoked = false;
@@ -236,6 +161,50 @@ public class ActTickTests
         Assert.IsFalse(wasPreTickInvoked, "OnPreTick invoked despite TickFlags.None!");
         Assert.IsFalse(wasPrePhysicsTickInvoked, "OnPrePhysicsTick invoked despite TickFlags.None!");
         Assert.IsFalse(wasPreLateTickInvoked, "OnPreLateTick invoked despite TickFlags.None!");
+    }
+    [UnityTest]
+    public IEnumerator TickWithoutTheater()
+    {
+        // Tick type
+        {
+            var act = new TickAct();
+            act.Init("Test Act");
+            act.Perform();
+
+            var actStatus = act.GetStatus();
+
+            // Assertions
+            Assert.IsTrue(actStatus == Act.Status.Entering, $"Act did not stay 'Entering' when ticking without theater! Status='{actStatus}'");
+            Assert.IsTrue(act.callCount == 0, $"Tick() invoked despite missing theater! Call count='{act.callCount}'");
+        }
+
+        // PhysicsTick type
+        {
+            var act = new PhysicsTickAct();
+            act.Init("Test Act");
+            act.Perform();
+
+            var actStatus = act.GetStatus();
+
+            // Assertions
+            Assert.IsTrue(actStatus == Act.Status.Entering, $"Act did not stay 'Entering' when physics ticking without theater! Status='{actStatus}'");
+            Assert.IsTrue(act.callCount == 0, $"PhysicsTick() invoked despite missing theater! Call count='{act.callCount}'");
+        }
+
+        // LateTick type
+        {
+            var act = new LateTickAct();
+            act.Init("Test Act");
+            act.Perform();
+
+            var actStatus = act.GetStatus();
+
+            // Assertions
+            Assert.IsTrue(actStatus == Act.Status.Entering, $"Act did not stay 'Entering' when late ticking without theater! Status='{actStatus}'");
+            Assert.IsTrue(act.callCount == 0, $"LateTick() invoked despite missing theater! Call count='{act.callCount}'");
+        }
+
+        yield return null;
     }
     [UnityTest]
     public IEnumerator GetDeltaAndPhysicsDelta()

@@ -6,6 +6,7 @@ using UnityEngine.TestTools;
 
 
 // 1. Does perform deferred work?
+// 1. Does perform deferred fail without theater?
 // 1. Does perform deferred not immediately perform the act?
 // 1. Does act perform once when deferred twice?
 // 1. Does perform deferred with tick flag as none do nothing?
@@ -75,6 +76,26 @@ public class ActPerformDeferredTests
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
+    }
+    [UnityTest]
+    public IEnumerator PerformDeferWithoutTheater()
+    {
+        // Perform Act
+        var act = new WaitInfiniAct();
+        act.Init("Test Act");
+        act.PerformDeferred();
+
+        yield return null;
+        yield return null;
+        yield return new WaitForFixedUpdate();
+        yield return new WaitForFixedUpdate();
+
+
+        // Assertions
+        Assert.IsTrue(!act.IsOngoing(), "Act is ongoing despite deferred performing without theater!");
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed despite missing theater! Perform Count='{act.GetPerformCount()}'");
+
+        yield return null;
     }
     [UnityTest]
     public IEnumerator PerformDeferredDoesNotImmediatelyPerform()
