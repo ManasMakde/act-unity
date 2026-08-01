@@ -333,6 +333,14 @@ public class Act
 	{
 		return _theater?.gameObject;
 	}
+	public HashSet<Act> GetBlockedByActs()
+	{
+		return new HashSet<Act>(_blockedByActs);
+	}
+	public Dictionary<Act, BlockType> GetActsToBlock()
+	{
+		return new Dictionary<Act, BlockType>(_actsToBlock);
+	}
 	public Status GetStatus()
 	{
 		return _status;
@@ -1289,6 +1297,73 @@ public class Act
 		static public void LateTickImpl(Act act)
 		{
 			act.LateTickImpl();
+		}
+
+
+		// For Testing Only
+		static public bool GetCanReperform(Act act)
+		{
+			return act._canReperform;
+		}
+		static public TickFlags GetTickFlags(Act act)
+		{
+			return act._tickFlags;
+		}
+		static public Status GetPrevStatus(Act act)
+		{
+			return act._prevStatus;
+		}
+		static public HashSet<Act> GetEpilogueActs(Act act)
+		{
+			return act._epilogueActs;
+		}
+		static public HashSet<Act> GetPendingEpilogueActs(Act act)
+		{
+			return act._pendingEpilogueActs;
+		}
+		static public HashSet<Act> GetPrologueActs(Act act)
+		{
+			return act._prologueActs;
+		}
+		static public HashSet<Act> GetPendingPrologueActs(Act act)
+		{
+			return act._pendingPrologueActs;
+		}
+		static public HashSet<Act> GetCompletedPrologueActs(Act act)
+		{
+			return act._completedPrologueActs;
+		}
+		static public bool GetIsInitializing(Act act)
+		{
+			return act._isInitializing;
+		}
+		static public bool GetHasPrecomputedPrologues(Act act)
+		{
+			return act._hasPrecomputedPrologues;
+		}
+		static public int GetTickReqCount(Act act)
+		{
+			return act._tickReqCount;
+		}
+		static public int GetPhysicsTickReqCount(Act act)
+		{
+			return act._physicsTickReqCount;
+		}
+		static public int GetLateTickReqCount(Act act)
+		{
+			return act._lateTickReqCount;
+		}
+		static public int GetPerformedOnTick(Act act)
+		{
+			return act._performedOnTick;
+		}
+		static public int GetPerformedOnPhysicsTick(Act act)
+		{
+			return act._performedOnPhysicsTick;
+		}
+		static public int GetPerformedOnLateTick(Act act)
+		{
+			return act._performedOnLateTick;
 		}
 	}
 }
