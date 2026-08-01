@@ -179,3 +179,26 @@ public class NoneTickAct : Act
         _tickFlags = TickFlags.None;
     }
 }
+public class RetryAct : Act
+{
+    public int enterCallCount = 0;
+    public int retryLimit = 1;
+    protected override Outcome Enter()
+    {
+        enterCallCount++;
+        return enterCallCount <= retryLimit ? Outcome.Retry : Outcome.Success;
+    }
+}
+public class RetryOnceThenFailAct : Act
+{
+    public int enterCallCount = 0;
+    protected override Outcome Enter()
+    {
+        enterCallCount++;
+        return enterCallCount == 1 ? Outcome.Retry : Outcome.Success;
+    }
+    protected override bool CanPerform()
+    {
+        return enterCallCount == 0;  // block retry attempt after first enter
+    }
+}

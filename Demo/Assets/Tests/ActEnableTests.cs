@@ -6,9 +6,9 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Is enable changed action broadcasted with correct arguments when enabled disabled
-// 1. Is enable changed action not called when blocked unblocked
-// 1. Does disabling abort the act
+// 1. Is enable changed action broadcasted with correct arguments when enabled disabled?
+// 1. Is enable changed action not called when blocked unblocked?
+// 1. Does disabling abort the act?
 
 
 public class ActEnableTests

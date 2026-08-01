@@ -712,7 +712,7 @@ public class Act
 
 		ofAct._completedPrologueActs.Clear();
 	}
-	private bool CanPerformImpl(bool skipOngoingCheck = false)
+	private bool CanPerformImpl(bool isRetrying = false)
 	{
 		// Return if in between initialization
 		if (_isInitializing)
@@ -723,7 +723,7 @@ public class Act
 
 
 		// Return if exiting
-		if (_status == Status.Exiting)
+		if (!isRetrying && _status == Status.Exiting)
 		{
 			WriteLog("Cannot perform, act is between exiting!");
 			return false;
@@ -747,7 +747,7 @@ public class Act
 
 
 		// Return if already ongoing
-		if (!skipOngoingCheck && !_canReperform && IsOngoing())
+		if (!isRetrying && !_canReperform && IsOngoing())
 		{
 			WriteLog("Cannot perform, act is ongoing!");
 			return false;
