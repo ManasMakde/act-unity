@@ -655,7 +655,7 @@ public class Act
 	private static void PrecomputePrologueChain(Act ofAct)
 	{
 		// Fail Incase directly null provided
-		var prologueActs =  ofAct.prologue.Invoke(ofAct);
+		var prologueActs = ofAct.prologue.Invoke(ofAct);
 		if (prologueActs == null)
 		{
 			ofAct.Redirect(Status.Exiting, Outcome.Failure);
@@ -721,11 +721,12 @@ public class Act
 	}
 	private static void ClearPrologueChain(Act ofAct)
 	{
-		while (ofAct._prologueActs.Count != 0)
+		while (ofAct._prologueActs.Count != 0 || ofAct._completedPrologueActs.Count != 0)
 		{
 			// Get prologue act
-			Act pAct = ofAct._prologueActs.First();
+			Act pAct = ofAct._prologueActs.Count != 0 ? ofAct._prologueActs.First() : ofAct._completedPrologueActs.First();
 			ofAct._prologueActs.Remove(pAct);
+			ofAct._completedPrologueActs.Remove(pAct);
 
 
 			// Skip if null
@@ -746,8 +747,6 @@ public class Act
 				ClearPrologueChain(pAct);
 			}
 		}
-
-		ofAct._completedPrologueActs.Clear();
 	}
 	private bool CanPerformImpl(bool isRetrying = false)
 	{
@@ -890,10 +889,6 @@ public class Act
 		{
 			return;  // Guard
 		}
-
-
-		// Reset pending prologues
-		_pendingPrologueActs.Clear();
 
 
 		// Perform all prologues
@@ -1236,6 +1231,9 @@ public class Act
 		FinishPrologues(this, _outcome);
 		ClearPrologueChain(this);
 		_hasPrecomputedPrologues = false;
+		_prologueActs.Clear();
+		_pendingPrologueActs.Clear();
+		_completedPrologueActs.Clear();
 
 
 		// Retry
@@ -1257,6 +1255,8 @@ public class Act
 		// Unblock & Continue Epilogues
 		UnblockOthers();
 		ContinueEpilogues(this, _outcome);
+		_epilogueActs.Clear();
+		_pendingEpilogueActs.Clear();
 
 
 		// Reset status

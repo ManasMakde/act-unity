@@ -44,6 +44,12 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActA1"), "MainAct performed before ActA1 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActA2"), "MainAct performed before ActA2 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActA3"), "MainAct performed before ActA3 in Seq() variation");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA2, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA3, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(mainAct, suffix: " in Seq() variation");
         }
 
 
@@ -76,6 +82,12 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActA1"), "MainAct performed before ActA1");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActA2"), "MainAct performed before ActA2");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActA3"), "MainAct performed before ActA3");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1);
+            Utilities.AssertChainCleared(actA2);
+            Utilities.AssertChainCleared(actA3);
+            Utilities.AssertChainCleared(mainAct);
         }
 
 
@@ -137,6 +149,15 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB1"), "Instant: MainAct performed before ActB1 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Instant: MainAct performed before ActB2 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB3"), "Instant: MainAct performed before ActB3 in Seq() variation");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA2, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA3, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB1, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB2, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB3, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(mainAct, prefix: "Instant: ", suffix: " in Seq() variation");
         }
 
 
@@ -199,6 +220,15 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Timed: MainAct performed before ActB2 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB3"), "Timed: MainAct performed before ActB3 in Seq() variation");
 
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA2, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA3, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB1, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB2, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB3, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(mainAct, prefix: "Timed: ", suffix: " in Seq() variation");
+
             UnityEngine.Object.Destroy(theater.gameObject);
         }
 
@@ -259,6 +289,15 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB1"), "Instant: MainAct performed before ActB1");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Instant: MainAct performed before ActB2");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB3"), "Instant: MainAct performed before ActB3");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actA2, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actA3, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actB1, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actB2, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actB3, prefix: "Instant: ");
+            Utilities.AssertChainCleared(mainAct, prefix: "Instant: ");
         }
 
 
@@ -323,6 +362,15 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB1"), "Timed: MainAct performed before ActB1");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Timed: MainAct performed before ActB2");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB3"), "Timed: MainAct performed before ActB3");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actA2, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actA3, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actB1, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actB2, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actB3, prefix: "Timed: ");
+            Utilities.AssertChainCleared(mainAct, prefix: "Timed: ");
 
             UnityEngine.Object.Destroy(theater.gameObject);
         }
@@ -410,6 +458,18 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC1"), "Instant: MainAct performed before ActC1 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC2"), "Instant: MainAct performed before ActC2 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC3"), "Instant: MainAct performed before ActC3 in Seq() variation");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA2, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA3, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB1, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB2, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB3, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actC1, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actC2, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actC3, prefix: "Instant: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(mainAct, prefix: "Instant: ", suffix: " in Seq() variation");
         }
 
 
@@ -496,6 +556,18 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC1"), "Timed: MainAct performed before ActC1 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC2"), "Timed: MainAct performed before ActC2 in Seq() variation");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC3"), "Timed: MainAct performed before ActC3 in Seq() variation");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA2, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actA3, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB1, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB2, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB3, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actC1, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actC2, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actC3, prefix: "Timed: ", suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(mainAct, prefix: "Timed: ", suffix: " in Seq() variation");
 
             UnityEngine.Object.Destroy(theater.gameObject);
         }
@@ -584,6 +656,18 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC1"), "Instant: MainAct performed before ActC1");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC2"), "Instant: MainAct performed before ActC2");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC3"), "Instant: MainAct performed before ActC3");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actA2, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actA3, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actB1, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actB2, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actB3, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actC1, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actC2, prefix: "Instant: ");
+            Utilities.AssertChainCleared(actC3, prefix: "Instant: ");
+            Utilities.AssertChainCleared(mainAct, prefix: "Instant: ");
         }
 
 
@@ -676,6 +760,18 @@ public class ActPrologues3Tests
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC1"), "Timed: MainAct performed before ActC1");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC2"), "Timed: MainAct performed before ActC2");
             Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC3"), "Timed: MainAct performed before ActC3");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA1, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actA2, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actA3, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actB1, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actB2, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actB3, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actC1, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actC2, prefix: "Timed: ");
+            Utilities.AssertChainCleared(actC3, prefix: "Timed: ");
+            Utilities.AssertChainCleared(mainAct, prefix: "Timed: ");
 
             UnityEngine.Object.Destroy(theater.gameObject);
         }

@@ -5,7 +5,18 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-
+public class Utilities
+{
+    public static void AssertChainCleared(Act act, string prefix = "", string suffix = "")
+    {
+        var name = act.GetName();
+        Assert.IsTrue(Act.Friend.GetEpilogueActs(act).Count == 0, $"{prefix}{name} epilogue acts not cleared{suffix}! epilogue acts count={Act.Friend.GetEpilogueActs(act).Count}");
+        Assert.IsTrue(Act.Friend.GetPendingEpilogueActs(act).Count == 0, $"{prefix}{name} pending epilogue acts not cleared{suffix}! pending epilogue acts count={Act.Friend.GetPendingEpilogueActs(act).Count}");
+        Assert.IsTrue(Act.Friend.GetPrologueActs(act).Count == 0, $"{prefix}{name} prologue acts not cleared{suffix}! prologue acts count={Act.Friend.GetPrologueActs(act).Count}");
+        Assert.IsTrue(Act.Friend.GetPendingPrologueActs(act).Count == 0, $"{prefix}{name} pending prologue acts not cleared{suffix}! pending prologue acts count={Act.Friend.GetPendingPrologueActs(act).Count}");
+        Assert.IsTrue(Act.Friend.GetCompletedPrologueActs(act).Count == 0, $"{prefix}{name} completed prologue acts not cleared{suffix}! completed prologue acts count={Act.Friend.GetCompletedPrologueActs(act).Count}");
+    }
+}
 public class SetupAct : Act
 {
     public int callCount = 0;

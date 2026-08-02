@@ -33,6 +33,10 @@ public class ActPrologues1Tests
             Assert.IsTrue(actA.GetPerformCount() == 1, $"ActA did not perform in Seq() variation, Perform Count={actA.GetPerformCount()}");
             Assert.IsTrue(mainAct.GetPerformCount() == 1, $"MainAct did not perform in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
             Assert.IsTrue(executionOrder.Count == 2 && executionOrder[0] == "ActA" && executionOrder[1] == "MainAct", "Execution order invalid in Seq() variation");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(mainAct, suffix: " in Seq() variation");
         }
 
 
@@ -53,6 +57,10 @@ public class ActPrologues1Tests
             Assert.IsTrue(actA.GetPerformCount() == 1, $"ActA did not perform, Perform Count={actA.GetPerformCount()}");
             Assert.IsTrue(mainAct.GetPerformCount() == 1, $"MainAct did not perform, Perform Count={mainAct.GetPerformCount()}");
             Assert.IsTrue(executionOrder.Count == 2 && executionOrder[0] == "ActA" && executionOrder[1] == "MainAct", "Execution order invalid");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA);
+            Utilities.AssertChainCleared(mainAct);
         }
 
 
@@ -83,6 +91,11 @@ public class ActPrologues1Tests
             Assert.IsTrue(actB.GetPerformCount() == 1, $"ActB did not perform in Seq() variation, Perform Count={actB.GetPerformCount()}");
             Assert.IsTrue(mainAct.GetPerformCount() == 1, $"MainAct did not perform in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
             Assert.IsTrue(executionOrder.Count == 3 && executionOrder[0] == "ActA" && executionOrder[1] == "ActB" && executionOrder[2] == "MainAct", "Execution order invalid in Seq() variation");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(mainAct, suffix: " in Seq() variation");
         }
 
 
@@ -109,6 +122,11 @@ public class ActPrologues1Tests
             Assert.IsTrue(actB.GetPerformCount() == 1, $"ActB did not perform, Perform Count={actB.GetPerformCount()}");
             Assert.IsTrue(mainAct.GetPerformCount() == 1, $"MainAct did not perform, Perform Count={mainAct.GetPerformCount()}");
             Assert.IsTrue(executionOrder.Count == 3 && executionOrder[0] == "ActA" && executionOrder[1] == "ActB" && executionOrder[2] == "MainAct", "Execution order invalid");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA);
+            Utilities.AssertChainCleared(actB);
+            Utilities.AssertChainCleared(mainAct);
         }
 
 
@@ -144,6 +162,12 @@ public class ActPrologues1Tests
             Assert.IsTrue(actC.GetPerformCount() == 1, $"ActC did not perform exactly once in Seq() variation, Perform Count={actC.GetPerformCount()}");
             Assert.IsTrue(mainAct.GetPerformCount() == 1, $"MainAct did not perform exactly once in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
             Assert.IsTrue(executionOrder.Count == 4 && executionOrder[0] == "ActA" && executionOrder[1] == "ActB" && executionOrder[2] == "ActC" && executionOrder[3] == "MainAct", "Execution order invalid in Seq() variation");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actB, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(actC, suffix: " in Seq() variation");
+            Utilities.AssertChainCleared(mainAct, suffix: " in Seq() variation");
         }
 
 
@@ -176,6 +200,12 @@ public class ActPrologues1Tests
             Assert.IsTrue(actC.GetPerformCount() == 1, $"ActC did not perform exactly once, Perform Count={actC.GetPerformCount()}");
             Assert.IsTrue(mainAct.GetPerformCount() == 1, $"MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
             Assert.IsTrue(executionOrder.Count == 4 && executionOrder[0] == "ActA" && executionOrder[1] == "ActB" && executionOrder[2] == "ActC" && executionOrder[3] == "MainAct", "Execution order invalid");
+
+            // Check chain sets cleared after perform
+            Utilities.AssertChainCleared(actA);
+            Utilities.AssertChainCleared(actB);
+            Utilities.AssertChainCleared(actC);
+            Utilities.AssertChainCleared(mainAct);
         }
 
 
