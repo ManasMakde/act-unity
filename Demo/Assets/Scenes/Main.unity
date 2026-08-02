@@ -408,8 +408,8 @@ MonoBehaviour:
     min: 4
     max: 6
   maxSpawnCount: 3
-  minSpawnRadius: 6
-  maxSpawnRadius: 10
+  minSpawnRadius: 10
+  maxSpawnRadius: 15
   gameOverDocument: {fileID: 1034557379}
   gameOverRootName: game-over-root
   restartButtonName: restart-button
