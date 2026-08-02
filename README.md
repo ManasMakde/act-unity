@@ -20,7 +20,7 @@ For a complete explaination & implementation in other game engines visit the [ma
 
 
 ## 🛠️ Installation
-If you want to use the act pattern in your project install the desired version from the [releases page][Releases]. Unzip & drop the 2 files anywhere in your project.  
+If you want to use the act pattern in your project install the desired version from the [releases page][Releases] & drop the 2 files anywhere in your project.  
 If you want to play the demo game clone this entire repository & open in unity 6000.3.19f1  
 
 > **Note**:  
