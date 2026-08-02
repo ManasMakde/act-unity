@@ -2,6 +2,7 @@
 
 [![Unity](https://img.shields.io/badge/Unity-4A4A4A?style=flat&logo=unity&logoColor=white)](https://unity.com)
 ![Status: Alpha](https://img.shields.io/badge/status-0.1.0--alpha-orange)
+![Tests](https://img.shields.io/badge/tests-included-lightgrey)
 ![License](https://img.shields.io/github/license/ManasMakde/act-unity?style=flat&color=yellow)
 
 This is the unity implementation of the **Act Pattern**.  
