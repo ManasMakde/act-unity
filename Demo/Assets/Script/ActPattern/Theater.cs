@@ -1,3 +1,26 @@
+// MIT License
+// 
+// Copyright (c) 2025-present Manas Ravindra Makde
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
+
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -84,14 +107,23 @@ public class Theater : MonoBehaviour
     // Private Properties
     private HashSet<Act> _allActs = new();
     private HashSet<Act> _ongoingActs = new();
-    private Dictionary<Act, Act.TickFlags> _deferredActs = new();
     private Dictionary<Act, bool> _pendingModActs = new();
+
+    private Dictionary<Act, Act.TickFlags> _stagedDeferActs = new();
     private Dictionary<Act, bool> _stagedTickActs = new();
     private Dictionary<Act, bool> _stagedPhysicsTickActs = new();
     private Dictionary<Act, bool> _stagedLateTickActs = new();
+
+    private Dictionary<Act, Act.TickFlags> _actsToDefer = new();
     private Dictionary<Act, bool> _actsToTick = new();
     private Dictionary<Act, bool> _actsToPhysicsTick = new();
     private Dictionary<Act, bool> _actsToLateTick = new();
+    
+    private List<Act> _deferFilterList = new();
+    private List<Act> _tickFilterList = new();
+    private List<Act> _physicsTickFilterList = new();
+    private List<Act> _lateTickFilterList = new();
+    
     private bool _isAbortingAll = false;
     private bool _isEnabled = true;
 
@@ -188,7 +220,7 @@ public class Theater : MonoBehaviour
             return;
         }
 
-        _deferredActs[act] = _deferredActs.ContainsKey(act) ? (_deferredActs[act] | flag) : flag;
+        _stagedDeferActs[act] = _stagedDeferActs.ContainsKey(act) ? (_stagedDeferActs[act] | flag) : flag;
     }
     private void UnstageDeferred(Act act)
     {
@@ -197,7 +229,7 @@ public class Theater : MonoBehaviour
             return;
         }
 
-        _deferredActs.Remove(act);
+        _stagedDeferActs.Remove(act);
     }
     private void StageTick(Act act)
     {
@@ -284,7 +316,7 @@ public class Theater : MonoBehaviour
 
 
     // Private Static Methods
-    private static void TickActs(ref Dictionary<Act, bool> stagedActs, ref Dictionary<Act, bool> actsToTick, Act.TickFlags flag)
+    private static void TickActs(ref Dictionary<Act, bool> stagedActs, ref Dictionary<Act, bool> actsToTick, List<Act> filterList, Act.TickFlags flag)
     {
         // Return if no act to process
         if (stagedActs.Count == 0)
@@ -294,8 +326,7 @@ public class Theater : MonoBehaviour
 
 
         // Reference swap to avoid mutation
-        actsToTick = stagedActs;
-        stagedActs = new();
+        (stagedActs, actsToTick) = (actsToTick, stagedActs);
 
 
         // Tick all acts based on flag
@@ -321,21 +352,21 @@ public class Theater : MonoBehaviour
         actsToTick.Clear();
 
 
-        // Filter
-        var filter = new List<Act>();
+        // Filter using reused list to avoid alloc
+        filterList.Clear();
         foreach (Act act in stagedActs.Keys)
         {
             if (!stagedActs[act])
             {
-                filter.Add(act);
+                filterList.Add(act);
             }
         }
-        foreach (Act act in filter)
+        foreach (Act act in filterList)
         {
             stagedActs.Remove(act);
         }
     }
-    private static void DeferActs(ref Dictionary<Act, Act.TickFlags> deferredActs, Act.TickFlags flag)
+    private static void DeferActs(ref Dictionary<Act, Act.TickFlags> deferredActs, ref Dictionary<Act, Act.TickFlags> actsToDefer, List<Act> filterList, Act.TickFlags flag)
     {
         // Return if no acts to defer
         if (deferredActs.Count == 0)
@@ -345,24 +376,23 @@ public class Theater : MonoBehaviour
 
 
         // Reference swap to avoid mutation
-        var actsToDefer = deferredActs;
-        deferredActs = new();
+        (deferredActs, actsToDefer) = (actsToDefer, deferredActs);
 
 
-        // Defer perform acts
-        var filter = new List<Act>();
+        // Defer perform acts using reused list to avoid alloc
+        filterList.Clear();
         foreach (Act act in actsToDefer.Keys)
         {
             if ((actsToDefer[act] & flag) != 0)
             {
                 act.Perform();
-                filter.Add(act);
+                filterList.Add(act);
             }
         }
 
 
         // Filter out
-        foreach (Act act in filter)
+        foreach (Act act in filterList)
         {
             actsToDefer.Remove(act);
         }
@@ -370,6 +400,7 @@ public class Theater : MonoBehaviour
 
         // Merge back unperformed
         MergeDict(deferredActs, actsToDefer, false);
+        actsToDefer.Clear();
     }
     private static void MergeDict<TKey, TValue>(Dictionary<TKey, TValue> dict, Dictionary<TKey, TValue> other, bool overwrite)
     {
@@ -388,18 +419,18 @@ public class Theater : MonoBehaviour
     // Private Override Methods
     private void Update()
     {
-        TickActs(ref _stagedTickActs, ref _actsToTick, Act.TickFlags.Tick);
-        DeferActs(ref _deferredActs, Act.TickFlags.Tick);
+        TickActs(ref _stagedTickActs, ref _actsToTick, _tickFilterList, Act.TickFlags.Tick);
+        DeferActs(ref _stagedDeferActs, ref _actsToDefer, _deferFilterList, Act.TickFlags.Tick);
     }
     private void FixedUpdate()
     {
-        TickActs(ref _stagedPhysicsTickActs, ref _actsToPhysicsTick, Act.TickFlags.PhysicsTick);
-        DeferActs(ref _deferredActs, Act.TickFlags.PhysicsTick);
+        TickActs(ref _stagedPhysicsTickActs, ref _actsToPhysicsTick, _physicsTickFilterList, Act.TickFlags.PhysicsTick);
+        DeferActs(ref _stagedDeferActs, ref _actsToDefer, _deferFilterList, Act.TickFlags.PhysicsTick);
     }
     private void LateUpdate()
     {
-        TickActs(ref _stagedLateTickActs, ref _actsToLateTick, Act.TickFlags.LateTick);
-        DeferActs(ref _deferredActs, Act.TickFlags.LateTick);
+        TickActs(ref _stagedLateTickActs, ref _actsToLateTick, _lateTickFilterList, Act.TickFlags.LateTick);
+        DeferActs(ref _stagedDeferActs, ref _actsToDefer, _deferFilterList, Act.TickFlags.LateTick);
     }
 
 
