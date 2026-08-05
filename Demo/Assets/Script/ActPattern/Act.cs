@@ -22,7 +22,6 @@
 
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -732,7 +731,7 @@ public class Act
 		// Finish all pending prologues
 		while (ofAct._pendingPrologueActs.Count != 0)
 		{
-			Act pAct = ofAct._pendingPrologueActs.First();
+			Act pAct = GetFirst(ofAct._pendingPrologueActs);
 			ofAct._pendingPrologueActs.Remove(pAct);
 			pAct?.Finish(pOutcome);
 		}
@@ -742,7 +741,7 @@ public class Act
 		// Continue and clear out epilogues
 		while (ofAct._pendingEpilogueActs.Count != 0)
 		{
-			Act eAct = ofAct._pendingEpilogueActs.First();
+			Act eAct = GetFirst(ofAct._pendingEpilogueActs);
 			ofAct._pendingEpilogueActs.Remove(eAct);
 			eAct._completedPrologueActs.Add(ofAct);
 			eAct.CompletedPrologue(ofAct, newOutcome);
@@ -753,9 +752,17 @@ public class Act
 		while (ofAct._prologueActs.Count != 0 || ofAct._completedPrologueActs.Count != 0)
 		{
 			// Get prologue act
-			Act pAct = ofAct._prologueActs.Count != 0 ? ofAct._prologueActs.First() : ofAct._completedPrologueActs.First();
-			ofAct._prologueActs.Remove(pAct);
-			ofAct._completedPrologueActs.Remove(pAct);
+			Act pAct;
+			if (ofAct._prologueActs.Count == 0)
+			{
+				pAct = GetFirst(ofAct._completedPrologueActs);
+				ofAct._completedPrologueActs.Remove(pAct);
+			}
+			else
+			{
+				pAct = GetFirst(ofAct._prologueActs);
+				ofAct._prologueActs.Remove(pAct);
+			}
 
 
 			// Skip if null
@@ -776,6 +783,20 @@ public class Act
 				ClearPrologueChain(pAct);
 			}
 		}
+	}
+	private static Act GetFirst(HashSet<Act> data)
+	{
+		if (data.Count == 0)
+		{
+			return null;
+		}
+
+		foreach (Act act in data)
+		{
+			return act;
+		}
+
+		return null;
 	}
 	private bool CanPerformImpl(bool isRetrying = false)
 	{
@@ -931,7 +952,7 @@ public class Act
 
 
 			// Skip prologue if ongoing
-			var pAct = _prologueActs.First();
+			var pAct = GetFirst(_prologueActs);
 			var isOngoing = pAct.IsOngoing();
 			if (isOngoing)
 			{
@@ -1066,17 +1087,17 @@ public class Act
 	}
 	private void HandleTickingImpl()
 	{
-		if (CanTick(TickFlags.Tick) && _theater != null)
+		if (CanTick(TickFlags.Tick))
 		{
 			_tickReqCount++;
 			Theater.Friend.StageTick(_theater, this);
 		}
-		if (CanTick(TickFlags.PhysicsTick) && _theater != null)
+		if (CanTick(TickFlags.PhysicsTick))
 		{
 			_physicsTickReqCount++;
 			Theater.Friend.StagePhysicsTick(_theater, this);
 		}
-		if (CanTick(TickFlags.LateTick) && _theater != null)
+		if (CanTick(TickFlags.LateTick))
 		{
 			_lateTickReqCount++;
 			Theater.Friend.StageLateTick(_theater, this);
@@ -1338,6 +1359,7 @@ public class Act
 			ExitImpl();
 		}
 	}
+
 
 
 	// Friend Class
