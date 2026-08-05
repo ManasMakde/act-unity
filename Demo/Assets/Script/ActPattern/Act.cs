@@ -313,7 +313,7 @@ public class Act
 		// Broadcast enabled disabled
 		OnEnableChanged?.Invoke(this, IsEnabled());
 	}
-	public bool DidPerform(TickFlags tickFlag = TickFlags.PhysicsTick)  // True if act was performed atleast once during current tick
+	public bool DidPerform(TickFlags tickFlag = TickFlags.PhysicsTick)
 	{
 		// Return false if no flag provided
 		if (tickFlag == TickFlags.None)
@@ -323,21 +323,21 @@ public class Act
 
 
 		// Check based on tick types
-		var performed = false;
+		var hasPerformed = false;
 		if ((tickFlag & TickFlags.Tick) != 0)
 		{
-			performed = performed || _performedOnTick == Time.frameCount;
+			hasPerformed = hasPerformed || _performedOnTick == Time.frameCount;
 		}
 		if ((tickFlag & TickFlags.PhysicsTick) != 0)
 		{
-			performed = performed || _performedOnPhysicsTick == Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
+			hasPerformed = hasPerformed || _performedOnPhysicsTick == Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
 		}
 		if ((tickFlag & TickFlags.LateTick) != 0)
 		{
-			performed = performed || _performedOnLateTick == Time.frameCount;
+			hasPerformed = hasPerformed || _performedOnLateTick == Time.frameCount;
 		}
 
-		return performed;
+		return hasPerformed;
 	}
 	public bool IsOngoing()
 	{
@@ -516,10 +516,17 @@ public class Act
 
 
 		// Return if both acts are in the same prologue chain
-		if (this != byAct && GetTopEpilogues(this).Overlaps(GetTopEpilogues(byAct)))
+		if (this != byAct && (_epilogueActs.Count != 0 || byAct._epilogueActs.Count != 0))
 		{
-			WriteLog("Failed to block, Both " + _name + " and " + byAct._name + " are in the same prologue chain!");
-			return;
+			_resultTopEpilogues.Clear();
+			_visitedTopEpilogues.Clear();
+			byAct._resultTopEpilogues.Clear();
+			byAct._visitedTopEpilogues.Clear();
+			if (GetTopEpilogues(this, _resultTopEpilogues, _visitedTopEpilogues).Overlaps(GetTopEpilogues(byAct, byAct._resultTopEpilogues, byAct._visitedTopEpilogues)))
+			{
+				WriteLog("Failed to block, Both " + _name + " and " + byAct._name + " are in the same prologue chain!");
+				return;
+			}
 		}
 
 
@@ -611,6 +618,9 @@ public class Act
 	private HashSet<Act> _pendingPrologueActs = new();
 	private HashSet<Act> _completedPrologueActs = new();
 
+	private HashSet<Act> _resultTopEpilogues = new();
+	private HashSet<Act> _visitedTopEpilogues = new();
+
 	private bool _hasInitialized = false;
 	private bool _isInitializing = false;
 	private bool _hasPrecomputedPrologues = false;
@@ -642,12 +652,8 @@ public class Act
 			}
 		}
 	}
-	private static HashSet<Act> GetTopEpilogues(Act ofAct, HashSet<Act> result = null, HashSet<Act> visited = null)
+	private static HashSet<Act> GetTopEpilogues(Act ofAct, HashSet<Act> result, HashSet<Act> visited)
 	{
-		result ??= new HashSet<Act>();
-		visited ??= new HashSet<Act>();
-
-
 		// Skip if already visited
 		if (visited.Contains(ofAct))
 		{
