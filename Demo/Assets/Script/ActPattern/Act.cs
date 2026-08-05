@@ -36,7 +36,7 @@ public class Act
 		None = 0,
 		Tick = 1 << 0,
 		PhysicsTick = 1 << 1,
-		LateTick = 1 << 2,
+		LateTick = 1 << 2
 	}
 	public enum Status
 	{
@@ -85,8 +85,8 @@ public class Act
 	public event Action<Act /* act */, bool /* newIsEnabled */> OnEnableChanged;
 	public event Action<Act /* act */, Act /* blockingAct */, BlockType /* blockType */, bool /* didBlock */> OnBlockChanged;
 
-	public Func<Act, List<Act>> prologue = (act) => new List<Act>();  // List all acts to perform before this act, Return { null } for failure outcome
-	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();  // Externally extendable conditions for CanPerform()
+	public Func<Act, List<Act>> prologue = (act) => new List<Act>();  // List all acts to perform before this act, Return null for failure outcome
+	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();  // Externally extendable conditions
 	public bool isVerbose = false;  // Toggle for warning messages
 
 	public void Init(string newName = "", Theater newTheater = null, bool initiallyEnabled = true)
@@ -142,8 +142,9 @@ public class Act
 
 
 		// Mark as initialization completed
-		_isInitializing = false;  // Intentionally before OnPostSetup DO NOT CHANGE
+		_isInitializing = false;  // Intentionally before post setup broadcast DO NOT CHANGE
 		_hasInitialized = true;
+
 
 		// Broadcast post setup
 		OnPostSetup?.Invoke(this);
@@ -153,7 +154,7 @@ public class Act
 		// Return if trying to redeinitialize
 		if (!_hasInitialized)
 		{
-			WriteLog("Failed Init(), Already deinitialized!");
+			WriteLog("Failed Deinit(), Already deinitialized!");
 			return;
 		}
 
@@ -953,8 +954,7 @@ public class Act
 
 			// Skip prologue if ongoing
 			var pAct = GetFirst(_prologueActs);
-			var isOngoing = pAct.IsOngoing();
-			if (isOngoing)
+			if (pAct.IsOngoing())
 			{
 				_prologueActs.Remove(pAct);
 				_pendingPrologueActs.Add(pAct);
