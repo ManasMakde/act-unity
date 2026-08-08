@@ -40,6 +40,7 @@
 | public | Func\<Act, List\<Act\>\> | [prologue](#prologue) |
 | public | List\<Func\<Act, bool\>\> | [performConditions](#performconditions) |
 | public | bool | [isVerbose](#isverbose) |
+| protected | string | [_name](#_name) |
 | protected | bool | [_canReperform](#_canreperform) |
 | protected | [TickFlags](#tickflags) | [_tickFlags](#_tickflags) |
 
@@ -88,7 +89,7 @@
 | protected virtual | void | [UnblockSelf](#unblockself)(Act byAct) <abbr title="">Virtual</abbr> |
 | protected virtual | void | [BlockOthers](#blockothers)() <abbr title="">Virtual</abbr> |
 | protected virtual | void | [UnblockOthers](#unblockothers)() <abbr title="">Virtual</abbr> |
-
+| protected virtual | void | [WriteLog](#writelog)(string message, string overrideName = "") <abbr title="">Virtual</abbr> |
 
 
 <br/>
@@ -358,14 +359,22 @@ Controls whether or not to print warnings. Set to `false` to silence them.
 ---
 
 
+### <a id="_name"></a> protected string _name
+`Default: ""`  
+
+Name of the act, Mainly useful for debugging purposes.
+
+
+---
+
+
 ### <a id="_canreperform"></a> protected bool _canReperform
 > **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
 
 `Default: false` 
 
-If `true` then calling `Perform()` while act is already performing will finish interruptively current perform and then reperform.  
-If `false` then current ongoing perform must be completed before calling `Perform()` again.
-
+If `true` then calling `Perform()` on an ongoing act will abort the act interruptively and then perform.  
+If `false` then current ongoing perform must be completed/aborted manually before calling `Perform()` again.
 
 ---
 
@@ -958,6 +967,16 @@ public class MyAct : Act
     }
 }
 ```
+
+
+---
+
+
+### <a id="writelog"></a> protected virtual void WriteLog(string message, string overrideName = "")
+Used internally to log warning messages when [isVerbose](#isverbose) is `true`. Only kept incase some special functionality needs to be hooked when a warning is logged.
+
+
+---
 
 
 <br/>
