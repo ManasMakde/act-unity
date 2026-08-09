@@ -47,16 +47,18 @@
 
 | Access | Type | Methods |
 |--------|------|--------------|
-| public | void | [Init](#init)(string name, Theater theater, bool initiallyEnabled) |
+| public | void | [Init](#init)(string name = "", Theater theater = null, bool initiallyEnabled = true) |
 | public | void | [Deinit](#deinit)() |
 | public | void | [Perform](#perform)() |
-| public | void | [PerformDeferred](#performdeferred)([TickFlags](#tickflags) tickFlag) |
+| public | void | [PerformDeferred](#performdeferred)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
 | public | void | [Retry](#retry)() |
 | public | void | [Abort](#abort)() |
-| public | void | [AddToBlock](#addtoblock)(List\<Act\> acts, [BlockType](#blocktype) blockType) |
+| public | void | [AddToBlock](#addtoblock)(List\<Act\> acts, [BlockType](#blocktype) blockType = BlockType.Persistent) |
 | public | void | [RemoveFromBlock](#removefromblock)(List\<Act\> acts) |
 | public | void | [SetEnabled](#setenabled)(bool newEnabled) |
-| public | bool | [DidPerform](#didperform)([TickFlags](#tickflags)) |
+| public | bool | [DidPerform](#didperform)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
+| public | bool | [HasInitialized](#hasinitialized)() |
+| public | bool | [IsInitializing](#isinitializing)() |
 | public | bool | [IsOngoing](#isongoing)() |
 | public | bool | [IsActive](#isactive)() |
 | public | bool | [IsEnabled](#isenabled)() |
@@ -84,7 +86,7 @@
 | protected virtual | [Outcome](#outcome) | [LateTick](#latetick)() <abbr title="">Virtual</abbr> |
 | protected virtual | void | [Exit](#exit)() <abbr title="">Virtual</abbr> |
 | protected virtual | void | [Cleanup](#cleanup)() <abbr title="">Virtual</abbr> |
-| protected | void | [Finish](#finish)([Outcome](#outcome) newOutcome) |
+| protected | void | [Finish](#finish)([Outcome](#outcome) newOutcome = Outcome.Success) |
 | protected virtual | void | [BlockSelf](#blockself)(Act byAct, [BlockType](#blocktype) blockType) <abbr title="">Virtual</abbr> |
 | protected virtual | void | [UnblockSelf](#unblockself)(Act byAct) <abbr title="">Virtual</abbr> |
 | protected virtual | void | [BlockOthers](#blockothers)() <abbr title="">Virtual</abbr> |
@@ -362,6 +364,9 @@ Controls whether or not to print warnings. Set to `false` to silence them.
 ### <a id="_name"></a> protected string _name
 `Default: ""`  
 
+> **Note:** If you want to give the act a default name assign this in [`Setup()`](#setup) method. However this will be overriden if name argument is passed to [`Init()`](#init).  
+
+
 Name of the act, Mainly useful for debugging purposes.
 
 
@@ -369,9 +374,9 @@ Name of the act, Mainly useful for debugging purposes.
 
 
 ### <a id="_canreperform"></a> protected bool _canReperform
-> **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
-
 `Default: false` 
+
+> **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
 
 If `true` then calling `Perform()` on an ongoing act will abort the act interruptively and then perform.  
 If `false` then current ongoing perform must be completed/aborted manually before calling `Perform()` again.
@@ -380,9 +385,9 @@ If `false` then current ongoing perform must be completed/aborted manually befor
 
 
 ### <a id="_tickflags"></a> protected [TickFlags](#tickflags) _tickFlags
-> **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
-
 `Default: TickFlags.None`  
+
+> **Note:** Should only be assigned inside the [`Setup()`](#setup) method.  
 
 Determines which tick methods are to be called. Look into [`Enter()`](#enter) & [`TickFlags`](#tickflags) to learn more.
 
@@ -514,6 +519,20 @@ void FixedUpdate()
     Debug.Log(myAct.DidPerform(TickFlags.PhysicsTick));  // true
 }
 ```
+
+
+---
+
+
+### <a id="hasinitialized"></a> public bool HasInitialized()
+Returns `true` if the act has been [initialized](#init). Resets to `false` once [deinitialized](#deinit)
+
+
+---
+
+
+### <a id="isinitializing"></a> public bool IsInitializing()
+Returns `true` if the act is currently in between [`Init()`](#init) or [`Deinit()`](#deinit).
 
 
 ---
@@ -1058,4 +1077,4 @@ Returns a list of all the acts assigned to the theater.
 [Unity-OnDestroy]: https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnDestroy.html
 [Unity-GameObject]: https://docs.unity3d.com/ScriptReference/Component-gameObject.html
 [Unity-DeltaTime]: https://docs.unity3d.com/ScriptReference/Time-deltaTime.html
-[Unity-FixedDeltaTime]: https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html   
+[Unity-FixedDeltaTime]: https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html

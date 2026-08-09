@@ -40,7 +40,7 @@ public class Act
 	}
 	public enum Status
 	{
-		None = 0,
+		None,
 		Prologuing,
 		Entering,
 		Ticking,
@@ -48,11 +48,11 @@ public class Act
 	}
 	public enum Outcome
 	{
-		Interrupted = -2,
-		Failure = -1,
-		Pending = 0,
-		Success = 1,
-		Retry = 2
+		Interrupted,
+		Failure,
+		Pending,
+		Success,
+		Retry
 	}
 	public enum BlockType
 	{
@@ -85,11 +85,11 @@ public class Act
 	public event Action<Act /* act */, bool /* newIsEnabled */> OnEnableChanged;
 	public event Action<Act /* act */, Act /* blockingAct */, BlockType /* blockType */, bool /* didBlock */> OnBlockChanged;
 
-	public Func<Act, List<Act>> prologue = (act) => new List<Act>();  // List all acts to perform before this act, Return null for failure outcome
-	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();  // Externally extendable conditions
-	public bool isVerbose = false;  // Toggle for warning messages
+	public Func<Act, List<Act>> prologue = (act) => new List<Act>();
+	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();
+	public bool isVerbose = false;
 
-	public void Init(string newName = "", Theater newTheater = null, bool initiallyEnabled = true)
+	public void Init(string newName = "", Theater newTheater = null, bool isInitiallyEnabled = true)
 	{
 		// Return if trying to reinitialize
 		if (_hasInitialized)
@@ -127,7 +127,7 @@ public class Act
 
 
 		// Disable Initially
-		if (!initiallyEnabled)
+		if (!isInitiallyEnabled)
 		{
 			BlockSelf(this, BlockType.Persistent);
 		}
@@ -183,10 +183,6 @@ public class Act
 		Cleanup();
 
 
-		// Broadcast post cleanup
-		OnPostCleanup?.Invoke(this);
-
-
 		// Unassign owning theater
 		if (_theater != null)
 		{
@@ -205,6 +201,10 @@ public class Act
 		// Mark as deinitialization completed
 		_isInitializing = false;
 		_hasInitialized = false;
+
+
+		// Broadcast post cleanup
+		OnPostCleanup?.Invoke(this);
 	}
 	public void Perform()
 	{
@@ -251,8 +251,8 @@ public class Act
 	{
 		foreach (Act bAct in acts)
 		{
-			// Skip if self (reserved for enable/disable)
-			if (bAct == this)
+			// Skip if self (reserved for enable/disable) or null
+			if (bAct == this || bAct == null)
 			{
 				WriteLog("Trying to block self!");
 				continue;
@@ -274,8 +274,8 @@ public class Act
 	{
 		foreach (Act bAct in acts)
 		{
-			// Skip if self (reserved for enable/disable)
-			if (bAct == this)
+			// Skip if self (reserved for enable/disable) or null
+			if (bAct == this || bAct == null)
 			{
 				WriteLog("Trying to unblock self!");
 				continue;
@@ -338,6 +338,14 @@ public class Act
 		}
 
 		return hasPerformed;
+	}
+	public bool HasInitialized()
+	{
+		return _hasInitialized;
+	}
+	public bool IsInitializing()
+	{
+		return _isInitializing;
 	}
 	public bool IsOngoing()
 	{
@@ -417,7 +425,7 @@ public class Act
 	{
 		return _name;
 	}
-	public static List<Act> Seq(List<List<Act>> pArrays)  // Only use inside prologue
+	public static List<Act> Seq(List<List<Act>> pArrays)
 	{
 		// Return if null
 		if (pArrays == null)
@@ -462,8 +470,8 @@ public class Act
 
 	// Protected
 	protected string _name = "";
-	protected bool _canReperform = false;  // Indicates if act can interrupt itself & restart perform, Only assign in Setup()
-	protected TickFlags _tickFlags = TickFlags.None;  // Indicates if act will be "Ticking" after entering, Only assign in Setup()
+	protected bool _canReperform = false;
+	protected TickFlags _tickFlags = TickFlags.None;
 
 	protected virtual void Setup()
 	{
@@ -604,12 +612,12 @@ public class Act
 
 
 	// Private
-	private Theater _theater = null;  // Which theater this act belongs to
-	private Status _status = Status.None;  // Keeps track of where in the perform life cycle the act is currently
+	private Theater _theater = null;
+	private Status _status = Status.None;
 	private Status _prevStatus = Status.None;
-	private Outcome _outcome = Outcome.Pending;  // Denotes how the act ended
-	private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();  // Which acts to block when performing this act
-	private HashSet<Act> _blockedByActs = new();  // Which acts are blocking this act
+	private Outcome _outcome = Outcome.Pending;
+	private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();
+	private HashSet<Act> _blockedByActs = new();
 
 	private HashSet<Act> _epilogueActs = new();
 	private HashSet<Act> _pendingEpilogueActs = new();

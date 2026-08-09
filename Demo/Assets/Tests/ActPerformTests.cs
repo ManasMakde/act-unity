@@ -41,7 +41,7 @@ using UnityEngine.TestTools;
 // 1. Does reperform fail from OnPostExit?
 // 1. Does perform succeed from OnPerformEnd?
 // 1. Does reperform fail from OnPreCleanup?
-// 1. Does reperform fail from OnPostCleanup?
+// 1. Does reperform succeed from OnPostCleanup?
 // 1. Does perform succeed from OnEnableChanged?
 // 1. Does perform succeed from OnBlockChanged?
 
@@ -869,10 +869,10 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformsFromOnPostCleanup()
+    public IEnumerator PerformFromOnPostCleanup()
     {
         // Perform Act
-        var act = new ReperformableAct();
+        var act = new Act();
         act.OnPostCleanup += (a) =>
         {
             a.Perform();
@@ -882,7 +882,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPostCleanup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act performed from OnPostCleanup! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;
