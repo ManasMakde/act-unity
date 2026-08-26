@@ -206,12 +206,15 @@ public class Act
 		// Broadcast post cleanup
 		OnPostCleanup?.Invoke(this);
 	}
-	public void Perform()
+	public bool Perform()
 	{
 		if (CanPerformImpl())
 		{
 			PerformImpl();
+			return true;
 		}
+
+		return false;
 	}
 	public void PerformDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
 	{
@@ -313,7 +316,7 @@ public class Act
 		// Broadcast enabled disabled
 		OnEnableChanged?.Invoke(this, IsEnabled());
 	}
-	public bool DidPerform(TickFlags tickFlag = TickFlags.PhysicsTick)
+	public bool DidPerformInTick(TickFlags tickFlag = TickFlags.PhysicsTick)
 	{
 		// Return false if no flag provided
 		if (tickFlag == TickFlags.None)

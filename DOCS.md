@@ -49,14 +49,14 @@
 |--------|------|--------------|
 | public | void | [Init](#init)(string name = "", Theater theater = null, bool initiallyEnabled = true) |
 | public | void | [Deinit](#deinit)() |
-| public | void | [Perform](#perform)() |
+| public | bool | [Perform](#perform)() |
 | public | void | [PerformDeferred](#performdeferred)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
 | public | void | [Retry](#retry)() |
 | public | void | [Abort](#abort)() |
 | public | void | [AddToBlock](#addtoblock)(List\<Act\> acts, [BlockType](#blocktype) blockType = BlockType.Persistent) |
 | public | void | [RemoveFromBlock](#removefromblock)(List\<Act\> acts) |
 | public | void | [SetEnabled](#setenabled)(bool newEnabled) |
-| public | bool | [DidPerform](#didperform)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
+| public | bool | [DidPerformInTick](#didperformintick)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
 | public | bool | [HasInitialized](#hasinitialized)() |
 | public | bool | [IsInitializing](#isinitializing)() |
 | public | bool | [IsOngoing](#isongoing)() |
@@ -323,7 +323,7 @@ myAct.prologue += (Act act) => {
     }
 
     return new() { myAct1, myAct2 };  // myAct1 & myAct2 will be performed in parallel
-}
+};
 ```
 
 
@@ -342,9 +342,9 @@ void FixedUpdate()
 void Awake()
 {
     jumpAct.performConditions.Add((Act act)=> {
-        return Input.GetKeyDown(KeyCode.Space)  // Only jump when spacebar is pressed
-    })
-    jumpAct.Init(theater, "Jump Act");
+        return Input.GetKeyDown(KeyCode.Space);  // Only jump when spacebar is pressed
+    });
+    jumpAct.Init("Jump Act", theater);
 }
 ```
 
@@ -407,7 +407,7 @@ void Awake()
     };
     myAct.prologue += (Act act) =>
     {
-        return new() { someAct }
+        return new() { someAct };
     };
     myAct.myVar = 10;
     myAct.Init("My Act", theater);
@@ -435,8 +435,8 @@ Calling `Deinit()` will internally call your overridden `Cleanup()` method.
 ---
 
 
-### <a id="perform"></a> public void Perform()
-Call this method when you want your defined act behaviour to run. This will start the perform lifecycle of the act.  
+### <a id="perform"></a> public bool Perform()
+Call this method when you want your defined act behaviour to run. This will start the perform lifecycle of the act. Returns `false` if act could not perform.
 ```csharp
 void FixedUpdate()
 {
@@ -481,7 +481,7 @@ void Awake()
 {
     theater = GetComponent<Theater>();
     damagedAct.AddToBlock(new() { walkAct });  // Walking is blocked while player is taking damage
-    damagedAct.Init(theater, "Damaged Act");
+    damagedAct.Init("Damaged Act", theater);
 }
 ```
 
@@ -509,14 +509,14 @@ myAct.SetEnabled(true);  // Enable act
 ---
 
 
-### <a id="didperform"></a> public bool DidPerform([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
+### <a id="didperformintick"></a> public bool DidPerformInTick([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
 Returns `true` if the act has performed atleast once in the span of the current tick.  
 ```csharp
 void FixedUpdate()
 {
-    Debug.Log(myAct.DidPerform(TickFlags.PhysicsTick));  // false
+    Debug.Log(myAct.DidPerformInTick(TickFlags.PhysicsTick));  // false
     myAct.Perform();
-    Debug.Log(myAct.DidPerform(TickFlags.PhysicsTick));  // true
+    Debug.Log(myAct.DidPerformInTick(TickFlags.PhysicsTick));  // true
 }
 ```
 
@@ -614,7 +614,6 @@ Returns the current [Status](#status) of the act.
 
 ### <a id="getoutcome"></a> public [Outcome](#outcome) GetOutcome()
 Returns the outcome of [`Enter()`](#enter) or any of the tick methods.  
-However this is only to be used inside the lifecycle methods since [`Exit()`](#exit) will internally reset the flag.
 
 
 ---
@@ -681,7 +680,7 @@ myAct.prologue += (Act act) => {
         new() { myActB1, myActB2 },
         new() { myActC1 },
     });
-}
+};
 ```
 In the above example `myAct1` will perform first,  
 then `myActB1` & `myActB2` will perform in parallel,  
@@ -692,19 +691,19 @@ This is how to do it without using `Seq()`:
 ```csharp
 myAct.prologue += (Act act) => {
     return new() { myActC1 };
-}
+};
 
 myActC1.prologue += (Act act) => {
     return new() { myActB1, myActB2 };
-}
+};
 
 myActB1.prologue += (Act act) => {
     return new() { myActA1 };
-}
+};
 
 myActB2.prologue += (Act act) => {
     return new() { myActA1 };
-}
+};
 ```
 
 

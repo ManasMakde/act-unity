@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Does DidPerform() valid everywhere?
+// 1. Does DidPerformInTick() valid everywhere?
 // 1. Does IsOngoing() valid everywhere?
 // 1. Does IsActive() valid everywhere?
 // 1. Does IsEnabled() valid in every combination?
@@ -40,26 +40,26 @@ using UnityEngine.TestTools;
 public class ActMiscTests
 {
     [UnityTest]
-    public IEnumerator DidPerform()
+    public IEnumerator DidPerformInTick()
     {
         // Tick
         {
             var act = new Act();
-            act.Init("Misc DidPerform Act");
+            act.Init();
             act.Perform();
 
-            var performedSameTick1 = act.DidPerform(Act.TickFlags.Tick);
-            var performedSameTick2 = act.DidPerform(Act.TickFlags.Tick);
+            var performedSameTick1 = act.DidPerformInTick(Act.TickFlags.Tick);
+            var performedSameTick2 = act.DidPerformInTick(Act.TickFlags.Tick);
 
             yield return null;
 
-            var performedNext1Tick = act.DidPerform(Act.TickFlags.Tick);
-            var performedNext2Tick = act.DidPerform(Act.TickFlags.Tick);
+            var performedNext1Tick = act.DidPerformInTick(Act.TickFlags.Tick);
+            var performedNext2Tick = act.DidPerformInTick(Act.TickFlags.Tick);
 
 
             // Assertions
-            Assert.IsTrue(performedSameTick1 && performedSameTick2, $"DidPerform() invalid in same tick! performedSameTick1={performedSameTick1}  performedSameTick2={performedSameTick2}");
-            Assert.IsTrue(!performedNext1Tick && !performedNext2Tick, $"DidPerform() invalid in next tick! performedNext1Tick={performedNext1Tick}  performedNext2Tick={performedNext2Tick}");
+            Assert.IsTrue(performedSameTick1 && performedSameTick2, $"DidPerformInTick() invalid in same tick! performedSameTick1={performedSameTick1}  performedSameTick2={performedSameTick2}");
+            Assert.IsTrue(!performedNext1Tick && !performedNext2Tick, $"DidPerformInTick() invalid in next tick! performedNext1Tick={performedNext1Tick}  performedNext2Tick={performedNext2Tick}");
 
             yield return null;
         }
@@ -67,21 +67,21 @@ public class ActMiscTests
         // Physics Tick
         {
             var act = new Act();
-            act.Init("Misc DidPerform Act");
+            act.Init();
             act.Perform();
 
-            var performedSameTick1 = act.DidPerform(Act.TickFlags.PhysicsTick);
-            var performedSameTick2 = act.DidPerform(Act.TickFlags.PhysicsTick);
+            var performedSameTick1 = act.DidPerformInTick(Act.TickFlags.PhysicsTick);
+            var performedSameTick2 = act.DidPerformInTick(Act.TickFlags.PhysicsTick);
 
             yield return new WaitForFixedUpdate();
 
-            var performedNext1Tick = act.DidPerform(Act.TickFlags.PhysicsTick);
-            var performedNext2Tick = act.DidPerform(Act.TickFlags.PhysicsTick);
+            var performedNext1Tick = act.DidPerformInTick(Act.TickFlags.PhysicsTick);
+            var performedNext2Tick = act.DidPerformInTick(Act.TickFlags.PhysicsTick);
 
 
             // Assertions
-            Assert.IsTrue(performedSameTick1 && performedSameTick2, $"DidPerform() invalid in same physics tick! performedSameTick1={performedSameTick1}  performedSameTick2={performedSameTick2}");
-            Assert.IsTrue(!performedNext1Tick && !performedNext2Tick, $"DidPerform() invalid in next physics tick! performedNext1Tick={performedNext1Tick}  performedNext2Tick={performedNext2Tick}");
+            Assert.IsTrue(performedSameTick1 && performedSameTick2, $"DidPerformInTick() invalid in same physics tick! performedSameTick1={performedSameTick1}  performedSameTick2={performedSameTick2}");
+            Assert.IsTrue(!performedNext1Tick && !performedNext2Tick, $"DidPerformInTick() invalid in next physics tick! performedNext1Tick={performedNext1Tick}  performedNext2Tick={performedNext2Tick}");
 
             yield return null;
         }
@@ -90,21 +90,21 @@ public class ActMiscTests
         // Late Tick
         {
             var act = new Act();
-            act.Init("Misc DidPerform Act");
+            act.Init();
             act.Perform();
 
-            var performedSameTick1 = act.DidPerform(Act.TickFlags.LateTick);
-            var performedSameTick2 = act.DidPerform(Act.TickFlags.LateTick);
+            var performedSameTick1 = act.DidPerformInTick(Act.TickFlags.LateTick);
+            var performedSameTick2 = act.DidPerformInTick(Act.TickFlags.LateTick);
 
             yield return null;
 
-            var performedNext1Tick = act.DidPerform(Act.TickFlags.LateTick);
-            var performedNext2Tick = act.DidPerform(Act.TickFlags.LateTick);
+            var performedNext1Tick = act.DidPerformInTick(Act.TickFlags.LateTick);
+            var performedNext2Tick = act.DidPerformInTick(Act.TickFlags.LateTick);
 
 
             // Assertions
-            Assert.IsTrue(performedSameTick1 && performedSameTick2, $"DidPerform() invalid in same late tick! performedSameTick1={performedSameTick1}  performedSameTick2={performedSameTick2}");
-            Assert.IsTrue(!performedNext1Tick && !performedNext2Tick, $"DidPerform() invalid in next late tick! performedNext1Tick={performedNext1Tick}  performedNext2Tick={performedNext2Tick}");
+            Assert.IsTrue(performedSameTick1 && performedSameTick2, $"DidPerformInTick() invalid in same late tick! performedSameTick1={performedSameTick1}  performedSameTick2={performedSameTick2}");
+            Assert.IsTrue(!performedNext1Tick && !performedNext2Tick, $"DidPerformInTick() invalid in next late tick! performedNext1Tick={performedNext1Tick}  performedNext2Tick={performedNext2Tick}");
 
 
             yield return null;

@@ -366,19 +366,19 @@ public class ActPrologueTests
 
 
         // Perform Act
-        var didPerform = false;
+        var didEnter = false;
         var act = new Act();
         act.prologue = (a) => new() { a, pAct };
         act.OnPreEnter += (a) =>
         {
-            didPerform = true;
+            didEnter = true;
         };
         act.Init("Test Act");
         act.Perform();
 
 
         // Assertions
-        Assert.IsTrue(didPerform, $"Act could not perform when passing itself as one of the prologues!");
+        Assert.IsTrue(didEnter, $"Act could not perform when passing itself as one of the prologues!");
         Assert.IsTrue(didProloguePerform, $"Passing self as prologue interfered with other prologue");
 
 
