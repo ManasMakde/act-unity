@@ -134,8 +134,8 @@
 ### <a id="status"></a> public enum Status
 - `None`: Indicates the act is not ongoing.  
 - `Prologuing`: Indicates the act is waiting on pending prologues to complete.
-- `Entering`: Indicates the act is carrying out it's core behaviour.  
-- `Ticking`: Indicates the act is ticking within any or all of it's [Tick](#tick)(), [PhysicsTick](#physicstick)() or [LateTick](#latetick)() methods.
+- `Entering`: Indicates the act is carrying out its core behaviour.  
+- `Ticking`: Indicates the act is ticking within any or all of its [Tick](#tick)(), [PhysicsTick](#physicstick)() or [LateTick](#latetick)() methods.
 - `Exiting`: Indicates the act perform has ended and is now finalizing.  
 
 
@@ -144,10 +144,10 @@
 
 ### <a id="outcome"></a> public enum Outcome
 - `Interrupted`: Indicates the act was interrupted externally while performing.  
-- `Failure`: Indicates the act failed to complete it's core behaviour.  
-- `Pending`: Indicates the act is still pending for it's core behaviour to complete which might also indicate ticking if [_tickFlags](#_tickflags) is assigned.  
-- `Success`: Indicates the act successfully completed it's core behaviour.  
-- `Retry`:  Indicates the act is retrying it's core behaviour.  
+- `Failure`: Indicates the act failed to complete its core behaviour.  
+- `Pending`: Indicates the act is still pending for its core behaviour to complete which might also indicate ticking if [_tickFlags](#_tickflags) is assigned.  
+- `Success`: Indicates the act successfully completed its core behaviour.  
+- `Retry`:  Indicates the act is retrying its core behaviour.  
 
 
 ---
@@ -467,7 +467,7 @@ If the act is not performing this will simply call [`Perform()`](#perform).
 
 
 ### <a id="abort"></a> public void Abort()
-This will finish the act if it's performing with [Outcome.Interrupted](#outcome).  
+This will finish the act if its performing with [Outcome.Interrupted](#outcome).  
 Won't do anything if the act was not performing.
 
 
@@ -1063,7 +1063,7 @@ Returns `true` if any act is currently performing.
 
 
 ### <a id="getallacts"></a> public HashSet\<Act\> GetAllActs()
-Returns a list of all the acts assigned to the theater.
+Returns all the acts assigned to the theater.
 
 
 
