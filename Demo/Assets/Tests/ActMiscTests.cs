@@ -6,33 +6,34 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Does DidPerformInTick() valid everywhere?
-// 1. Does IsOngoing() valid everywhere?
-// 1. Does IsActive() valid everywhere?
-// 1. Does IsEnabled() valid in every combination?
-// 1. Does IsBlocked() valid in every combination?
+// 1. Is DidPerformInTick() valid everywhere?
+// 1. Is IsRetrying() valid everywhere?
+// 1. Is IsOngoing() valid everywhere?
+// 1. Is IsActive() valid everywhere?
+// 1. Is IsEnabled() valid in every combination?
+// 1. Is IsBlocked() valid in every combination?
 
-// 1. Does CanTick() valid in every combination?
-// 1. Does CanTick() false when no tick flags?
+// 1. Is CanTick() valid in every combination?
+// 1. Is CanTick() false when no tick flags?
 
-// 1. Does GetTheater() return accurate theater?
-// 1. Does GetTheater() return null when no theater is assigned?
+// 1. Is GetTheater() return accurate theater?
+// 1. Is GetTheater() return null when no theater is assigned?
 
-// 1. Does GetOwner() return accurate owner?
-// 1. Does GetOwner() return null when no theater is assigned?
+// 1. Is GetOwner() return accurate owner?
+// 1. Is GetOwner() return null when no theater is assigned?
 
-// 1. Does GetBlockedByActs() return accurate acts?
-// 1. Does GetActsToBlock() return accurate acts?
+// 1. Is GetBlockedByActs() return accurate acts?
+// 1. Is GetActsToBlock() return accurate acts?
 
-// 1. Does GetStatus() valid everywhere?
-// 1. Does GetStatus() return None before & after perform?
+// 1. Is GetStatus() valid everywhere?
+// 1. Is GetStatus() return None before & after perform?
 
-// 1. Does GetOutcome() return accurate outcome after exiting? (Check for all outcomes)
+// 1. Is GetOutcome() return accurate outcome after exiting? (Check for all outcomes)
 
-// 1. Does GetPerformCount() give accurate perform counts?
-// 1. Does GetTickCount() give accurate tick counts?
-// 1. Does GetPhysicsTickCount() give accurate tick counts?
-// 1. Does GetLateTickCount() give accurate tick counts?
+// 1. Is GetPerformCount() give accurate perform counts?
+// 1. Is GetTickCount() give accurate tick counts?
+// 1. Is GetPhysicsTickCount() give accurate tick counts?
+// 1. Is GetLateTickCount() give accurate tick counts?
 
 // 1. GetName() return accurate value?
 
@@ -40,7 +41,7 @@ using UnityEngine.TestTools;
 public class ActMiscTests
 {
     [UnityTest]
-    public IEnumerator DidPerformInTick()
+    public IEnumerator DidPerformInTickValid()
     {
         // Tick
         {
@@ -111,7 +112,136 @@ public class ActMiscTests
         }
     }
     [UnityTest]
-    public IEnumerator IsOngoing()
+    public IEnumerator IsRetryingValid()
+    {
+        // Prerequisites
+        var theaterGO = new GameObject("Misc Retrying Theater");
+        var theater = theaterGO.AddComponent<Theater>();
+        var prologueAct = new Act();
+        prologueAct.Init("Prologue Act");
+
+        bool retryingInPreSetup = false;
+        bool retryingInPostSetup = false;
+        bool retryingInPerformStart = false;
+        bool retryingInPrePrologue = false;
+        bool retryingInPrologueComplete = false;
+        bool retryingInPostPrologue = false;
+        bool retryingInPreEnter = false;
+        bool retryingInPostEnter = false;
+        bool retryingInPreTick = false;
+        bool retryingInPostTick = false;
+        bool retryingInPrePhysicsTick = false;
+        bool retryingInPostPhysicsTick = false;
+        bool retryingInPreLateTick = false;
+        bool retryingInPostLateTick = false;
+        bool retryingInPreExit = false;
+        bool retryingInPostExit = false;
+        bool retryingInPerformEnd = false;
+        bool retryingInPreCleanup = false;
+        bool retryingInPostCleanup = false;
+        bool retryingInEnableChanged = false;
+        bool retryingInBlockChanged = false;
+
+
+        // Perform Act
+        var act = new RetryingCheckAct();
+        act.OnPreSetup += (a) => { retryingInPreSetup = a.IsRetrying(); };
+        act.OnPostSetup += (a) => { retryingInPostSetup = a.IsRetrying(); };
+        act.OnPerformStart += (a) => { retryingInPerformStart = a.IsRetrying(); };
+        act.OnPrePrologue += (a) => { retryingInPrePrologue = a.IsRetrying(); };
+        act.OnPrologueComplete += (a, pAct, pOutcome) => { retryingInPrologueComplete = a.IsRetrying(); };
+        act.OnPostPrologue += (a) => { retryingInPostPrologue = a.IsRetrying(); };
+        act.OnPreEnter += (a) => { retryingInPreEnter = a.IsRetrying(); };
+        act.OnPostEnter += (a) => { retryingInPostEnter = a.IsRetrying(); };
+        act.OnPreTick += (a) => { retryingInPreTick = a.IsRetrying(); };
+        act.OnPostTick += (a) => { retryingInPostTick = a.IsRetrying(); };
+        act.OnPrePhysicsTick += (a) => { retryingInPrePhysicsTick = a.IsRetrying(); };
+        act.OnPostPhysicsTick += (a) => { retryingInPostPhysicsTick = a.IsRetrying(); };
+        act.OnPreLateTick += (a) => { retryingInPreLateTick = a.IsRetrying(); };
+        act.OnPostLateTick += (a) => { retryingInPostLateTick = a.IsRetrying(); };
+        act.OnPreExit += (a) => { retryingInPreExit = a.IsRetrying(); };
+        act.OnPostExit += (a) => { retryingInPostExit = a.IsRetrying(); };
+        act.OnPerformEnd += (a) => { retryingInPerformEnd = a.IsRetrying(); };
+        act.OnPreCleanup += (a) => { retryingInPreCleanup = a.IsRetrying(); };
+        act.OnPostCleanup += (a) => { retryingInPostCleanup = a.IsRetrying(); };
+        act.OnEnableChanged += (a, newIsEnabled) => { retryingInEnableChanged = a.IsRetrying(); };
+        act.OnBlockChanged += (a, blockingAct, blockType, didBlock) => { retryingInBlockChanged = a.IsRetrying(); };
+        act.prologue += (a) => new() { prologueAct };
+        act.Init("Misc Retrying Act", theater);
+
+        act.Perform();
+
+        yield return new WaitForFixedUpdate();
+        yield return new WaitForFixedUpdate();
+        yield return null;
+        yield return null;
+
+        act.Retry();
+
+        yield return new WaitForFixedUpdate();
+        yield return new WaitForFixedUpdate();
+        yield return null;
+        yield return null;
+
+        act.Abort();
+
+        yield return new WaitForFixedUpdate();
+        yield return new WaitForFixedUpdate();
+        yield return null;
+        yield return null;
+
+        var retryingAfterFinish = act.IsRetrying();
+
+        act.Deinit();
+
+
+        // Assertions
+        Assert.IsTrue(!retryingInPreSetup, "IsRetrying() true in OnPreSetup!");
+        Assert.IsTrue(!act.retryingInSetup, "IsRetrying() true in Setup()!");
+        Assert.IsTrue(!retryingInPostSetup, "IsRetrying() true in OnPostSetup!");
+
+        Assert.IsTrue(retryingInPerformStart, "IsRetrying() false in OnPerformStart!");
+        Assert.IsTrue(retryingInPrePrologue, "IsRetrying() false in OnPrePrologue!");
+        Assert.IsTrue(retryingInPrologueComplete, "IsRetrying() false in OnPrologueComplete!");
+        Assert.IsTrue(retryingInPostPrologue, "IsRetrying() false in OnPostPrologue!");
+
+        Assert.IsTrue(retryingInPreEnter, "IsRetrying() false in OnPreEnter!");
+        Assert.IsTrue(act.retryingInEnter, "IsRetrying() false in Enter()!");
+        Assert.IsTrue(retryingInPostEnter, "IsRetrying() false in OnPostEnter!");
+
+        Assert.IsTrue(retryingInPreTick, "IsRetrying() false in OnPreTick!");
+        Assert.IsTrue(act.retryingInTick, "IsRetrying() false in Tick()!");
+        Assert.IsTrue(retryingInPostTick, "IsRetrying() false in OnPostTick!");
+
+        Assert.IsTrue(retryingInPrePhysicsTick, "IsRetrying() false in OnPrePhysicsTick!");
+        Assert.IsTrue(act.retryingInPhysicsTick, "IsRetrying() false in PhysicsTick()!");
+        Assert.IsTrue(retryingInPostPhysicsTick, "IsRetrying() false in OnPostPhysicsTick!");
+
+        Assert.IsTrue(retryingInPreLateTick, "IsRetrying() false in OnPreLateTick!");
+        Assert.IsTrue(act.retryingInLateTick, "IsRetrying() false in LateTick()!");
+        Assert.IsTrue(retryingInPostLateTick, "IsRetrying() false in OnPostLateTick!");
+
+        Assert.IsTrue(retryingInPreExit, "IsRetrying() false in OnPreExit!");
+        Assert.IsTrue(act.retryingInExit, "IsRetrying() false in Exit()!");
+        Assert.IsTrue(retryingInPostExit, "IsRetrying() false in OnPostExit!");
+
+        Assert.IsTrue(!retryingInPerformEnd, "IsRetrying() true in OnPerformEnd!");
+
+        Assert.IsTrue(!retryingAfterFinish, "IsRetrying() true even after act has finished perform!");
+
+        Assert.IsTrue(!retryingInPreCleanup, "IsRetrying() true in OnPreCleanup!");
+        Assert.IsTrue(!act.retryingInCleanup, "IsRetrying() true in Cleanup()!");
+        Assert.IsTrue(!retryingInPostCleanup, "IsRetrying() true in OnPostCleanup!");
+
+        Assert.IsTrue(!retryingInEnableChanged, "IsRetrying() true in OnEnableChanged!");
+        Assert.IsTrue(!retryingInBlockChanged, "IsRetrying() true in OnBlockChanged!");
+
+        UnityEngine.Object.Destroy(theaterGO);
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator IsOngoingValid()
     {
         // Prerequisites
         var theaterGO = new GameObject("Misc Ongoing Theater");
@@ -227,7 +357,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator IsActive()
+    public IEnumerator IsActiveValid()
     {
         // Prerequisites
         var theaterGO = new GameObject("Misc Active Theater");
@@ -343,7 +473,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator IsEnabled()
+    public IEnumerator IsEnabledValid()
     {
 
         // Enabled by default
@@ -389,7 +519,7 @@ public class ActMiscTests
         }
     }
     [UnityTest]
-    public IEnumerator IsBlocked()
+    public IEnumerator IsBlockedValid()
     {
         var blockedAct = new Act();
         blockedAct.Init("Misc Target Act");

@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
+// 1. Are "pre perform request" & "post perform request" actions being broadcasted (with correct arguments)?
 // 1. Are "perform start" & "perform end" actions being broadcasted (with correct arguments)?
 
 // 1. Does perform fail when act disabled?
@@ -28,7 +29,7 @@ using UnityEngine.TestTools;
 // 1. Does reperform succeed from OnPerformStart?
 // 1. Does reperform succeed from OnPrePrologue?
 // 1. Does reperform succeed from OnPrologueComplete?
-// 1. Does reperform fail from OnPostPrologue?
+// 1. Does reperform succeed from OnPostPrologue?
 // 1. Does reperform succeed from OnPreEnter?
 // 1. Does reperform succeed from OnPostEnter?
 // 1. Does reperform succeed from OnPreTick?
@@ -48,6 +49,61 @@ using UnityEngine.TestTools;
 
 public class ActPerformTests
 {
+    [UnityTest]
+    public IEnumerator OnPerformPreAndPostReq()
+    {
+        // Prerequisites
+        var preReqTag = "PreReq";
+        var postReqTag = "PostReq";
+        var startTag = "Start";
+        var eventOrder = new List<string>();
+
+
+        // Successful perform
+        bool wasPreReqInvoked = false;
+        Act preReqArg1 = null;
+        bool wasPostReqInvoked = false;
+        Act postReqArg1 = null;
+        bool postReqArg2 = false;
+
+        var act = new Act();
+        act.OnPrePerformReq += (a) => { wasPreReqInvoked = true; preReqArg1 = a; eventOrder.Add(preReqTag); };
+        act.OnPostPerformReq += (a, willPerform) => { wasPostReqInvoked = true; postReqArg1 = a; postReqArg2 = willPerform; eventOrder.Add(postReqTag); };
+        act.OnPerformStart += (a) => eventOrder.Add(startTag);
+        act.Init("Test Act");
+        act.Perform();
+
+
+        // Assertions for successful perform
+        Assert.IsTrue(wasPreReqInvoked, "OnPrePerformReq not invoked!");
+        Assert.IsTrue(preReqArg1 == act, $"OnPrePerformReq first argument is invalid! Arg1='{preReqArg1}'");
+        Assert.IsTrue(wasPostReqInvoked, "OnPostPerformReq not invoked!");
+        Assert.IsTrue(postReqArg1 == act, $"OnPostPerformReq first argument is invalid! Arg1='{postReqArg1}'");
+        Assert.IsTrue(postReqArg2 == true, $"OnPostPerformReq second argument is not true despite act performing! Arg2='{postReqArg2}'");
+        Assert.IsTrue(eventOrder.Count == 3 && eventOrder[0] == preReqTag && eventOrder[1] == postReqTag && eventOrder[2] == startTag, $"Perform request events invalid order! Order='{string.Join(",", eventOrder)}'");
+
+
+        // Failed perform
+        wasPreReqInvoked = false;
+        wasPostReqInvoked = false;
+        postReqArg2 = true;
+
+        var failAct = new FalseCanPerformAct();
+        failAct.OnPrePerformReq += (a) => { wasPreReqInvoked = true; };
+        failAct.OnPostPerformReq += (a, willPerform) => { wasPostReqInvoked = true; postReqArg2 = willPerform; };
+        failAct.Init("Fail Act");
+        failAct.Perform();
+
+
+        // Assertions for failed perform
+        Assert.IsTrue(wasPreReqInvoked, "OnPrePerformReq not invoked despite perform failing!");
+        Assert.IsTrue(wasPostReqInvoked, "OnPostPerformReq not invoked despite perform failing!");
+        Assert.IsTrue(postReqArg2 == false, $"OnPostPerformReq second argument is not false despite perform failing! Arg2='{postReqArg2}'");
+        Assert.IsTrue(failAct.GetPerformCount() == 0, $"Act performed despite CanPerform() being false! Perform Count={failAct.GetPerformCount()}");
+
+
+        yield return null;
+    }
     [UnityTest]
     public IEnumerator OnPerformStartAndEnd()
     {
@@ -502,11 +558,10 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() != 3, $"Act reperform thrice from OnPostPrologue! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 3, $"Act did not reperform thrice from OnPostPrologue! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;
-
     }
     [UnityTest]
     public IEnumerator PerformFromOnPreEnter()

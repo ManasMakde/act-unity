@@ -14,6 +14,8 @@
 |--------------|-------|
 | \<Act act\> | [OnPreSetup](#onpresetup) |
 | \<Act act\> | [OnPostSetup](#onpostsetup) |
+| \<Act act\> | [OnPrePerformReq](#onpreperformreq) |
+| \<Act act,<br> bool willPerform\> | [OnPostPerformReq](#onpostperformreq) |
 | \<Act act\> | [OnPerformStart](#onperformstartact) |
 | \<Act act\> | [OnPrePrologue](#onpreprologue) |
 | \<Act act,<br> Act pAct,<br> [Outcome](#outcome) pOutcome\> | [OnPrologueComplete](#onprologuecomplete) |
@@ -59,6 +61,7 @@
 | public | bool | [DidPerformInTick](#didperformintick)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
 | public | bool | [HasInitialized](#hasinitialized)() |
 | public | bool | [IsInitializing](#isinitializing)() |
+| public | bool | [IsRetrying](#isretrying)() |
 | public | bool | [IsOngoing](#isongoing)() |
 | public | bool | [IsActive](#isactive)() |
 | public | bool | [IsEnabled](#isenabled)() |
@@ -170,6 +173,21 @@ Invoked just before [Setup](#setup)() method is called.
 
 ### <a id="onpostsetup"></a> public event Action\<Act act\> OnPostSetup
 Invoked just after [Setup](#setup)() method has been called.
+
+
+---
+
+
+### <a id="onpreperformreq"></a> public event Action\<Act act\> OnPrePerformReq
+Invoked whenever a perform is requested, before checking if the act can perform.
+
+
+---
+
+
+### <a id="onpostperformreq"></a> public event Action\<Act act, bool willPerform\> OnPostPerformReq
+Invoked whenever a perform is requested, after checking if the act can perform.  
+`willPerform` is `true` if the perform condition is met.
 
 
 ---
@@ -436,7 +454,7 @@ Calling `Deinit()` will internally call your overridden `Cleanup()` method.
 
 
 ### <a id="perform"></a> public bool Perform()
-Call this method when you want your defined act behaviour to run. This will start the perform lifecycle of the act. Returns `false` if act could not perform.
+Call this method when you want your defined act behaviour to run. This will start the perform lifecycle of the act. Returns `false` if act could not perform.  
 ```csharp
 void FixedUpdate()
 {
@@ -533,6 +551,13 @@ Returns `true` if the act has been [initialized](#init). Resets to `false` once 
 
 ### <a id="isinitializing"></a> public bool IsInitializing()
 Returns `true` if the act is currently in between [`Init()`](#init) or [`Deinit()`](#deinit).
+
+
+---
+
+
+### <a id="isretrying"></a> public bool IsRetrying()
+Returns `true` if the act is currently performing due to a retry.
 
 
 ---

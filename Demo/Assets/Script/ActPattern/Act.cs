@@ -65,6 +65,8 @@ public class Act
 	// Public
 	public event Action<Act /* act */> OnPreSetup;
 	public event Action<Act /* act */> OnPostSetup;
+	public event Action<Act /* act */> OnPrePerformReq;
+	public event Action<Act /* act */, bool /* willPerform */> OnPostPerformReq;
 	public event Action<Act /* act */> OnPerformStart;
 	public event Action<Act /* act */> OnPrePrologue;
 	public event Action<Act /* act */, Act /* pAct */, Outcome /* pOutcome */> OnPrologueComplete;
@@ -208,13 +210,7 @@ public class Act
 	}
 	public bool Perform()
 	{
-		if (CanPerformImpl())
-		{
-			PerformImpl();
-			return true;
-		}
-
-		return false;
+		return PerformImpl();
 	}
 	public void PerformDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
 	{
@@ -257,7 +253,7 @@ public class Act
 			// Skip if self (reserved for enable/disable) or null
 			if (bAct == this || bAct == null)
 			{
-				WriteLog("Trying to block self!");
+				WriteLog("Trying to block self or another invalid act!");
 				continue;
 			}
 
@@ -280,7 +276,7 @@ public class Act
 			// Skip if self (reserved for enable/disable) or null
 			if (bAct == this || bAct == null)
 			{
-				WriteLog("Trying to unblock self!");
+				WriteLog("Trying to unblock self or another invalid act!");
 				continue;
 			}
 
@@ -349,6 +345,10 @@ public class Act
 	public bool IsInitializing()
 	{
 		return _isInitializing;
+	}
+	public bool IsRetrying()
+	{
+		return _isRetrying;
 	}
 	public bool IsOngoing()
 	{
@@ -624,6 +624,7 @@ public class Act
 
 	private HashSet<Act> _epilogueActs = new();
 	private HashSet<Act> _pendingEpilogueActs = new();
+	private HashSet<Act> _continueEpilogueActs = new();
 
 	private HashSet<Act> _prologueActs = new();
 	private HashSet<Act> _pendingPrologueActs = new();
@@ -634,6 +635,7 @@ public class Act
 
 	private bool _hasInitialized = false;
 	private bool _isInitializing = false;
+	private bool _isRetrying = false;
 	private bool _hasPrecomputedPrologues = false;
 
 	private int _performCount = 0;
@@ -748,13 +750,13 @@ public class Act
 			pAct?.Finish(pOutcome);
 		}
 	}
-	private static void ContinueEpilogues(Act ofAct, Outcome newOutcome)
+	private static void ContinueEpilogues(Act ofAct, HashSet<Act> pendingEpilogueActs, Outcome newOutcome)
 	{
 		// Continue and clear out epilogues
-		while (ofAct._pendingEpilogueActs.Count != 0)
+		while (pendingEpilogueActs.Count != 0)
 		{
-			Act eAct = GetFirst(ofAct._pendingEpilogueActs);
-			ofAct._pendingEpilogueActs.Remove(eAct);
+			Act eAct = GetFirst(pendingEpilogueActs);
+			pendingEpilogueActs.Remove(eAct);
 			eAct._completedPrologueActs.Add(ofAct);
 			eAct.CompletedPrologue(ofAct, newOutcome);
 		}
@@ -864,8 +866,31 @@ public class Act
 
 		return CanPerform();
 	}
-	private void PerformImpl()
+	private bool PerformImpl(bool isRetrying = false)
 	{
+		// Store retrying status
+		_isRetrying = isRetrying;
+
+
+		// Broadcast pre perform requested
+		OnPrePerformReq?.Invoke(this);
+
+
+		// Check perform condition
+		bool willPerform = CanPerformImpl(isRetrying);
+
+
+		// Broadcast post perform requested
+		OnPostPerformReq?.Invoke(this, willPerform);
+
+
+		// Return if perform condition failed
+		if (!willPerform)
+		{
+			return false;
+		}
+
+
 		// Finish any ongoing perform
 		if (_status != Status.None)
 		{
@@ -889,6 +914,9 @@ public class Act
 
 		// Start prologuing
 		Redirect(Status.Prologuing);
+
+
+		return true;
 	}
 	private void PrologueImpl()
 	{
@@ -982,19 +1010,23 @@ public class Act
 			}
 
 
+			// Mark prologue as pending
+			_prologueActs.Remove(pAct);
+			_pendingPrologueActs.Add(pAct);
+
+
 			// Perform prologue
-			if (pAct.CanPerformImpl())
+			if (!pAct.PerformImpl())
 			{
-				_prologueActs.Remove(pAct);
-				_pendingPrologueActs.Add(pAct);
-				pAct.PerformImpl();
-				continue;
+				// Revert pending
+				_pendingPrologueActs.Remove(pAct);
+				_prologueActs.Add(pAct);
+
+
+				// Exit with failure if failed to perform prologue
+				Redirect(Status.Exiting, Outcome.Failure);
+				return;
 			}
-
-
-			// Exit with failure if failed to perform
-			Redirect(Status.Exiting, Outcome.Failure);
-			return;
 		}
 	}
 	private void CompletedPrologue(Act pAct, Outcome newOutcome)
@@ -1006,7 +1038,7 @@ public class Act
 		}
 
 
-		// Remove from pending and move to completed
+		// Remove from pending
 		_pendingPrologueActs.Remove(pAct);
 
 
@@ -1291,37 +1323,47 @@ public class Act
 		// Cleanup prologues
 		FinishPrologues(this, _outcome);
 		ClearPrologueChain(this);
-		_hasPrecomputedPrologues = false;
+		_epilogueActs.Clear();
 		_prologueActs.Clear();
 		_pendingPrologueActs.Clear();
 		_completedPrologueActs.Clear();
+		_hasPrecomputedPrologues = false;
 
 
 		// Retry
 		if (_outcome == Outcome.Retry)
 		{
-			if (CanPerformImpl(true))
+			// Reset status
+			_status = Status.None;
+
+
+			// Retry performing
+			if (PerformImpl(true))
 			{
-				_status = Status.None;
-				PerformImpl();
 				return;
 			}
 
 
-			// Change outcome to failure since could not retry
+			// Revert status & Change outcome to failure since could not retry
+			_status = Status.Exiting;
 			_outcome = Outcome.Failure;
 		}
 
 
-		// Unblock & Continue Epilogues
+		// Unblock
 		UnblockOthers();
-		ContinueEpilogues(this, _outcome);
-		_epilogueActs.Clear();
-		_pendingEpilogueActs.Clear();
+
+
+		// Prerequisites for epilogue
+		Outcome epilogueOutcome = _outcome;
+		HashSet<Act> pendingEpilogueActs = _pendingEpilogueActs;
+		_pendingEpilogueActs = _continueEpilogueActs;
+		_continueEpilogueActs = pendingEpilogueActs;
 
 
 		// Reset status
 		_status = Status.None;
+		_isRetrying = false;
 
 
 		// Let theater know this act has ended
@@ -1333,6 +1375,10 @@ public class Act
 
 		// Broadcast perform end
 		OnPerformEnd?.Invoke(this);
+
+
+		// Continue epilogues
+		ContinueEpilogues(this, pendingEpilogueActs, epilogueOutcome);
 	}
 	private void Redirect(Status newStatus, Outcome newOutcome = Outcome.Pending)
 	{

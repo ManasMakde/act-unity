@@ -215,6 +215,52 @@ public class RetryOnceThenFailAct : Act
         return enterCallCount == 0;  // block retry attempt after first enter
     }
 }
+public class RetryingCheckAct : Act
+{
+    public bool retryingInSetup = false;
+    public bool retryingInEnter = false;
+    public bool retryingInTick = false;
+    public bool retryingInPhysicsTick = false;
+    public bool retryingInLateTick = false;
+    public bool retryingInExit = false;
+    public bool retryingInCleanup = false;
+ 
+
+    protected override void Setup()
+    {
+        _canReperform = true;
+        _tickFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
+        retryingInSetup = IsRetrying();
+    }
+    protected override Outcome Enter()
+    {
+        retryingInEnter = IsRetrying();
+        return Outcome.Pending;
+    }
+    protected override Outcome Tick()
+    {
+        retryingInTick = IsRetrying();
+        return Outcome.Pending;
+    }
+    protected override Outcome PhysicsTick()
+    {
+        retryingInPhysicsTick = IsRetrying();
+        return Outcome.Pending;
+    }
+    protected override Outcome LateTick()
+    {
+        retryingInLateTick = IsRetrying();
+        return Outcome.Pending;
+    }
+    protected override void Exit()
+    {
+        retryingInExit = IsRetrying();
+    }
+    protected override void Cleanup()
+    {
+        retryingInCleanup = IsRetrying();
+    }
+}
 public class OngoingCheckAct : Act
 {
     public bool ongoingInSetup = false;
