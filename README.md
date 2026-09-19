@@ -1,7 +1,7 @@
 # 🎭 act-unity
 
 [![Unity](https://img.shields.io/badge/Unity-4A4A4A?style=flat&logo=unity&logoColor=white)](https://unity.com)
-![Status: Alpha](https://img.shields.io/badge/status-0.3.0--alpha-orange)
+![Status: Alpha](https://img.shields.io/badge/status-0.4.0--alpha-orange)
 ![Tests](https://img.shields.io/badge/tests-included-lightgrey)
 ![License](https://img.shields.io/github/license/ManasMakde/act-unity?style=flat&color=yellow)
 
