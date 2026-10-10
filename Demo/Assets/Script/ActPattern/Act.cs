@@ -44,7 +44,8 @@ public class Act
 		Prologuing,
 		Entering,
 		Ticking,
-		Exiting
+		Exiting,
+		Concluding
 	}
 	public enum Outcome
 	{
@@ -234,7 +235,7 @@ public class Act
 	{
 		if (IsPerforming())
 		{
-			Redirect(Status.Exiting, Outcome.Retry);
+			Finish(Outcome.Retry);
 		}
 		else
 		{
@@ -243,7 +244,7 @@ public class Act
 	}
 	public void Abort()
 	{
-		Redirect(Status.Exiting, Outcome.Interrupted);
+		Finish(Outcome.Interrupted);
 
 
 		// Clear deferred
@@ -522,7 +523,7 @@ public class Act
 	}
 	protected void Finish(Outcome newOutcome = Outcome.Success)
 	{
-		Redirect(Status.Exiting, newOutcome);
+		Redirect(_status == Status.Prologuing ? Status.Concluding : Status.Exiting, newOutcome);
 	}
 	protected virtual void BlockSelf(Act byAct, BlockType blockType)
 	{
@@ -557,7 +558,7 @@ public class Act
 
 
 		// Finish interrupted incase performing
-		Redirect(Status.Exiting, Outcome.Interrupted);
+		Finish(Outcome.Interrupted);
 
 
 		// Add to blocked by list if persistent
@@ -716,7 +717,7 @@ public class Act
 		var prologueActs = ofAct.prologue.Invoke(ofAct);
 		if (prologueActs == null)
 		{
-			ofAct.Redirect(Status.Exiting, Outcome.Failure);
+			ofAct.Finish(Outcome.Failure);
 			return;
 		}
 
@@ -734,7 +735,7 @@ public class Act
 			// Fail incase null
 			if (pAct == null)
 			{
-				ofAct.Redirect(Status.Exiting, Outcome.Failure);
+				ofAct.Finish(Outcome.Failure);
 				return;
 			}
 
@@ -846,10 +847,10 @@ public class Act
 		}
 
 
-		// Return if exiting
-		if (!isRetrying && _status == Status.Exiting)
+		// Return if exiting or concluding
+		if (!isRetrying && (_status == Status.Exiting || _status == Status.Concluding))
 		{
-			WriteLog("Cannot perform, act is between exiting!");
+			WriteLog("Cannot perform, act is between exiting or concluding!");
 			return false;
 		}
 
@@ -916,10 +917,7 @@ public class Act
 
 
 		// Finish if in between performing
-		if (_status != Status.None)
-		{
-			Finish(Outcome.Interrupted);
-		}
+		Finish(Outcome.Interrupted);
 
 
 		// Store during which tick act was performed
@@ -1034,8 +1032,8 @@ public class Act
 				_prologueActs.Add(pAct);
 
 
-				// Exit with failure if failed to perform prologue
-				Redirect(Status.Exiting, Outcome.Failure);
+				// Conclude if failed to perform prologue
+				Redirect(Status.Concluding, Outcome.Failure);
 				return;
 			}
 		}
@@ -1061,10 +1059,10 @@ public class Act
 		}
 
 
-		// Exit if prologue act did not succeed
+		// Concluding if prologue act did not succeed
 		if (newOutcome != Outcome.Success)
 		{
-			Redirect(Status.Exiting, newOutcome);
+			Redirect(Status.Concluding, newOutcome);
 			return;
 		}
 
@@ -1127,24 +1125,6 @@ public class Act
 
 		// Redirect to ticking
 		Redirect(Status.Ticking);
-	}
-	private void HandleTickingImpl()
-	{
-		if (CanTick(TickFlags.Tick))
-		{
-			_tickReqCount++;
-			Theater.Friend.StageTick(_theater, this);
-		}
-		if (CanTick(TickFlags.PhysicsTick))
-		{
-			_physicsTickReqCount++;
-			Theater.Friend.StagePhysicsTick(_theater, this);
-		}
-		if (CanTick(TickFlags.LateTick))
-		{
-			_lateTickReqCount++;
-			Theater.Friend.StageLateTick(_theater, this);
-		}
 	}
 	private void TickImpl()
 	{
@@ -1262,39 +1242,40 @@ public class Act
 	}
 	private void ExitImpl()
 	{
-		// Only exit if coming from enter or tick
-		if (_prevStatus == Status.Entering || _prevStatus == Status.Ticking)
+		// Stop ticking
+		if (CanTick(TickFlags.Tick) && _theater != null)
 		{
-			// Stop ticking
-			if (CanTick(TickFlags.Tick) && _theater != null)
-			{
-				Theater.Friend.UnstageTick(_theater, this);
-			}
-			if (CanTick(TickFlags.PhysicsTick) && _theater != null)
-			{
-				Theater.Friend.UnstagePhysicsTick(_theater, this);
-			}
-			if (CanTick(TickFlags.LateTick) && _theater != null)
-			{
-				Theater.Friend.UnstageLateTick(_theater, this);
-			}
-
-
-			// Broadcast pre exit
-			OnPreExit?.Invoke(this);
-
-
-			// Core exit
-			Exit();
-
-
-			// Broadcast post exit
-			OnPostExit?.Invoke(this);
+			Theater.Friend.UnstageTick(_theater, this);
+		}
+		if (CanTick(TickFlags.PhysicsTick) && _theater != null)
+		{
+			Theater.Friend.UnstagePhysicsTick(_theater, this);
+		}
+		if (CanTick(TickFlags.LateTick) && _theater != null)
+		{
+			Theater.Friend.UnstageLateTick(_theater, this);
 		}
 
 
+		// Broadcast pre exit
+		OnPreExit?.Invoke(this);
+
+
+		// Core exit
+		Exit();
+
+
+		// Broadcast post exit
+		OnPostExit?.Invoke(this);
+
+
+		// Redirect to concluding
+		Redirect(Status.Concluding);
+	}
+	private void ConcludingImpl()
+	{
 		// Cleanup prologues
-		FinishPrologues(this, _outcome);
+		FinishPrologues(this, _outcome == Outcome.Retry ? Outcome.Interrupted : _outcome);  // Set outcome to iterrupted incase retrying
 		ClearPrologueChain(this);
 		_epilogueActs.Clear();
 		_prologueActs.Clear();
@@ -1306,10 +1287,6 @@ public class Act
 		// Retry
 		if (_outcome == Outcome.Retry)
 		{
-			// Reset status
-			_status = Status.None;
-
-
 			// Retry performing
 			if (PerformImpl(true))
 			{
@@ -1317,8 +1294,7 @@ public class Act
 			}
 
 
-			// Revert status & Change outcome to failure since could not retry
-			_status = Status.Exiting;
+			// Change outcome to failure
 			_outcome = Outcome.Failure;
 		}
 
@@ -1327,36 +1303,13 @@ public class Act
 		UnblockOthers();
 
 
-		// Prerequisites for epilogue
-		Outcome epilogueOutcome = _outcome;
-		HashSet<Act> pendingEpilogueActs = _pendingEpilogueActs;
-		_pendingEpilogueActs = _continueEpilogueActs;
-		_continueEpilogueActs = pendingEpilogueActs;
-
-
-		// Reset status
-		_status = Status.None;
-		_isRetrying = false;
-
-
-		// Let theater know this act has ended
-		if (_theater != null)
-		{
-			Theater.Friend.UnstagePerforming(_theater, this);
-		}
-
-
-		// Broadcast perform end
-		OnPerformEnd?.Invoke(this);
-
-
-		// Continue epilogues
-		ContinueEpilogues(this, pendingEpilogueActs, epilogueOutcome);
+		// Redirect to None
+		Redirect(Status.None);
 	}
 	private void Redirect(Status newStatus, Outcome newOutcome = Outcome.Pending)
 	{
-		// None -> prologue
-		if (_status == Status.None && newStatus == Status.Prologuing)
+		// None/Concluding -> prologue
+		if ((_status == Status.None || _status == Status.Concluding) && newStatus == Status.Prologuing)
 		{
 			_prevStatus = _status;
 			_status = Status.Prologuing;
@@ -1377,16 +1330,69 @@ public class Act
 		{
 			_prevStatus = _status;
 			_status = Status.Ticking;
-			HandleTickingImpl();
+			if (CanTick(TickFlags.Tick))
+			{
+				_tickReqCount++;
+				Theater.Friend.StageTick(_theater, this);
+			}
+			if (CanTick(TickFlags.PhysicsTick))
+			{
+				_physicsTickReqCount++;
+				Theater.Friend.StagePhysicsTick(_theater, this);
+			}
+			if (CanTick(TickFlags.LateTick))
+			{
+				_lateTickReqCount++;
+				Theater.Friend.StageLateTick(_theater, this);
+			}
 		}
 
-		// prologue or Enter or Tick -> Exit
-		else if ((_status == Status.Prologuing || _status == Status.Entering || _status == Status.Ticking) && newStatus == Status.Exiting)
+		// Enter/Tick -> Exit
+		else if ((_status == Status.Entering || _status == Status.Ticking) && newStatus == Status.Exiting)
 		{
 			_prevStatus = _status;
 			_status = Status.Exiting;
 			_outcome = newOutcome;
 			ExitImpl();
+		}
+
+		// Prologue/Exit -> Conclude
+		else if ((_status == Status.Prologuing || _status == Status.Exiting) && newStatus == Status.Concluding)
+		{
+			_prevStatus = _status;
+			_status = Status.Concluding;
+			_outcome = _prevStatus == Status.Prologuing ? newOutcome : _outcome;
+			ConcludingImpl();
+		}
+
+		// Conclude -> None
+		else if (_status == Status.Concluding && newStatus == Status.None)
+		{
+			_prevStatus = _status;
+			_status = Status.None;
+			_isRetrying = false;
+
+
+			// Prerequisites for epilogue
+			Outcome epilogueOutcome = _outcome;
+			HashSet<Act> pendingEpilogueActs = _pendingEpilogueActs;
+			_pendingEpilogueActs = _continueEpilogueActs;
+			_continueEpilogueActs = pendingEpilogueActs;
+
+
+			// Let theater know this act has ended
+			if (_theater != null)
+			{
+				Theater.Friend.UnstagePerforming(_theater, this);
+			}
+
+
+			// Broadcast perform end
+			OnPerformEnd?.Invoke(this);
+
+
+			// Continue epilogues
+			ContinueEpilogues(this, pendingEpilogueActs, epilogueOutcome);
 		}
 	}
 
