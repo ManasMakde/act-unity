@@ -829,6 +829,16 @@ public class Act
 
 		return null;
 	}
+	private void SetStatus(Status newStatus)
+	{
+		_prevStatus = _status;
+		_status = newStatus;
+
+		if (_theater != null)
+		{
+			Theater.Friend.ActStatusChange(_theater, this, _prevStatus, _status);
+		}
+	}
 	private bool CanPerformImpl(bool isRetrying = false)
 	{
 		// Return if in between initialization
@@ -945,15 +955,6 @@ public class Act
 		// Broadcast perform start
 		OnPerformStart?.Invoke(this);
 		if (_status != Status.Prologuing) { return; }  // Guard
-
-
-		// Let theater know this act has started
-		if (_theater != null)
-		{
-			Theater.Friend.StagePerforming(_theater, this);
-		}
-		if (_status != Status.Prologuing) { return; }  // Guard
-
 
 
 		// Precompute prologue chain
@@ -1311,8 +1312,7 @@ public class Act
 		// None/Concluding -> prologue
 		if ((_status == Status.None || _status == Status.Concluding) && newStatus == Status.Prologuing)
 		{
-			_prevStatus = _status;
-			_status = Status.Prologuing;
+			SetStatus(Status.Prologuing);
 			_outcome = Outcome.Pending;
 			PrologueImpl();
 		}
@@ -1320,16 +1320,14 @@ public class Act
 		// prologue -> Enter
 		else if (_status == Status.Prologuing && newStatus == Status.Entering)
 		{
-			_prevStatus = _status;
-			_status = Status.Entering;
+			SetStatus(Status.Entering);
 			EnterImpl();
 		}
 
 		// Enter -> Tick
 		else if (_status == Status.Entering && newStatus == Status.Ticking)
 		{
-			_prevStatus = _status;
-			_status = Status.Ticking;
+			SetStatus(Status.Ticking);
 			if (CanTick(TickFlags.Tick))
 			{
 				_tickReqCount++;
@@ -1350,8 +1348,7 @@ public class Act
 		// Enter/Tick -> Exit
 		else if ((_status == Status.Entering || _status == Status.Ticking) && newStatus == Status.Exiting)
 		{
-			_prevStatus = _status;
-			_status = Status.Exiting;
+			SetStatus(Status.Exiting);
 			_outcome = newOutcome;
 			ExitImpl();
 		}
@@ -1359,8 +1356,7 @@ public class Act
 		// Prologue/Exit -> Conclude
 		else if ((_status == Status.Prologuing || _status == Status.Exiting) && newStatus == Status.Concluding)
 		{
-			_prevStatus = _status;
-			_status = Status.Concluding;
+			SetStatus(Status.Concluding);
 			_outcome = _prevStatus == Status.Prologuing ? newOutcome : _outcome;
 			ConcludingImpl();
 		}
@@ -1368,8 +1364,7 @@ public class Act
 		// Conclude -> None
 		else if (_status == Status.Concluding && newStatus == Status.None)
 		{
-			_prevStatus = _status;
-			_status = Status.None;
+			SetStatus(Status.None);
 			_isRetrying = false;
 
 
@@ -1378,13 +1373,6 @@ public class Act
 			HashSet<Act> pendingEpilogueActs = _pendingEpilogueActs;
 			_pendingEpilogueActs = _continueEpilogueActs;
 			_continueEpilogueActs = pendingEpilogueActs;
-
-
-			// Let theater know this act has ended
-			if (_theater != null)
-			{
-				Theater.Friend.UnstagePerforming(_theater, this);
-			}
 
 
 			// Broadcast perform end

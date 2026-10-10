@@ -52,110 +52,110 @@ public class TheaterTests
 
         yield return null;
     }
-    [UnityTest]
-    public IEnumerator PerformStart()
-    {
-        // Prerequisites
-        bool wasInvoked = false;
-        Theater arg1 = null;
-        Act arg2 = null;
+    // [UnityTest]
+    // public IEnumerator PerformStart()
+    // {
+    //     // Prerequisites
+    //     bool wasInvoked = false;
+    //     Theater arg1 = null;
+    //     Act arg2 = null;
 
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-        theater.OnPerformStart += (t, a) =>
-        {
-            wasInvoked = true;
-            arg1 = t;
-            arg2 = a;
-        };
+    //     // Setup Theater
+    //     var theaterObj = new GameObject("Test Theater");
+    //     var theater = theaterObj.AddComponent<Theater>();
+    //     theater.OnPerformStart += (t, a) =>
+    //     {
+    //         wasInvoked = true;
+    //         arg1 = t;
+    //         arg2 = a;
+    //     };
 
-        // Perform Act
-        var act = new ManualFinishAct();
-        act.Init("Test Act", theater);
-        act.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(wasInvoked, "OnPerformStart not invoked!");
-        Assert.IsTrue(arg1 == theater, $"OnPerformStart first argument is invalid! Arg1='{arg1}'");
-        Assert.IsTrue(arg2 == act, $"OnPerformStart second argument is invalid! Arg2='{arg2}'");
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PerformEnd()
-    {
-        // Prerequisites
-        bool wasInvoked = false;
-        Theater arg1 = null;
-        Act arg2 = null;
-
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-        theater.OnPerformEnd += (t, a) =>
-        {
-            wasInvoked = true;
-            arg1 = t;
-            arg2 = a;
-        };
-
-        // Perform Act
-        var act = new ManualFinishAct();
-        act.Init("Test Act", theater);
-        act.Perform();
-        act.ManualFinish();
+    //     // Perform Act
+    //     var act = new ManualFinishAct();
+    //     act.Init("Test Act", theater);
+    //     act.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(wasInvoked, "OnPerformEnd not invoked!");
-        Assert.IsTrue(arg1 == theater, $"OnPerformEnd first argument is invalid! Arg1='{arg1}'");
-        Assert.IsTrue(arg2 == act, $"OnPerformEnd second argument is invalid! Arg2='{arg2}'");
+    //     // Assertions
+    //     Assert.IsTrue(wasInvoked, "OnPerformStart not invoked!");
+    //     Assert.IsTrue(arg1 == theater, $"OnPerformStart first argument is invalid! Arg1='{arg1}'");
+    //     Assert.IsTrue(arg2 == act, $"OnPerformStart second argument is invalid! Arg2='{arg2}'");
 
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator AllPerformEnd()
-    {
-        // Prerequisites
-        int invokeCount = 0;
-        Theater arg1 = null;
+    //     yield return null;
+    // }
+    // [UnityTest]
+    // public IEnumerator PerformEnd()
+    // {
+    //     // Prerequisites
+    //     bool wasInvoked = false;
+    //     Theater arg1 = null;
+    //     Act arg2 = null;
 
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-        theater.OnAllPerformEnd += (t) =>
-        {
-            invokeCount++;
-            arg1 = t;
-        };
+    //     // Setup Theater
+    //     var theaterObj = new GameObject("Test Theater");
+    //     var theater = theaterObj.AddComponent<Theater>();
+    //     theater.OnPerformEnd += (t, a) =>
+    //     {
+    //         wasInvoked = true;
+    //         arg1 = t;
+    //         arg2 = a;
+    //     };
 
-        // Perform Acts
-        var actA = new ManualFinishAct();
-        actA.Init("Test Act A", theater);
-        actA.Perform();
-        var actB = new ManualFinishAct();
-        actB.Init("Test Act B", theater);
-        actB.Perform();
-
-        // Finish first act only
-        actA.ManualFinish();
+    //     // Perform Act
+    //     var act = new ManualFinishAct();
+    //     act.Init("Test Act", theater);
+    //     act.Perform();
+    //     act.ManualFinish();
 
 
-        // Assertions
-        Assert.IsTrue(invokeCount == 0, $"OnAllPerformEnd invoked despite one act still performing! Invoke Count='{invokeCount}'");
+    //     // Assertions
+    //     Assert.IsTrue(wasInvoked, "OnPerformEnd not invoked!");
+    //     Assert.IsTrue(arg1 == theater, $"OnPerformEnd first argument is invalid! Arg1='{arg1}'");
+    //     Assert.IsTrue(arg2 == act, $"OnPerformEnd second argument is invalid! Arg2='{arg2}'");
 
-        // Finish second act
-        actB.ManualFinish();
+    //     yield return null;
+    // }
+    // [UnityTest]
+    // public IEnumerator AllPerformEnd()
+    // {
+    //     // Prerequisites
+    //     int invokeCount = 0;
+    //     Theater arg1 = null;
+
+    //     // Setup Theater
+    //     var theaterObj = new GameObject("Test Theater");
+    //     var theater = theaterObj.AddComponent<Theater>();
+    //     theater.OnAllPerformEnd += (t) =>
+    //     {
+    //         invokeCount++;
+    //         arg1 = t;
+    //     };
+
+    //     // Perform Acts
+    //     var actA = new ManualFinishAct();
+    //     actA.Init("Test Act A", theater);
+    //     actA.Perform();
+    //     var actB = new ManualFinishAct();
+    //     actB.Init("Test Act B", theater);
+    //     actB.Perform();
+
+    //     // Finish first act only
+    //     actA.ManualFinish();
 
 
-        // Assertions
-        Assert.IsTrue(invokeCount == 1, $"OnAllPerformEnd not invoked exactly once! Invoke Count='{invokeCount}'");
-        Assert.IsTrue(arg1 == theater, $"OnAllPerformEnd argument is invalid! Arg1='{arg1}'");
+    //     // Assertions
+    //     Assert.IsTrue(invokeCount == 0, $"OnAllPerformEnd invoked despite one act still performing! Invoke Count='{invokeCount}'");
 
-        yield return null;
-    }
+    //     // Finish second act
+    //     actB.ManualFinish();
+
+
+    //     // Assertions
+    //     Assert.IsTrue(invokeCount == 1, $"OnAllPerformEnd not invoked exactly once! Invoke Count='{invokeCount}'");
+    //     Assert.IsTrue(arg1 == theater, $"OnAllPerformEnd argument is invalid! Arg1='{arg1}'");
+
+    //     yield return null;
+    // }
 
 
 

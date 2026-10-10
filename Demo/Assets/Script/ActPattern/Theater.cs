@@ -30,9 +30,7 @@ public class Theater : MonoBehaviour
 {
     // Public Signals
     public event Action<Theater, bool> OnEnableChanged;
-    public event Action<Theater, Act> OnPerformStart;
-    public event Action<Theater, Act> OnPerformEnd;
-    public event Action<Theater> OnAllPerformEnd;
+    public event Action<Theater, Act, Act.Status /* prevStatus */, Act.Status /* newStatus */> OnActStatusChange;
 
 
     // Public Methods
@@ -118,12 +116,12 @@ public class Theater : MonoBehaviour
     private Dictionary<Act, bool> _actsToTick = new();
     private Dictionary<Act, bool> _actsToPhysicsTick = new();
     private Dictionary<Act, bool> _actsToLateTick = new();
-    
+
     private List<Act> _deferFilterList = new();
     private List<Act> _tickFilterList = new();
     private List<Act> _physicsTickFilterList = new();
     private List<Act> _lateTickFilterList = new();
-    
+
     private bool _isAbortingAll = false;
     private bool _isEnabled = true;
 
@@ -174,44 +172,18 @@ public class Theater : MonoBehaviour
 
         _allActs.Remove(oldAct);
     }
-    private void StagePerforming(Act act)
+    private void ActStatusChange(Act act, Act.Status prevStatus, Act.Status newStatus)
     {
-        // Return if invalid act or already performing
-        if (act == null || _performingActs.Contains(act))
+        if (act.IsPerforming())
         {
-            return;
+            _performingActs.Add(act);
+        }
+        else
+        {
+            _performingActs.Remove(act);
         }
 
-
-        // Mark as performing act
-        _performingActs.Add(act);
-
-
-        // Broadcast act started
-        OnPerformStart?.Invoke(this, act);
-    }
-    private void UnstagePerforming(Act act)
-    {
-        // Return if act is null or was never staged performing
-        if (act == null || !_performingActs.Contains(act))
-        {
-            return;
-        }
-
-
-        // Remove as performing act
-        _performingActs.Remove(act);
-
-
-        // Broadcast act ended
-        OnPerformEnd?.Invoke(this, act);
-
-
-        // Broadcast all ended if none performing
-        if (!AreAnyPerforming())
-        {
-            OnAllPerformEnd?.Invoke(this);
-        }
+        OnActStatusChange?.Invoke(this, act, prevStatus, newStatus);
     }
     private void StageDeferred(Act act, Act.TickFlags flag)
     {
@@ -445,13 +417,9 @@ public class Theater : MonoBehaviour
         {
             theater.RemoveAct(oldAct);
         }
-        static public void StagePerforming(Theater theater, Act act)
+        static public void ActStatusChange(Theater theater, Act act, Act.Status prevStatus, Act.Status newStatus)
         {
-            theater.StagePerforming(act);
-        }
-        static public void UnstagePerforming(Theater theater, Act act)
-        {
-            theater.UnstagePerforming(act);
+            theater.ActStatusChange(act, prevStatus, newStatus);
         }
         static public void StageDeferred(Theater theater, Act act, Act.TickFlags flag)
         {
