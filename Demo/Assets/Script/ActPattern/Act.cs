@@ -41,11 +41,13 @@ public class Act
 	public enum Status
 	{
 		None,
+		Initializing,
 		Prologuing,
 		Entering,
 		Ticking,
 		Exiting,
-		Concluding
+		Concluding,
+		Deinitializing
 	}
 	public enum Outcome
 	{
@@ -92,129 +94,16 @@ public class Act
 	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();
 	public bool isVerbose = false;
 
-	public void Init(string newName = "", Theater newTheater = null, bool isInitiallyEnabled = true)
+	public void Init(string newName = "", Theater newTheater = null)
 	{
-		// Return if already initialized
-		if (_hasInitialized)
-		{
-			WriteLog("Failed Init(), Already initialized!");
-			return;
-		}
-
-
-		// Return if already reinitializing
-		if (_isInitializing || _isDeinitializing)
-		{
-			WriteLog("Failed Init(), Already initializing or deinitializing!");
-			return;
-		}
-
-
-		// Mark as initialization started
-		_isInitializing = true;
-
-
-		// Assign new name
-		if (newName != "")
-		{
-			_name = newName;
-		}
-
-
-		// Assign new owning theater
-		if (newTheater != null)
-		{
-			_theater = newTheater;
-			Theater.Friend.AddAct(_theater, this);
-		}
-
-
-		// Enable/Disable Initially
-		if (isInitiallyEnabled && !IsEnabled())
-		{
-			UnblockSelf(this);
-		}
-		else if (!isInitiallyEnabled && IsEnabled())
-		{
-			BlockSelf(this, BlockType.Persistent);
-		}
-		if (!_isInitializing) { return; }  // Guard
-
-
-		// Mark as initialization completed
-		_isInitializing = false;  // Intentionally before post setup broadcast DO NOT CHANGE
-		_hasInitialized = true;
-
-
-		// Broadcast pre setup
-		OnPreSetup?.Invoke(this);
-
-
-		// Core setup
-		Setup();
-
-
-		// Broadcast post setup
-		OnPostSetup?.Invoke(this);
+		_initName = newName;
+		_initTheater = newTheater;
+		Redirect(Status.Initializing);
 	}
 	public void Deinit()
 	{
-		// Return if not initialized
-		if (!_hasInitialized && !_isInitializing)
-		{
-			WriteLog("Failed Deinit(), Already deinitialized!");
-			return;
-		}
-
-
-		// Return if already deinitializing
-		if (_isDeinitializing)
-		{
-			WriteLog("Failed Deinit(), Already deinitializing!");
-			return;
-		}
-
-
-		// Mark as deinitialization started
-		_isDeinitializing = true;
-
-
-		// Make sure act is not performing
 		Abort();
-
-
-		// Unassign owning theater
-		if (_theater != null)
-		{
-			Theater.Friend.RemoveAct(_theater, this);
-			_theater = null;
-		}
-
-
-		// Reset performed on ticks
-		_performCount = 0;
-		_performedOnTick = -1;
-		_performedOnPhysicsTick = -1;
-		_performedOnLateTick = -1;
-
-
-		// Reset all initialization flags
-		_hasInitialized = false;
-		_isInitializing = false;
-		_isDeinitializing = false;
-
-
-		// Broadcast pre cleanup
-		OnPreCleanup?.Invoke(this);
-
-
-		// Core cleanup
-		Cleanup();
-
-
-
-		// Broadcast post cleanup
-		OnPostCleanup?.Invoke(this);
+		Redirect(Status.Deinitializing);
 	}
 	public bool Perform()
 	{
@@ -350,25 +239,17 @@ public class Act
 	{
 		return _hasInitialized;
 	}
-	public bool IsInitializing()
-	{
-		return _isInitializing;
-	}
-	public bool IsDeinitializing()
-	{
-		return _isDeinitializing;
-	}
 	public bool IsRetrying()
 	{
 		return _isRetrying;
 	}
 	public bool IsPerforming()
 	{
-		return _status != Status.None;
+		return _status != Status.Initializing && _status != Status.Deinitializing && _status != Status.None;
 	}
 	public bool IsOngoing()
 	{
-		return _status != Status.None && _status != Status.Prologuing;
+		return _status != Status.Initializing && _status != Status.Deinitializing && _status != Status.None && _status != Status.Prologuing;
 	}
 	public bool IsEnabled()
 	{
@@ -649,9 +530,10 @@ public class Act
 	private HashSet<Act> _resultTopEpilogues = new();
 	private HashSet<Act> _visitedTopEpilogues = new();
 
+	private string _initName;
+	private Theater _initTheater;
+
 	private bool _hasInitialized = false;
-	private bool _isInitializing = false;
-	private bool _isDeinitializing = false;
 	private bool _isRetrying = false;
 	private bool _hasPrecomputedPrologues = false;
 
@@ -831,6 +713,13 @@ public class Act
 	}
 	private void SetStatus(Status newStatus)
 	{
+		// Return if reassigning same status
+		if (newStatus == _status)
+		{
+			return;
+		}
+
+
 		_prevStatus = _status;
 		_status = newStatus;
 
@@ -842,17 +731,9 @@ public class Act
 	private bool CanPerformImpl(bool isRetrying = false)
 	{
 		// Return if in between initialization
-		if (_isInitializing)
+		if (_status == Status.Initializing || _status == Status.Deinitializing)
 		{
-			WriteLog("Cannot perform, act is in between initializing!");
-			return false;
-		}
-
-
-		// Return if in between deinitialization
-		if (_isDeinitializing)
-		{
-			WriteLog("Cannot perform, act is in between deinitializing!");
+			WriteLog("Cannot perform, act is in between initializing or deinitializing!");
 			return false;
 		}
 
@@ -1381,6 +1262,85 @@ public class Act
 
 			// Continue epilogues
 			ContinueEpilogues(this, pendingEpilogueActs, epilogueOutcome);
+		}
+
+
+
+		// None/Deinitialize -> Initialize
+		else if (_status == Status.None && newStatus == Status.Initializing && !_hasInitialized)
+		{
+			SetStatus(Status.Initializing);
+
+
+			// Assign new name
+			if (_initName != "")
+			{
+				_name = _initName;
+			}
+
+
+			// Assign new owning theater
+			if (_initTheater != null)
+			{
+				_theater = _initTheater;
+				Theater.Friend.AddAct(_theater, this);
+			}
+
+
+			// Broadcast pre setup
+			OnPreSetup?.Invoke(this);
+
+
+			// Core setup
+			Setup();
+
+
+			// Mark as initialized
+			_hasInitialized = true;
+
+
+			SetStatus(Status.None);
+
+
+			// Broadcast post setup
+			OnPostSetup?.Invoke(this);
+		}
+
+		// None/Initialize -> Deinitialize
+		else if (_status == Status.None && newStatus == Status.Deinitializing && _hasInitialized)
+		{
+			SetStatus(Status.Deinitializing);
+
+
+			// Broadcast pre cleanup
+			OnPreCleanup?.Invoke(this);
+
+
+			// Core cleanup
+			Cleanup();
+
+
+			// Unassign owning theater
+			if (_theater != null)
+			{
+				Theater.Friend.RemoveAct(_theater, this);
+				_theater = null;
+			}
+
+
+			// Reset performed on ticks & Mark as deinitialized
+			_performCount = 0;
+			_performedOnTick = -1;
+			_performedOnPhysicsTick = -1;
+			_performedOnLateTick = -1;
+			_hasInitialized = false;
+
+
+			SetStatus(Status.None);
+
+
+			// Broadcast post cleanup
+			OnPostCleanup?.Invoke(this);
 		}
 	}
 

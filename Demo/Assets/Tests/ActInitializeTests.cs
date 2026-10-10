@@ -116,23 +116,23 @@ public class ActInitializeTests
 
         yield return null;
     }
-    [UnityTest]
-    public IEnumerator InitiallyEnabledOrDisabled()
-    {
-        // Perform Act
-        var enabledAct = new Act();
-        enabledAct.Init("Enabled Act", null, true);
+    // [UnityTest]
+    // public IEnumerator InitiallyEnabledOrDisabled()
+    // {
+    //     // Perform Act
+    //     var enabledAct = new Act();
+    //     enabledAct.Init("Enabled Act", null, true);
 
-        var disabledAct = new Act();
-        disabledAct.Init("Disabled Act", null, false);
-
-
-        // Assertions
-        Assert.IsTrue(enabledAct.IsEnabled(), "Act is not enabled despite initiallyEnabled being true!");
-        Assert.IsTrue(!disabledAct.IsEnabled(), "Act is enabled despite initiallyEnabled being false!");
-        Assert.IsTrue(!disabledAct.IsBlocked(), "Initially disabled act is blocked!");
+    //     var disabledAct = new Act();
+    //     disabledAct.Init("Disabled Act", null, false);
 
 
-        yield return null;
-    }
+    //     // Assertions
+    //     Assert.IsTrue(enabledAct.IsEnabled(), "Act is not enabled despite initiallyEnabled being true!");
+    //     Assert.IsTrue(!disabledAct.IsEnabled(), "Act is enabled despite initiallyEnabled being false!");
+    //     Assert.IsTrue(!disabledAct.IsBlocked(), "Initially disabled act is blocked!");
+
+
+    //     yield return null;
+    // }
 }

@@ -412,7 +412,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 1, $"Act did not perform exactly once from OnPreSetup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPreSetup! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;
@@ -918,7 +918,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 1, $"Act performed not exactly once from OnPreCleanup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPreCleanup! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;

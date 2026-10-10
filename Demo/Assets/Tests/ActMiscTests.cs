@@ -789,9 +789,11 @@ public class ActMiscTests
 
         statusAfterPerform = act.GetStatus();
 
+        act.Deinit();
+
 
         // Assertions
-        Assert.IsTrue(statusInPreSetup == Act.Status.None, $"Status wrong in OnPreSetup! Status='{statusInPreSetup}'");
+        Assert.IsTrue(statusInPreSetup == Act.Status.Initializing, $"Status wrong in OnPreSetup! Status='{statusInPreSetup}'");
         Assert.IsTrue(statusInPostSetup == Act.Status.None, $"Status wrong in OnPostSetup! Status='{statusInPostSetup}'");
         Assert.IsTrue(statusBeforePerform == Act.Status.None, $"Status should be None before Perform() is called. Status='{statusBeforePerform}'");
         Assert.IsTrue(statusInPerformStart == Act.Status.Prologuing, $"Status wrong in OnPerformStart! Status='{statusInPerformStart}'");
@@ -809,7 +811,7 @@ public class ActMiscTests
         Assert.IsTrue(statusInPreExit == Act.Status.Exiting, $"Status wrong in OnPreExit! Status='{statusInPreExit}'");
         Assert.IsTrue(statusInPostExit == Act.Status.Exiting, $"Status wrong in OnPostExit! Status='{statusInPostExit}'");
         Assert.IsTrue(statusAfterPerform == Act.Status.None, $"Status should be None after Perform() has ended. Status='{statusAfterPerform}'");
-        Assert.IsTrue(statusInPreCleanup == Act.Status.None, $"Status wrong in OnPreCleanup! Status='{statusInPreCleanup}'");
+        Assert.IsTrue(statusInPreCleanup == Act.Status.Deinitializing, $"Status wrong in OnPreCleanup! Status='{statusInPreCleanup}'");
         Assert.IsTrue(statusInPostCleanup == Act.Status.None, $"Status wrong in OnPostCleanup! Status='{statusInPostCleanup}'");
 
         UnityEngine.Object.Destroy(theaterGO);
