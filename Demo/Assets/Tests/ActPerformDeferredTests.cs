@@ -93,7 +93,7 @@ public class ActPerformDeferredTests
 
 
         // Assertions
-        Assert.IsTrue(!act.IsOngoing(), "Act is ongoing despite deferred performing without theater!");
+        Assert.IsTrue(!act.IsPerforming(), "Act is performing despite deferred performing without theater!");
         Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed despite missing theater! Perform Count='{act.GetPerformCount()}'");
 
         yield return null;

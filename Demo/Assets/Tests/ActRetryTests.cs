@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 // 1. Does Retry() work externally?
 // 1. Does retry cancel prologues?
 // 1. Does retry not cancel epilogues?
-// 1. Does Retry() perform the act even if not ongoing?
+// 1. Does Retry() perform the act even if not performing?
 // 1. Does failing to retry change the outcome to failure?
 
 
@@ -75,7 +75,7 @@ public class ActRetryTests
         // Assertions
         Assert.IsTrue(prologueAct.GetPerformCount() == 1, $"Prologue act did not exactly once! Perform Count={prologueAct.GetPerformCount()}");
         Assert.IsTrue(prologueAct.GetOutcome() == Act.Outcome.Interrupted, $"Prologue act was not interrupted after retry! Outcome={prologueAct.GetOutcome()}");
-        Assert.IsFalse(prologueAct.IsOngoing(), $"Prologue act is still ongoing after retry cancelled it!");
+        Assert.IsFalse(prologueAct.IsPerforming(), $"Prologue act is still performing after retry cancelled it!");
         Assert.IsTrue(act.GetStatus() == Act.Status.Entering, $"Act did not skip cancelled prologue and enter! Status={act.GetStatus()}");
 
         yield return null;
@@ -99,12 +99,12 @@ public class ActRetryTests
         // Assertions
         Assert.IsTrue(statusBeforeRetry == Act.Status.Prologuing, $"Act did not wait on prologue before retry! Status={statusBeforeRetry}");
         Assert.IsTrue(statusAfterRetry == Act.Status.Prologuing, $"Act got cancelled after prologue retried! Status={statusAfterRetry}");
-        Assert.IsTrue(act.IsOngoing(), "Act stopped being ongoing after prologue retried!");
+        Assert.IsTrue(act.IsPerforming(), "Act stopped being performing after prologue retried!");
 
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RetryPerformsWhenNotOngoing()
+    public IEnumerator RetryPerformsWhenNotPerforming()
     {
         // Perform Act
         var act = new EnterAct();
@@ -113,8 +113,8 @@ public class ActRetryTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 1, $"Act did not perform after calling Retry() while not ongoing! Perform Count={act.GetPerformCount()}");
-        Assert.IsTrue(act.callCount == 1, $"Enter() was not invoked after Retry() while not ongoing! Call count={act.callCount}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act did not perform after calling Retry() while not performing! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.callCount == 1, $"Enter() was not invoked after Retry() while not performing! Call count={act.callCount}");
 
         yield return null;
     }
@@ -129,7 +129,7 @@ public class ActRetryTests
 
         // Assertions
         Assert.IsTrue(act.GetOutcome() == Act.Outcome.Failure, $"Outcome did not change to failure after failing to retry! Outcome={act.GetOutcome()}");
-        Assert.IsFalse(act.IsOngoing(), "Act is still ongoing despite failing to retry!");
+        Assert.IsFalse(act.IsPerforming(), "Act is still performing despite failing to retry!");
 
         yield return null;
     }

@@ -13,7 +13,7 @@ using UnityEngine.TestTools;
 // 1. Does act abort on deinitialization?
 // 1. Does prologue act abort on deinitialization?
 // 1. Does PerformCount() reset to 0 after deinitialization?
-// 1. After Deinit() is the act removed from the theater's allActs & ongoing acts?
+// 1. After Deinit() is the act removed from the theater's allActs & performing acts?
 
 
 public class ActDeinitializeTests
@@ -109,7 +109,7 @@ public class ActDeinitializeTests
 
 
         // Assertions
-        Assert.IsTrue(!act.IsOngoing(), "Act is still ongoing after Deinit()!");
+        Assert.IsTrue(!act.IsPerforming(), "Act is still performing after Deinit()!");
 
 
         yield return null;
@@ -131,8 +131,8 @@ public class ActDeinitializeTests
 
 
         // Assertions
-        Assert.IsTrue(!mainAct.IsOngoing(), "Main act is still ongoing after Deinit()!");
-        Assert.IsTrue(!prologueAct.IsOngoing(), "Prologue act is still ongoing after Deinit()!");
+        Assert.IsTrue(!mainAct.IsPerforming(), "Main act is still performing after Deinit()!");
+        Assert.IsTrue(!prologueAct.IsPerforming(), "Prologue act is still performing after Deinit()!");
 
 
         yield return null;
@@ -174,7 +174,7 @@ public class ActDeinitializeTests
         // Assertions
         Assert.IsTrue(wasInAllActs, "Act was never added to theater's allActs!");
         Assert.IsFalse(theaterObj.GetAllActs().Contains(act), "Act still present in theater's allActs after Deinit()!");
-        Assert.IsFalse(theaterObj.AreAnyOngoing(), "Theater still reports act as ongoing after Deinit()!");
+        Assert.IsFalse(theaterObj.AreAnyPerforming(), "Theater still reports act as performing after Deinit()!");
 
 
         UnityEngine.Object.Destroy(theaterObj.gameObject);

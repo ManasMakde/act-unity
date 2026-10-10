@@ -45,14 +45,14 @@ public class BiterSpider : MonoBehaviour, IDamageable
     void Update()
     {
         // Return if any override animation playing
-        if (damageAct.IsActive() || biteAct.IsActive())
+        if (damageAct.IsOngoing() || biteAct.IsOngoing())
         {
             return;
         }
 
 
         // Walk
-        if (chaseAct.IsActive())
+        if (chaseAct.IsOngoing())
         {
             eventfulAnimator.Play(walkAnim);
         }

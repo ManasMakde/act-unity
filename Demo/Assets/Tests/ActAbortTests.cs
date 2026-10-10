@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Does an ongoing act stop when Abort() is invoked?
+// 1. Does a performing act stop when Abort() is invoked?
 // 1. Does abort fail from OnPreSetup?
 // 1. Does abort fail from OnPostSetup?
 // 1. Does abort succeed from OnPerformStart?
@@ -33,21 +33,21 @@ using UnityEngine.TestTools;
 public class ActAbortTests
 {
     [UnityTest]
-    public IEnumerator AbortStopsOngoingAct()
+    public IEnumerator AbortStopsPerformingAct()
     {
         // Perform Act
         var act = new ManualFinishAct();
         act.Init("Test Act");
         act.Perform();
 
-        var wasOngoing = act.IsOngoing();
+        var wasPerforming = act.IsPerforming();
 
         act.Abort();
 
 
         // Assertions
-        Assert.IsTrue(wasOngoing, "Act was not ongoing before Abort()!");
-        Assert.IsTrue(!act.IsOngoing() && act.GetOutcome() == Act.Outcome.Interrupted, $"Act did not stop on Abort()! IsOngoing={act.IsOngoing()}  Outcome={act.GetOutcome()}");
+        Assert.IsTrue(wasPerforming, "Act was not performing before Abort()!");
+        Assert.IsTrue(!act.IsPerforming() && act.GetOutcome() == Act.Outcome.Interrupted, $"Act did not stop on Abort()! IsPerforming={act.IsPerforming()}  Outcome={act.GetOutcome()}");
 
         yield return null;
     }
@@ -61,7 +61,7 @@ public class ActAbortTests
 
 
         // Assertions
-        Assert.IsTrue(act.callCount == 0 && !act.IsOngoing(), $"Abort from OnPreSetup calling Exit()! callCount={act.callCount}  Outcome={act.GetOutcome()}");
+        Assert.IsTrue(act.callCount == 0 && !act.IsPerforming(), $"Abort from OnPreSetup calling Exit()! callCount={act.callCount}  Outcome={act.GetOutcome()}");
 
         yield return null;
     }
@@ -75,7 +75,7 @@ public class ActAbortTests
 
 
         // Assertions
-        Assert.IsTrue(act.callCount == 0 && !act.IsOngoing(), $"Abort from OnPostSetup calling Exit()! callCount={act.callCount}  Outcome={act.GetOutcome()}");
+        Assert.IsTrue(act.callCount == 0 && !act.IsPerforming(), $"Abort from OnPostSetup calling Exit()! callCount={act.callCount}  Outcome={act.GetOutcome()}");
 
         yield return null;
     }
@@ -312,7 +312,7 @@ public class ActAbortTests
 
 
         // Assertions
-        Assert.IsTrue(!act.IsOngoing() && act.GetOutcome() == Act.Outcome.Success, $"Abort from OnPreExit wrongly overrode outcome! Outcome={act.GetOutcome()}");
+        Assert.IsTrue(!act.IsPerforming() && act.GetOutcome() == Act.Outcome.Success, $"Abort from OnPreExit wrongly overrode outcome! Outcome={act.GetOutcome()}");
 
         yield return null;
     }
@@ -329,7 +329,7 @@ public class ActAbortTests
 
 
         // Assertions
-        Assert.IsTrue(!act.IsOngoing() && act.GetOutcome() == Act.Outcome.Success, $"Abort from OnPostExit wrongly overrode outcome! Outcome={act.GetOutcome()}");
+        Assert.IsTrue(!act.IsPerforming() && act.GetOutcome() == Act.Outcome.Success, $"Abort from OnPostExit wrongly overrode outcome! Outcome={act.GetOutcome()}");
 
         yield return null;
     }
@@ -345,7 +345,7 @@ public class ActAbortTests
 
 
         // Assertions
-        Assert.IsTrue(!mainAct.IsOngoing() && mainAct.GetOutcome() == Act.Outcome.Success, $"Abort from OnPerformEnd overrode outcome! IsOngoing={mainAct.IsOngoing()}  Outcome={mainAct.GetOutcome()}");
+        Assert.IsTrue(!mainAct.IsPerforming() && mainAct.GetOutcome() == Act.Outcome.Success, $"Abort from OnPerformEnd overrode outcome! IsPerforming={mainAct.IsPerforming()}  Outcome={mainAct.GetOutcome()}");
 
         yield return null;
     }
@@ -360,7 +360,7 @@ public class ActAbortTests
 
 
         // Assertions
-        Assert.IsTrue(!act.IsOngoing(), $"Abort from OnPreCleanup wronglymade act ongoing! Ongoing={act.IsOngoing()}");
+        Assert.IsTrue(!act.IsPerforming(), $"Abort from OnPreCleanup wronglymade act performing! Performing={act.IsPerforming()}");
 
         yield return null;
     }
@@ -375,7 +375,7 @@ public class ActAbortTests
 
 
         // Assertions
-        Assert.IsTrue(!act.IsOngoing(), $"Abort from OnPostCleanup wrongly made act ongoing! Ongoing={act.IsOngoing()}");
+        Assert.IsTrue(!act.IsPerforming(), $"Abort from OnPostCleanup wrongly made act performing! Performing={act.IsPerforming()}");
 
         yield return null;
     }
@@ -388,14 +388,14 @@ public class ActAbortTests
         act.Init("Test Act");
 
         act.SetEnabled(false);
-        bool IsOngoingAfterDisable = act.IsOngoing();
+        bool IsPerformingAfterDisable = act.IsPerforming();
         act.SetEnabled(true);
-        bool IsOngoingAfterEnable = act.IsOngoing();
+        bool IsPerformingAfterEnable = act.IsPerforming();
 
 
         // Assertions
-        Assert.IsTrue(!IsOngoingAfterDisable, $"Abort from OnEnableChanged false made act ongoing! IsOngoingAfterDisable={IsOngoingAfterDisable}");
-        Assert.IsTrue(!IsOngoingAfterEnable, $"Abort from OnEnableChanged true made act ongoing! IsOngoingAfterEnable={IsOngoingAfterEnable}");
+        Assert.IsTrue(!IsPerformingAfterDisable, $"Abort from OnEnableChanged false made act performing! IsPerformingAfterDisable={IsPerformingAfterDisable}");
+        Assert.IsTrue(!IsPerformingAfterEnable, $"Abort from OnEnableChanged true made act performing! IsPerformingAfterEnable={IsPerformingAfterEnable}");
 
 
         yield return null;
@@ -416,7 +416,7 @@ public class ActAbortTests
 
 
         // Assertions
-        Assert.IsTrue(!blockedAct.IsOngoing(), $"Abort from OnBlockChanged made act ongoing! IsOngoing={blockedAct.IsOngoing()}");
+        Assert.IsTrue(!blockedAct.IsPerforming(), $"Abort from OnBlockChanged made act performing! IsPerforming={blockedAct.IsPerforming()}");
 
         yield return null;
     }

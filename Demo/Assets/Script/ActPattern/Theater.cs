@@ -94,9 +94,9 @@ public class Theater : MonoBehaviour
         }
         _pendingModActs.Clear();
     }
-    public bool AreAnyOngoing()
+    public bool AreAnyPerforming()
     {
-        return _ongoingActs.Count != 0;
+        return _performingActs.Count != 0;
     }
     public HashSet<Act> GetAllActs()
     {
@@ -106,7 +106,7 @@ public class Theater : MonoBehaviour
 
     // Private Properties
     private HashSet<Act> _allActs = new();
-    private HashSet<Act> _ongoingActs = new();
+    private HashSet<Act> _performingActs = new();
     private Dictionary<Act, bool> _pendingModActs = new();
 
     private Dictionary<Act, Act.TickFlags> _stagedDeferActs = new();
@@ -138,7 +138,7 @@ public class Theater : MonoBehaviour
         }
 
 
-        // Mark as pending if abort all is ongoing
+        // Mark as pending if abort all is performing
         if (_isAbortingAll)
         {
             _pendingModActs[newAct] = true;
@@ -157,7 +157,7 @@ public class Theater : MonoBehaviour
         }
 
 
-        // Mark as pending if abort all is ongoing
+        // Mark as pending if abort all is performing
         if (_isAbortingAll)
         {
             _pendingModActs[oldAct] = false;
@@ -174,41 +174,41 @@ public class Theater : MonoBehaviour
 
         _allActs.Remove(oldAct);
     }
-    private void StageOngoing(Act act)
+    private void StagePerforming(Act act)
     {
-        // Return if invalid act or already ongoing
-        if (act == null || _ongoingActs.Contains(act))
+        // Return if invalid act or already performing
+        if (act == null || _performingActs.Contains(act))
         {
             return;
         }
 
 
-        // Mark as ongoing act
-        _ongoingActs.Add(act);
+        // Mark as performing act
+        _performingActs.Add(act);
 
 
         // Broadcast act started
         OnPerformStart?.Invoke(this, act);
     }
-    private void UnstageOngoing(Act act)
+    private void UnstagePerforming(Act act)
     {
-        // Return if act is null or was never staged ongoing
-        if (act == null || !_ongoingActs.Contains(act))
+        // Return if act is null or was never staged performing
+        if (act == null || !_performingActs.Contains(act))
         {
             return;
         }
 
 
-        // Remove as ongoing act
-        _ongoingActs.Remove(act);
+        // Remove as performing act
+        _performingActs.Remove(act);
 
 
         // Broadcast act ended
         OnPerformEnd?.Invoke(this, act);
 
 
-        // Broadcast all ended if none ongoing
-        if (!AreAnyOngoing())
+        // Broadcast all ended if none performing
+        if (!AreAnyPerforming())
         {
             OnAllPerformEnd?.Invoke(this);
         }
@@ -445,13 +445,13 @@ public class Theater : MonoBehaviour
         {
             theater.RemoveAct(oldAct);
         }
-        static public void StageOngoing(Theater theater, Act act)
+        static public void StagePerforming(Theater theater, Act act)
         {
-            theater.StageOngoing(act);
+            theater.StagePerforming(act);
         }
-        static public void UnstageOngoing(Theater theater, Act act)
+        static public void UnstagePerforming(Theater theater, Act act)
         {
-            theater.UnstageOngoing(act);
+            theater.UnstagePerforming(act);
         }
         static public void StageDeferred(Theater theater, Act act, Act.TickFlags flag)
         {

@@ -11,11 +11,11 @@ using UnityEngine.TestTools;
 // 1. Does blocking abort the act?
 // 1. Can a persistantly unblocked act perform?
 
-// 1. Does interrupt block stop the act's ongoing perform?
-// 1. Can a interrupt blocked act perform despite blocker act still ongoing?
+// 1. Does interrupt block stop the act's performing perform?
+// 1. Can a interrupt blocked act perform despite blocker act still performing?
 
-// 1. Does adding an act to the main act (which is ongoing) block the act?
-// 1. Does removing a blocked act from the main act (which is ongoing) unblock that act?
+// 1. Does adding an act to the main act (which is performing) block the act?
+// 1. Does removing a blocked act from the main act (which is performing) unblock that act?
 // 1. Does persistent blocking fail when adding self act to block?
 
 
@@ -131,7 +131,7 @@ public class ActBlockTests
         // Assertions
         Assert.IsTrue(wasAborted, "Target act did not go through exit despite getting blocked!");
         Assert.IsTrue(recivedOutcome == Act.Outcome.Interrupted, $"Target act did not recieve 'Interrupted' outcome on block! recivedOutcome={recivedOutcome}");
-        Assert.IsTrue(!targetAct.IsOngoing(), "Target act is still ongoing despite getting blocked!");
+        Assert.IsTrue(!targetAct.IsPerforming(), "Target act is still performing despite getting blocked!");
 
 
         yield return null;
@@ -191,7 +191,7 @@ public class ActBlockTests
 
         // Assertions
         Assert.IsTrue(wasAborted, "Target act did not go through exit despite interrupt block!");
-        Assert.IsTrue(!targetAct.IsOngoing(), "Target act is still ongoing despite interrupt block!");
+        Assert.IsTrue(!targetAct.IsPerforming(), "Target act is still performing despite interrupt block!");
 
 
         yield return null;
@@ -213,7 +213,7 @@ public class ActBlockTests
 
 
         // Assertions
-        Assert.IsTrue(mainAct.IsOngoing(), "Main act is not ongoing!");
+        Assert.IsTrue(mainAct.IsPerforming(), "Main act is not performing!");
         Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite interrupt block!");
         Assert.IsTrue(targetAct.GetPerformCount() == 1, $"Target act did not perform despite interrupt block being one time only! Perform Count={targetAct.GetPerformCount()}");
 
@@ -223,7 +223,7 @@ public class ActBlockTests
 
 
     [UnityTest]
-    public IEnumerator AddToBlockWhileOngoing()
+    public IEnumerator AddToBlockWhilePerforming()
     {
         // Setup main and target act
         var mainAct = new ManualFinishAct();
@@ -238,13 +238,13 @@ public class ActBlockTests
 
 
         // Assertions
-        Assert.IsTrue(targetAct.IsBlocked(), "Target act is not blocked despite being added while main act is ongoing!");
+        Assert.IsTrue(targetAct.IsBlocked(), "Target act is not blocked despite being added while main act is performing!");
 
 
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RemoveFromBlockWhileOngoing()
+    public IEnumerator RemoveFromBlockWhilePerforming()
     {
         // Setup main and target act
         var mainAct = new ManualFinishAct();
@@ -258,13 +258,13 @@ public class ActBlockTests
         mainAct.Perform();
 
 
-        // Remove target from block while main act still ongoing
+        // Remove target from block while main act still performing
         mainAct.RemoveFromBlock(new List<Act> { targetAct });
 
 
         // Assertions
-        Assert.IsTrue(mainAct.IsOngoing(), "Main act is not ongoing!");
-        Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite being removed while main act is ongoing!");
+        Assert.IsTrue(mainAct.IsPerforming(), "Main act is not performing!");
+        Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite being removed while main act is performing!");
 
 
         yield return null;
@@ -283,7 +283,7 @@ public class ActBlockTests
 
 
         // Assertions
-        Assert.IsTrue(mainAct.IsOngoing(), "Main act did not perform despite trying to add self to block being a no op!");
+        Assert.IsTrue(mainAct.IsPerforming(), "Main act did not perform despite trying to add self to block being a no op!");
         Assert.IsTrue(!mainAct.IsBlocked(), "Main act got blocked despite trying to add self to block being reserved for enable disable!");
 
 

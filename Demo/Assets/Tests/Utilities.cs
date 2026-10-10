@@ -261,6 +261,55 @@ public class RetryingCheckAct : Act
         retryingInCleanup = IsRetrying();
     }
 }
+public class PerformingCheckAct : Act
+{
+    public bool performingInSetup = false;
+    public bool performingInEnter = false;
+    public bool performingInTick = false;
+    public bool performingInPhysicsTick = false;
+    public bool performingInLateTick = false;
+    public bool performingInExit = false;
+    public bool performingInCleanup = false;
+    public void ForceFinish(Outcome outcome = Outcome.Success)
+    {
+        Finish(outcome);
+    }
+
+
+    protected override void Setup()
+    {
+        _tickFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
+        performingInSetup = IsPerforming();
+    }
+    protected override Outcome Enter()
+    {
+        performingInEnter = IsPerforming();
+        return Outcome.Pending;
+    }
+    protected override Outcome Tick()
+    {
+        performingInTick = IsPerforming();
+        return Outcome.Pending;
+    }
+    protected override Outcome PhysicsTick()
+    {
+        performingInPhysicsTick = IsPerforming();
+        return Outcome.Pending;
+    }
+    protected override Outcome LateTick()
+    {
+        performingInLateTick = IsPerforming();
+        return Outcome.Pending;
+    }
+    protected override void Exit()
+    {
+        performingInExit = IsPerforming();
+    }
+    protected override void Cleanup()
+    {
+        performingInCleanup = IsPerforming();
+    }
+}
 public class OngoingCheckAct : Act
 {
     public bool ongoingInSetup = false;
@@ -308,55 +357,6 @@ public class OngoingCheckAct : Act
     protected override void Cleanup()
     {
         ongoingInCleanup = IsOngoing();
-    }
-}
-public class ActiveCheckAct : Act
-{
-    public bool activeInSetup = false;
-    public bool activeInEnter = false;
-    public bool activeInTick = false;
-    public bool activeInPhysicsTick = false;
-    public bool activeInLateTick = false;
-    public bool activeInExit = false;
-    public bool activeInCleanup = false;
-    public void ForceFinish(Outcome outcome = Outcome.Success)
-    {
-        Finish(outcome);
-    }
-
-
-    protected override void Setup()
-    {
-        _tickFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
-        activeInSetup = IsActive();
-    }
-    protected override Outcome Enter()
-    {
-        activeInEnter = IsActive();
-        return Outcome.Pending;
-    }
-    protected override Outcome Tick()
-    {
-        activeInTick = IsActive();
-        return Outcome.Pending;
-    }
-    protected override Outcome PhysicsTick()
-    {
-        activeInPhysicsTick = IsActive();
-        return Outcome.Pending;
-    }
-    protected override Outcome LateTick()
-    {
-        activeInLateTick = IsActive();
-        return Outcome.Pending;
-    }
-    protected override void Exit()
-    {
-        activeInExit = IsActive();
-    }
-    protected override void Cleanup()
-    {
-        activeInCleanup = IsActive();
     }
 }
 public class StatusCheckAct : Act

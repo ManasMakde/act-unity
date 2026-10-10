@@ -70,16 +70,16 @@ public class ActEnterTests
         act.Perform();
 
         var actStatus = act.GetStatus();
-        var wasOngoing = act.IsOngoing();
+        var wasPerforming = act.IsPerforming();
 
         act.ManualFinish();
 
-        var didComplete = !act.IsOngoing();
+        var didComplete = !act.IsPerforming();
 
 
         // Assertions
         Assert.IsTrue(actStatus == Act.Status.Entering, $"Act did not have status 'Entering' despite pending outcome! Status='{actStatus}'");
-        Assert.IsTrue(wasOngoing, "Act is not ongoing despite pending outcome!");
+        Assert.IsTrue(wasPerforming, "Act is not performing despite pending outcome!");
         Assert.IsTrue(didComplete && act.GetPerformCount() == 1, $"Act is not exit despite calling Finish()! Perform Count={act.GetPerformCount()}");
         Assert.IsTrue(wentThroughExit, $"Act is not go through exit on calling Finish()!");
 

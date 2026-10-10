@@ -117,14 +117,14 @@ public class ShooterSpider : MonoBehaviour, IDamageable
     void Update()
     {
         // Return if any override animation playing
-        if (damageAct.IsActive() || shootAct.IsActive())
+        if (damageAct.IsOngoing() || shootAct.IsOngoing())
         {
             return;
         }
 
 
         // Walk
-        if (wanderAct.IsActive())
+        if (wanderAct.IsOngoing())
         {
             eventfulAnimator.Play(walkAnim);
         }

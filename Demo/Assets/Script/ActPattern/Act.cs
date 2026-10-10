@@ -93,7 +93,7 @@ public class Act
 
 	public void Init(string newName = "", Theater newTheater = null, bool isInitiallyEnabled = true)
 	{
-		// Return if trying to reinitialize
+		// Return if already initialized
 		if (_hasInitialized)
 		{
 			WriteLog("Failed Init(), Already initialized!");
@@ -101,8 +101,8 @@ public class Act
 		}
 
 
-		// Return if already initialized
-		if (_isInitializing)
+		// Return if already reinitializing
+		if (_isInitializing || _isDeinitializing)
 		{
 			WriteLog("Failed Init(), Already initializing or deinitializing!");
 			return;
@@ -128,11 +128,21 @@ public class Act
 		}
 
 
-		// Disable Initially
-		if (!isInitiallyEnabled)
+		// Enable/Disable Initially
+		if (isInitiallyEnabled && !IsEnabled())
+		{
+			UnblockSelf(this);
+		}
+		else if (!isInitiallyEnabled && IsEnabled())
 		{
 			BlockSelf(this, BlockType.Persistent);
 		}
+		if (!_isInitializing) { return; }  // Guard
+
+
+		// Mark as initialization completed
+		_isInitializing = false;  // Intentionally before post setup broadcast DO NOT CHANGE
+		_hasInitialized = true;
 
 
 		// Broadcast pre setup
@@ -143,46 +153,33 @@ public class Act
 		Setup();
 
 
-		// Mark as initialization completed
-		_isInitializing = false;  // Intentionally before post setup broadcast DO NOT CHANGE
-		_hasInitialized = true;
-
-
 		// Broadcast post setup
 		OnPostSetup?.Invoke(this);
 	}
 	public void Deinit()
 	{
-		// Return if trying to redeinitialize
-		if (!_hasInitialized)
+		// Return if not initialized
+		if (!_hasInitialized && !_isInitializing)
 		{
 			WriteLog("Failed Deinit(), Already deinitialized!");
 			return;
 		}
 
 
-		// Return if not initialized
-		if (_isInitializing)
+		// Return if already deinitializing
+		if (_isDeinitializing)
 		{
-			WriteLog("Failed Deinit(), Already initializing or deinitializing!");
+			WriteLog("Failed Deinit(), Already deinitializing!");
 			return;
 		}
 
 
 		// Mark as deinitialization started
-		_isInitializing = true;
+		_isDeinitializing = true;
 
 
-		// Make sure act is not ongoing
+		// Make sure act is not performing
 		Abort();
-
-
-		// Broadcast pre cleanup
-		OnPreCleanup?.Invoke(this);
-
-
-		// Core cleanup
-		Cleanup();
 
 
 		// Unassign owning theater
@@ -200,9 +197,19 @@ public class Act
 		_performedOnLateTick = -1;
 
 
-		// Mark as deinitialization completed
-		_isInitializing = false;
+		// Reset all initialization flags
 		_hasInitialized = false;
+		_isInitializing = false;
+		_isDeinitializing = false;
+
+
+		// Broadcast pre cleanup
+		OnPreCleanup?.Invoke(this);
+
+
+		// Core cleanup
+		Cleanup();
+
 
 
 		// Broadcast post cleanup
@@ -225,7 +232,7 @@ public class Act
 	}
 	public void Retry()
 	{
-		if (IsOngoing())
+		if (IsPerforming())
 		{
 			Redirect(Status.Exiting, Outcome.Retry);
 		}
@@ -262,8 +269,8 @@ public class Act
 			_actsToBlock[bAct] = blockType;
 
 
-			// Block if ongoing
-			if (IsOngoing())
+			// Block if performing
+			if (IsPerforming())
 			{
 				bAct.BlockSelf(this, blockType);
 			}
@@ -281,7 +288,7 @@ public class Act
 			}
 
 
-			// Unblock if ongoing
+			// Unblock if performing
 			bAct.UnblockSelf(this);
 
 
@@ -346,15 +353,19 @@ public class Act
 	{
 		return _isInitializing;
 	}
+	public bool IsDeinitializing()
+	{
+		return _isDeinitializing;
+	}
 	public bool IsRetrying()
 	{
 		return _isRetrying;
 	}
-	public bool IsOngoing()
+	public bool IsPerforming()
 	{
 		return _status != Status.None;
 	}
-	public bool IsActive()
+	public bool IsOngoing()
 	{
 		return _status != Status.None && _status != Status.Prologuing;
 	}
@@ -371,6 +382,10 @@ public class Act
 		}
 
 		return _blockedByActs.Count != 0;
+	}
+	public bool IsBlockedBy(Act byAct)
+	{
+		return _blockedByActs.Contains(byAct);
 	}
 	public bool CanTick(TickFlags type)
 	{
@@ -541,7 +556,7 @@ public class Act
 		}
 
 
-		// Finish interrupted incase ongoing
+		// Finish interrupted incase performing
 		Redirect(Status.Exiting, Outcome.Interrupted);
 
 
@@ -635,6 +650,7 @@ public class Act
 
 	private bool _hasInitialized = false;
 	private bool _isInitializing = false;
+	private bool _isDeinitializing = false;
 	private bool _isRetrying = false;
 	private bool _hasPrecomputedPrologues = false;
 
@@ -817,7 +833,15 @@ public class Act
 		// Return if in between initialization
 		if (_isInitializing)
 		{
-			WriteLog("Cannot perform, act is initializing or deinitializing!");
+			WriteLog("Cannot perform, act is in between initializing!");
+			return false;
+		}
+
+
+		// Return if in between deinitialization
+		if (_isDeinitializing)
+		{
+			WriteLog("Cannot perform, act is in between deinitializing!");
 			return false;
 		}
 
@@ -846,10 +870,10 @@ public class Act
 		}
 
 
-		// Return if already ongoing
-		if (!isRetrying && !_canReperform && IsOngoing())
+		// Return if already performing
+		if (!isRetrying && !_canReperform && IsPerforming())
 		{
-			WriteLog("Cannot perform, act is ongoing!");
+			WriteLog("Cannot perform, act is performing!");
 			return false;
 		}
 
@@ -891,7 +915,7 @@ public class Act
 		}
 
 
-		// Finish any ongoing perform
+		// Finish if in between performing
 		if (_status != Status.None)
 		{
 			Finish(Outcome.Interrupted);
@@ -922,21 +946,16 @@ public class Act
 	{
 		// Broadcast perform start
 		OnPerformStart?.Invoke(this);
-		if (_status != Status.Prologuing)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Prologuing) { return; }  // Guard
 
 
 		// Let theater know this act has started
 		if (_theater != null)
 		{
-			Theater.Friend.StageOngoing(_theater, this);
+			Theater.Friend.StagePerforming(_theater, this);
 		}
-		if (_status != Status.Prologuing)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Prologuing) { return; }  // Guard
+
 
 
 		// Precompute prologue chain
@@ -944,10 +963,8 @@ public class Act
 		{
 			PrecomputePrologueChain(this);
 		}
-		if (_status != Status.Prologuing)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Prologuing) { return; }  // Guard
+
 
 
 		// Assign self as pending epilogue
@@ -959,10 +976,7 @@ public class Act
 
 		// Block
 		BlockOthers();
-		if (_status != Status.Prologuing)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Prologuing) { return; }  // Guard
 
 
 		// Skip if no prologues
@@ -975,10 +989,7 @@ public class Act
 
 		// Broadcast pre prologue
 		OnPrePrologue?.Invoke(this);
-		if (_status != Status.Prologuing)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Prologuing) { return; }  // Guard
 
 
 		// Perform all prologues
@@ -991,9 +1002,9 @@ public class Act
 			}
 
 
-			// Skip prologue if ongoing
+			// Skip prologue if already performing
 			var pAct = GetFirst(_prologueActs);
-			if (pAct.IsOngoing())
+			if (pAct.IsPerforming())
 			{
 				_prologueActs.Remove(pAct);
 				_pendingPrologueActs.Add(pAct);
@@ -1067,10 +1078,8 @@ public class Act
 
 		// Broadcast post prologue
 		OnPostPrologue?.Invoke(this);
-		if (_status != Status.Prologuing)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Prologuing) { return; }  // Guard
+
 
 
 		// Redirect to enter
@@ -1080,26 +1089,17 @@ public class Act
 	{
 		// Broadcast pre enter
 		OnPreEnter?.Invoke(this);
-		if (_status != Status.Entering)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Entering) { return; }  // Guard
 
 
 		// Core enter
 		var newOutcome = Enter();
-		if (_status != Status.Entering)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Entering) { return; }  // Guard 
 
 
 		// Broadcast post enter
 		OnPostEnter?.Invoke(this);
-		if (_status != Status.Entering)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Entering) { return; }  // Guard
 
 
 		// Redirect to exit
@@ -1165,26 +1165,17 @@ public class Act
 
 		// Broadcast pre tick
 		OnPreTick?.Invoke(this);
-		if (_status != Status.Ticking || currTickReqCount != _tickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currTickReqCount != _tickReqCount) { return; }   // Guard
 
 
 		// Core tick
 		var newOutcome = Tick();
-		if (_status != Status.Ticking || currTickReqCount != _tickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currTickReqCount != _tickReqCount) { return; }  // Guard
 
 
 		// Broadcast post tick
 		OnPostTick?.Invoke(this);
-		if (_status != Status.Ticking || currTickReqCount != _tickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currTickReqCount != _tickReqCount) { return; }  // Guard
 
 
 		// Check if exit was requested
@@ -1212,26 +1203,17 @@ public class Act
 
 		// Broadcast pre physics tick
 		OnPrePhysicsTick?.Invoke(this);
-		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount) { return; }  // Guard
 
 
 		// Core tick
 		var newOutcome = PhysicsTick();
-		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount) { return; }  // Guard
 
 
 		// Broadcast post physics tick
 		OnPostPhysicsTick?.Invoke(this);
-		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount) { return; }  // Guard
 
 
 		// Check if exit was requested
@@ -1259,26 +1241,17 @@ public class Act
 
 		// Broadcast pre late tick
 		OnPreLateTick?.Invoke(this);
-		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount) { return; }  // Guard
 
 
 		// Core tick
 		var newOutcome = LateTick();
-		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount) { return; }  // Guard
 
 
 		// Broadcast post late tick
 		OnPostLateTick?.Invoke(this);
-		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount)
-		{
-			return;  // Guard
-		}
+		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount) { return; }  // Guard
 
 
 		// Check if exit was requested
@@ -1369,7 +1342,7 @@ public class Act
 		// Let theater know this act has ended
 		if (_theater != null)
 		{
-			Theater.Friend.UnstageOngoing(_theater, this);
+			Theater.Friend.UnstagePerforming(_theater, this);
 		}
 
 
@@ -1468,10 +1441,6 @@ public class Act
 		static public HashSet<Act> GetCompletedPrologueActs(Act act)
 		{
 			return act._completedPrologueActs;
-		}
-		static public bool GetIsInitializing(Act act)
-		{
-			return act._isInitializing;
 		}
 		static public bool GetHasPrecomputedPrologues(Act act)
 		{

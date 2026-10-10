@@ -8,8 +8,8 @@ using UnityEngine.TestTools;
 
 // 1. Is DidPerformInTick() valid everywhere?
 // 1. Is IsRetrying() valid everywhere?
+// 1. Is IsPerforming() valid everywhere?
 // 1. Is IsOngoing() valid everywhere?
-// 1. Is IsActive() valid everywhere?
 // 1. Is IsEnabled() valid in every combination?
 // 1. Is IsBlocked() valid in every combination?
 
@@ -241,10 +241,126 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
+    public IEnumerator IsPerformingValid()
+    {
+        // Prerequisites
+        var theaterGO = new GameObject("Misc Performing Theater");
+        var theater = theaterGO.AddComponent<Theater>();
+        var prologueAct = new Act();
+        prologueAct.Init("Prologue Act");
+
+        bool performingInPreSetup = false;
+        bool performingInPostSetup = false;
+        bool performingInPerformStart = false;
+        bool performingInPrePrologue = false;
+        bool performingInPrologueComplete = false;
+        bool performingInPostPrologue = false;
+        bool performingInPreEnter = false;
+        bool performingInPostEnter = false;
+        bool performingInPreTick = false;
+        bool performingInPostTick = false;
+        bool performingInPrePhysicsTick = false;
+        bool performingInPostPhysicsTick = false;
+        bool performingInPreLateTick = false;
+        bool performingInPostLateTick = false;
+        bool performingInPreExit = false;
+        bool performingInPostExit = false;
+        bool performingInPerformEnd = false;
+        bool performingInPreCleanup = false;
+        bool performingInPostCleanup = false;
+        bool performingInEnableChanged = false;
+        bool performingInBlockChanged = false;
+
+
+        // Perform Act
+        var act = new PerformingCheckAct();
+        act.OnPreSetup += (a) => { performingInPreSetup = a.IsPerforming(); };
+        act.OnPostSetup += (a) => { performingInPostSetup = a.IsPerforming(); };
+        act.OnPerformStart += (a) => { performingInPerformStart = a.IsPerforming(); };
+        act.OnPrePrologue += (a) => { performingInPrePrologue = a.IsPerforming(); };
+        act.OnPrologueComplete += (a, pAct, pOutcome) => { performingInPrologueComplete = a.IsPerforming(); };
+        act.OnPostPrologue += (a) => { performingInPostPrologue = a.IsPerforming(); };
+        act.OnPreEnter += (a) => { performingInPreEnter = a.IsPerforming(); };
+        act.OnPostEnter += (a) => { performingInPostEnter = a.IsPerforming(); };
+        act.OnPreTick += (a) => { performingInPreTick = a.IsPerforming(); };
+        act.OnPostTick += (a) => { performingInPostTick = a.IsPerforming(); };
+        act.OnPrePhysicsTick += (a) => { performingInPrePhysicsTick = a.IsPerforming(); };
+        act.OnPostPhysicsTick += (a) => { performingInPostPhysicsTick = a.IsPerforming(); };
+        act.OnPreLateTick += (a) => { performingInPreLateTick = a.IsPerforming(); };
+        act.OnPostLateTick += (a) => { performingInPostLateTick = a.IsPerforming(); };
+        act.OnPreExit += (a) => { performingInPreExit = a.IsPerforming(); };
+        act.OnPostExit += (a) => { performingInPostExit = a.IsPerforming(); };
+        act.OnPerformEnd += (a) => { performingInPerformEnd = a.IsPerforming(); };
+        act.OnPreCleanup += (a) => { performingInPreCleanup = a.IsPerforming(); };
+        act.OnPostCleanup += (a) => { performingInPostCleanup = a.IsPerforming(); };
+        act.OnEnableChanged += (a, newIsEnabled) => { performingInEnableChanged = a.IsPerforming(); };
+        act.OnBlockChanged += (a, blockingAct, blockType, didBlock) => { performingInBlockChanged = a.IsPerforming(); };
+        act.prologue += (a) => new() { prologueAct };
+        act.Init("Misc Performing Act", theater);
+
+        act.Perform();
+
+        yield return new WaitForFixedUpdate();
+        yield return new WaitForFixedUpdate();
+        yield return null;
+        yield return null;
+
+        act.ForceFinish();
+        var performingAfterFinish = act.IsPerforming();
+
+        act.Deinit();
+
+
+        // Assertions
+        Assert.IsTrue(!performingInPreSetup, "IsPerforming() true in OnPreSetup!");
+        Assert.IsTrue(!act.performingInSetup, "IsPerforming() true in Setup()!");
+        Assert.IsTrue(!performingInPostSetup, "IsPerforming() true in OnPostSetup!");
+
+        Assert.IsTrue(performingInPerformStart, "IsPerforming() false in OnPerformStart!");
+        Assert.IsTrue(performingInPrePrologue, "IsPerforming() false in OnPrePrologue!");
+        Assert.IsTrue(performingInPrologueComplete, "IsPerforming() false in OnPrologueComplete!");
+        Assert.IsTrue(performingInPostPrologue, "IsPerforming() false in OnPostPrologue!");
+
+        Assert.IsTrue(performingInPreEnter, "IsPerforming() false in OnPreEnter!");
+        Assert.IsTrue(act.performingInEnter, "IsPerforming() false in Enter()!");
+        Assert.IsTrue(performingInPostEnter, "IsPerforming() false in OnPostEnter!");
+
+        Assert.IsTrue(performingInPreTick, "IsPerforming() false in OnPreTick!");
+        Assert.IsTrue(act.performingInTick, "IsPerforming() false in Tick()!");
+        Assert.IsTrue(performingInPostTick, "IsPerforming() false in OnPostTick!");
+
+        Assert.IsTrue(performingInPrePhysicsTick, "IsPerforming() false in OnPrePhysicsTick!");
+        Assert.IsTrue(act.performingInPhysicsTick, "IsPerforming() false in PhysicsTick()!");
+        Assert.IsTrue(performingInPostPhysicsTick, "IsPerforming() false in OnPostPhysicsTick!");
+
+        Assert.IsTrue(performingInPreLateTick, "IsPerforming() false in OnPreLateTick!");
+        Assert.IsTrue(act.performingInLateTick, "IsPerforming() false in LateTick()!");
+        Assert.IsTrue(performingInPostLateTick, "IsPerforming() false in OnPostLateTick!");
+
+        Assert.IsTrue(performingInPreExit, "IsPerforming() false in OnPreExit!");
+        Assert.IsTrue(act.performingInExit, "IsPerforming() false in Exit()!");
+        Assert.IsTrue(performingInPostExit, "IsPerforming() false in OnPostExit!");
+
+        Assert.IsTrue(!performingInPerformEnd, "IsPerforming() true in OnPerformEnd!");
+
+        Assert.IsTrue(!performingAfterFinish, "IsPerforming() true even after act has finished perform!");
+
+        Assert.IsTrue(!performingInPreCleanup, "IsPerforming() true in OnPreCleanup!");
+        Assert.IsTrue(!act.performingInCleanup, "IsPerforming() true in Cleanup()!");
+        Assert.IsTrue(!performingInPostCleanup, "IsPerforming() true in OnPostCleanup!");
+
+        Assert.IsTrue(!performingInEnableChanged, "IsPerforming() true in OnEnableChanged!");
+        Assert.IsTrue(!performingInBlockChanged, "IsPerforming() true in OnBlockChanged!");
+
+        UnityEngine.Object.Destroy(theaterGO);
+
+        yield return null;
+    }
+    [UnityTest]
     public IEnumerator IsOngoingValid()
     {
         // Prerequisites
-        var theaterGO = new GameObject("Misc Ongoing Theater");
+        var theaterGO = new GameObject("Misc Theater");
         var theater = theaterGO.AddComponent<Theater>();
         var prologueAct = new Act();
         prologueAct.Init("Prologue Act");
@@ -316,10 +432,10 @@ public class ActMiscTests
         Assert.IsTrue(!act.ongoingInSetup, "IsOngoing() true in Setup()!");
         Assert.IsTrue(!ongoingInPostSetup, "IsOngoing() true in OnPostSetup!");
 
-        Assert.IsTrue(ongoingInPerformStart, "IsOngoing() false in OnPerformStart!");
-        Assert.IsTrue(ongoingInPrePrologue, "IsOngoing() false in OnPrePrologue!");
-        Assert.IsTrue(ongoingInPrologueComplete, "IsOngoing() false in OnPrologueComplete!");
-        Assert.IsTrue(ongoingInPostPrologue, "IsOngoing() false in OnPostPrologue!");
+        Assert.IsTrue(!ongoingInPerformStart, "IsOngoing() true in OnPerformStart!");
+        Assert.IsTrue(!ongoingInPrePrologue, "IsOngoing() true in OnPrePrologue!");
+        Assert.IsTrue(!ongoingInPrologueComplete, "IsOngoing() true in OnPrologueComplete!");
+        Assert.IsTrue(!ongoingInPostPrologue, "IsOngoing() true in OnPostPrologue!");
 
         Assert.IsTrue(ongoingInPreEnter, "IsOngoing() false in OnPreEnter!");
         Assert.IsTrue(act.ongoingInEnter, "IsOngoing() false in Enter()!");
@@ -351,122 +467,6 @@ public class ActMiscTests
 
         Assert.IsTrue(!ongoingInEnableChanged, "IsOngoing() true in OnEnableChanged!");
         Assert.IsTrue(!ongoingInBlockChanged, "IsOngoing() true in OnBlockChanged!");
-
-        UnityEngine.Object.Destroy(theaterGO);
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator IsActiveValid()
-    {
-        // Prerequisites
-        var theaterGO = new GameObject("Misc Active Theater");
-        var theater = theaterGO.AddComponent<Theater>();
-        var prologueAct = new Act();
-        prologueAct.Init("Prologue Act");
-
-        bool activeInPreSetup = false;
-        bool activeInPostSetup = false;
-        bool activeInPerformStart = false;
-        bool activeInPrePrologue = false;
-        bool activeInPrologueComplete = false;
-        bool activeInPostPrologue = false;
-        bool activeInPreEnter = false;
-        bool activeInPostEnter = false;
-        bool activeInPreTick = false;
-        bool activeInPostTick = false;
-        bool activeInPrePhysicsTick = false;
-        bool activeInPostPhysicsTick = false;
-        bool activeInPreLateTick = false;
-        bool activeInPostLateTick = false;
-        bool activeInPreExit = false;
-        bool activeInPostExit = false;
-        bool activeInPerformEnd = false;
-        bool activeInPreCleanup = false;
-        bool activeInPostCleanup = false;
-        bool activeInEnableChanged = false;
-        bool activeInBlockChanged = false;
-
-
-        // Perform Act
-        var act = new ActiveCheckAct();
-        act.OnPreSetup += (a) => { activeInPreSetup = a.IsActive(); };
-        act.OnPostSetup += (a) => { activeInPostSetup = a.IsActive(); };
-        act.OnPerformStart += (a) => { activeInPerformStart = a.IsActive(); };
-        act.OnPrePrologue += (a) => { activeInPrePrologue = a.IsActive(); };
-        act.OnPrologueComplete += (a, pAct, pOutcome) => { activeInPrologueComplete = a.IsActive(); };
-        act.OnPostPrologue += (a) => { activeInPostPrologue = a.IsActive(); };
-        act.OnPreEnter += (a) => { activeInPreEnter = a.IsActive(); };
-        act.OnPostEnter += (a) => { activeInPostEnter = a.IsActive(); };
-        act.OnPreTick += (a) => { activeInPreTick = a.IsActive(); };
-        act.OnPostTick += (a) => { activeInPostTick = a.IsActive(); };
-        act.OnPrePhysicsTick += (a) => { activeInPrePhysicsTick = a.IsActive(); };
-        act.OnPostPhysicsTick += (a) => { activeInPostPhysicsTick = a.IsActive(); };
-        act.OnPreLateTick += (a) => { activeInPreLateTick = a.IsActive(); };
-        act.OnPostLateTick += (a) => { activeInPostLateTick = a.IsActive(); };
-        act.OnPreExit += (a) => { activeInPreExit = a.IsActive(); };
-        act.OnPostExit += (a) => { activeInPostExit = a.IsActive(); };
-        act.OnPerformEnd += (a) => { activeInPerformEnd = a.IsActive(); };
-        act.OnPreCleanup += (a) => { activeInPreCleanup = a.IsActive(); };
-        act.OnPostCleanup += (a) => { activeInPostCleanup = a.IsActive(); };
-        act.OnEnableChanged += (a, newIsEnabled) => { activeInEnableChanged = a.IsActive(); };
-        act.OnBlockChanged += (a, blockingAct, blockType, didBlock) => { activeInBlockChanged = a.IsActive(); };
-        act.prologue += (a) => new() { prologueAct };
-        act.Init("Misc Active Act", theater);
-
-        act.Perform();
-
-        yield return new WaitForFixedUpdate();
-        yield return new WaitForFixedUpdate();
-        yield return null;
-        yield return null;
-
-        act.ForceFinish();
-        var activeAfterFinish = act.IsActive();
-
-        act.Deinit();
-
-
-        // Assertions
-        Assert.IsTrue(!activeInPreSetup, "IsActive() true in OnPreSetup!");
-        Assert.IsTrue(!act.activeInSetup, "IsActive() true in Setup()!");
-        Assert.IsTrue(!activeInPostSetup, "IsActive() true in OnPostSetup!");
-
-        Assert.IsTrue(!activeInPerformStart, "IsActive() true in OnPerformStart!");
-        Assert.IsTrue(!activeInPrePrologue, "IsActive() true in OnPrePrologue!");
-        Assert.IsTrue(!activeInPrologueComplete, "IsActive() true in OnPrologueComplete!");
-        Assert.IsTrue(!activeInPostPrologue, "IsActive() true in OnPostPrologue!");
-
-        Assert.IsTrue(activeInPreEnter, "IsActive() false in OnPreEnter!");
-        Assert.IsTrue(act.activeInEnter, "IsActive() false in Enter()!");
-        Assert.IsTrue(activeInPostEnter, "IsActive() false in OnPostEnter!");
-
-        Assert.IsTrue(activeInPreTick, "IsActive() false in OnPreTick!");
-        Assert.IsTrue(act.activeInTick, "IsActive() false in Tick()!");
-        Assert.IsTrue(activeInPostTick, "IsActive() false in OnPostTick!");
-
-        Assert.IsTrue(activeInPrePhysicsTick, "IsActive() false in OnPrePhysicsTick!");
-        Assert.IsTrue(act.activeInPhysicsTick, "IsActive() false in PhysicsTick()!");
-        Assert.IsTrue(activeInPostPhysicsTick, "IsActive() false in OnPostPhysicsTick!");
-
-        Assert.IsTrue(activeInPreLateTick, "IsActive() false in OnPreLateTick!");
-        Assert.IsTrue(act.activeInLateTick, "IsActive() false in LateTick()!");
-        Assert.IsTrue(activeInPostLateTick, "IsActive() false in OnPostLateTick!");
-
-        Assert.IsTrue(activeInPreExit, "IsActive() false in OnPreExit!");
-        Assert.IsTrue(act.activeInExit, "IsActive() false in Exit()!");
-        Assert.IsTrue(activeInPostExit, "IsActive() false in OnPostExit!");
-
-        Assert.IsTrue(!activeInPerformEnd, "IsActive() true in OnPerformEnd!");
-
-        Assert.IsTrue(!activeAfterFinish, "IsActive() true even after act has finished perform!");
-
-        Assert.IsTrue(!activeInPreCleanup, "IsActive() true in OnPreCleanup!");
-        Assert.IsTrue(!act.activeInCleanup, "IsActive() true in Cleanup()!");
-        Assert.IsTrue(!activeInPostCleanup, "IsActive() true in OnPostCleanup!");
-
-        Assert.IsTrue(!activeInEnableChanged, "IsActive() true in OnEnableChanged!");
-        Assert.IsTrue(!activeInBlockChanged, "IsActive() true in OnBlockChanged!");
 
         UnityEngine.Object.Destroy(theaterGO);
 

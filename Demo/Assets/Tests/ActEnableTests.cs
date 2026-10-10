@@ -71,7 +71,7 @@ public class ActEnableTests
         blockerAct.Perform();
 
 
-        // Block act using ongoing blocker
+        // Block act using performing blocker
         blockerAct.AddToBlock(new List<Act> { act });
 
 
@@ -99,16 +99,16 @@ public class ActEnableTests
         act.Init("Test Act");
         act.Perform();
 
-        var wasOngoing = act.IsOngoing();
+        var wasPerforming = act.IsPerforming();
 
         act.SetEnabled(false);
 
-        var isOngoingAfterDisable = act.IsOngoing();
+        var isPerformingAfterDisable = act.IsPerforming();
 
 
         // Assertions
-        Assert.IsTrue(wasOngoing, "Act was not ongoing before disable!");
-        Assert.IsFalse(isOngoingAfterDisable, "Act was not aborted on disable!");
+        Assert.IsTrue(wasPerforming, "Act was not performing before disable!");
+        Assert.IsFalse(isPerformingAfterDisable, "Act was not aborted on disable!");
 
 
         yield return null;

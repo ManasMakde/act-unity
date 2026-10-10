@@ -18,7 +18,7 @@ using UnityEngine.TestTools;
 // 1. Does AbortAll() abort all acts?
 // 1. Can all acts perform after AbortAll() is invoked?
 
-// 1. Does AreAnyOngoing() return correct state?
+// 1. Does AreAnyPerforming() return correct state?
 // 1. Does GetAllActs() return all acts assigned to theater?
 
 
@@ -144,7 +144,7 @@ public class TheaterTests
 
 
         // Assertions
-        Assert.IsTrue(invokeCount == 0, $"OnAllPerformEnd invoked despite one act still ongoing! Invoke Count='{invokeCount}'");
+        Assert.IsTrue(invokeCount == 0, $"OnAllPerformEnd invoked despite one act still performing! Invoke Count='{invokeCount}'");
 
         // Finish second act
         actB.ManualFinish();
@@ -210,9 +210,9 @@ public class TheaterTests
 
 
         // Assertions
-        Assert.IsTrue(!actA.IsOngoing(), "Act A still ongoing despite theater being disabled!");
-        Assert.IsTrue(!actB.IsOngoing(), "Act B still ongoing despite theater being disabled!");
-        Assert.IsTrue(!actC.IsOngoing(), "Act C still ongoing despite theater being disabled!");
+        Assert.IsTrue(!actA.IsPerforming(), "Act A still performing despite theater being disabled!");
+        Assert.IsTrue(!actB.IsPerforming(), "Act B still performing despite theater being disabled!");
+        Assert.IsTrue(!actC.IsPerforming(), "Act C still performing despite theater being disabled!");
 
         yield return null;
     }
@@ -241,9 +241,9 @@ public class TheaterTests
 
 
         // Assertions
-        Assert.IsTrue(!actA.IsOngoing(), "Act A is ongoing despite theater being disabled!");
-        Assert.IsTrue(!actB.IsOngoing(), "Act B is ongoing despite theater being disabled!");
-        Assert.IsTrue(!actC.IsOngoing(), "Act C is ongoing despite theater being disabled!");
+        Assert.IsTrue(!actA.IsPerforming(), "Act A is performing despite theater being disabled!");
+        Assert.IsTrue(!actB.IsPerforming(), "Act B is performing despite theater being disabled!");
+        Assert.IsTrue(!actC.IsPerforming(), "Act C is performing despite theater being disabled!");
 
         yield return null;
     }
@@ -280,9 +280,9 @@ public class TheaterTests
 
 
         // Assertions
-        Assert.IsTrue(!actA.IsOngoing(), "Act A still ongoing despite AbortAll() being invoked!");
-        Assert.IsTrue(!actB.IsOngoing(), "Act B still ongoing despite AbortAll() being invoked!");
-        Assert.IsTrue(!actC.IsOngoing(), "Act C still ongoing despite AbortAll() being invoked!");
+        Assert.IsTrue(!actA.IsPerforming(), "Act A still performing despite AbortAll() being invoked!");
+        Assert.IsTrue(!actB.IsPerforming(), "Act B still performing despite AbortAll() being invoked!");
+        Assert.IsTrue(!actC.IsPerforming(), "Act C still performing despite AbortAll() being invoked!");
 
         yield return null;
     }
@@ -317,9 +317,9 @@ public class TheaterTests
 
 
         // Assertions
-        Assert.IsTrue(actA.IsOngoing(), "Act A did not perform after AbortAll() was invoked!");
-        Assert.IsTrue(actB.IsOngoing(), "Act B did not perform after AbortAll() was invoked!");
-        Assert.IsTrue(actC.IsOngoing(), "Act C did not perform after AbortAll() was invoked!");
+        Assert.IsTrue(actA.IsPerforming(), "Act A did not perform after AbortAll() was invoked!");
+        Assert.IsTrue(actB.IsPerforming(), "Act B did not perform after AbortAll() was invoked!");
+        Assert.IsTrue(actC.IsPerforming(), "Act C did not perform after AbortAll() was invoked!");
 
         yield return null;
     }
@@ -327,9 +327,9 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator AreAnyOngoing()
+    public IEnumerator AreAnyPerforming()
     {
-        // All acts ongoing
+        // All acts performing
         {
             // Setup Theater
             var theaterObj = new GameObject("Test Theater");
@@ -350,10 +350,10 @@ public class TheaterTests
 
 
             // Assertions
-            Assert.IsTrue(theater.AreAnyOngoing(), "AreAnyOngoing() is false despite all acts ongoing!");
+            Assert.IsTrue(theater.AreAnyPerforming(), "AreAnyPerforming() is false despite all acts performing!");
         }
 
-        // One act ongoing rest not
+        // One act performing rest not
         {
             // Setup Theater
             var theaterObj = new GameObject("Test Theater");
@@ -376,10 +376,10 @@ public class TheaterTests
 
 
             // Assertions
-            Assert.IsTrue(theater.AreAnyOngoing(), "AreAnyOngoing() is false despite one act still ongoing!");
+            Assert.IsTrue(theater.AreAnyPerforming(), "AreAnyPerforming() is false despite one act still performing!");
         }
 
-        // No acts ongoing
+        // No acts performing
         {
             // Setup Theater
             var theaterObj = new GameObject("Test Theater");
@@ -403,7 +403,7 @@ public class TheaterTests
 
 
             // Assertions
-            Assert.IsFalse(theater.AreAnyOngoing(), "AreAnyOngoing() is true despite no acts ongoing!");
+            Assert.IsFalse(theater.AreAnyPerforming(), "AreAnyPerforming() is true despite no acts performing!");
         }
 
         yield return null;

@@ -11,14 +11,14 @@ using UnityEngine.TestTools;
 // 1. Does perform fail when act disabled?
 // 1. Does perform fail when theater disabled?
 // 1. Does perform fail when act blocked?
-// 1. Does perform fail when already ongoing and cannot reperform?
+// 1. Does perform fail when already performing and cannot reperform?
 // 1. Does perform fail when external condition is false?
 // 1. Does perform fail when overriden CanPerform() is false?
 // 1. Does perform fail when called while exiting?
 
 // 1. Does perform succeed when act enabled?
 // 1. Does perform succeed when theater enabled?
-// 1. Does perform succeed when already ongoing and can reperform?
+// 1. Does perform succeed when already performing and can reperform?
 // 1. Does perform succeed when external condition is true?
 // 1. Does perform succeed when overriden CanPerform() is true?
 
@@ -171,7 +171,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsFalse(act.IsOngoing(), "Act performed despite theater being disabled!");
+        Assert.IsFalse(act.IsPerforming(), "Act performed despite theater being disabled!");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -181,7 +181,7 @@ public class ActPerformTests
     public IEnumerator PerformWhenBlocked()
     {
         // Perform First Block Later
-        bool isOngoing_PFBL = false;
+        bool isPerforming_PFBL = false;
         bool isBlocked_PFBL = false;
         {
             var act = new WaitInfiniAct();
@@ -193,13 +193,13 @@ public class ActPerformTests
             blockingAct.AddToBlock(new() { act });
             blockingAct.Perform();
 
-            isOngoing_PFBL = act.IsOngoing();
+            isPerforming_PFBL = act.IsPerforming();
             isBlocked_PFBL = act.IsBlocked();
         }
 
 
         // Block First Perform Later
-        bool isOngoing_BFPL = false;
+        bool isPerforming_BFPL = false;
         bool isBlocked_BFPL = false;
         {
             var act = new WaitInfiniAct();
@@ -213,15 +213,15 @@ public class ActPerformTests
             act.Perform();
 
 
-            isOngoing_BFPL = act.IsOngoing();
+            isPerforming_BFPL = act.IsPerforming();
             isBlocked_BFPL = act.IsBlocked();
         }
 
 
         // Assertions
-        Assert.IsTrue(!isOngoing_PFBL, "Act is ongoing despite being blocked (Perform First Block Later)!");
+        Assert.IsTrue(!isPerforming_PFBL, "Act is performing despite being blocked (Perform First Block Later)!");
         Assert.IsTrue(isBlocked_PFBL, "Act is unblocked despite being blocked (Perform First Block Later)!");
-        Assert.IsTrue(!isOngoing_BFPL, "Act is ongoing despite being blocked (Block First Perform Later)!");
+        Assert.IsTrue(!isPerforming_BFPL, "Act is performing despite being blocked (Block First Perform Later)!");
         Assert.IsTrue(isBlocked_BFPL, "Act is unblocked despite being blocked (Block First Perform Later)!");
 
         yield return null;
@@ -258,7 +258,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(!act.IsOngoing(), "Act performed despite external condition being false!");
+        Assert.IsTrue(!act.IsPerforming(), "Act performed despite external condition being false!");
 
 
         yield return null;
@@ -273,7 +273,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(!act.IsOngoing(), "Act performed despite CanPerform() being false!");
+        Assert.IsTrue(!act.IsPerforming(), "Act performed despite CanPerform() being false!");
 
 
         yield return null;
@@ -292,7 +292,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.IsOngoing(), "Act did not perform despite being enabled!");
+        Assert.IsTrue(act.IsPerforming(), "Act did not perform despite being enabled!");
 
 
         yield return null;
@@ -312,7 +312,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.IsOngoing(), "Act did not perform despite theater being enabled!");
+        Assert.IsTrue(act.IsPerforming(), "Act did not perform despite theater being enabled!");
 
 
         UnityEngine.Object.Destroy(theater.gameObject);
@@ -350,7 +350,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.IsOngoing(), "Act did not perform despite external condition being true!");
+        Assert.IsTrue(act.IsPerforming(), "Act did not perform despite external condition being true!");
 
 
         yield return null;
@@ -412,7 +412,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPreSetup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act did not perform exactly once from OnPreSetup! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;
@@ -430,7 +430,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 1, $"Act performed from OnPostSetup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act did not perform exactly once from OnPostSetup! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;
@@ -918,7 +918,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, $"Act performed from OnPreCleanup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act performed not exactly once from OnPreCleanup! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;
@@ -937,7 +937,7 @@ public class ActPerformTests
 
 
         // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 1, $"Act performed from OnPostCleanup! Perform Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act performed not exactly once from OnPostCleanup! Perform Count={act.GetPerformCount()}");
 
 
         yield return null;
