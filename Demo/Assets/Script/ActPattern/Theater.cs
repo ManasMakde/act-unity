@@ -30,7 +30,7 @@ public class Theater : MonoBehaviour
 {
     // Public Signals
     public event Action<Theater, bool> OnEnableChanged;
-    public event Action<Theater, Act, Act.Status /* prevStatus */, Act.Status /* newStatus */> OnActStatusChange;
+    public event Action<Theater, Act> OnActStatusChange;
 
 
     // Public Methods
@@ -172,7 +172,7 @@ public class Theater : MonoBehaviour
 
         _allActs.Remove(oldAct);
     }
-    private void ActStatusChange(Act act, Act.Status prevStatus, Act.Status newStatus)
+    private void ActStatusChange(Act act)
     {
         if (act.IsPerforming())
         {
@@ -183,7 +183,7 @@ public class Theater : MonoBehaviour
             _performingActs.Remove(act);
         }
 
-        OnActStatusChange?.Invoke(this, act, prevStatus, newStatus);
+        OnActStatusChange?.Invoke(this, act);
     }
     private void StageDeferred(Act act, Act.TickFlags flag)
     {
@@ -417,9 +417,9 @@ public class Theater : MonoBehaviour
         {
             theater.RemoveAct(oldAct);
         }
-        static public void ActStatusChange(Theater theater, Act act, Act.Status prevStatus, Act.Status newStatus)
+        static public void ActStatusChange(Theater theater, Act act)
         {
-            theater.ActStatusChange(act, prevStatus, newStatus);
+            theater.ActStatusChange(act);
         }
         static public void StageDeferred(Theater theater, Act act, Act.TickFlags flag)
         {

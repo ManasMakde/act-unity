@@ -41,8 +41,8 @@ public class BiterSpider : MonoBehaviour, IDamageable
     }
 
 
-    // Override Properties
-    void Update()
+    // Private Properties
+    private void UpdateAnimation()
     {
         // Return if any override animation playing
         if (damageAct.IsOngoing() || biteAct.IsOngoing())
@@ -57,14 +57,16 @@ public class BiterSpider : MonoBehaviour, IDamageable
             eventfulAnimator.Play(walkAnim);
         }
 
-
         // Idle
         else
         {
             eventfulAnimator.Play(idleAnim);
         }
     }
-    void Awake()
+
+
+    // Override Properties
+    void Start()
     {
         // Get Player
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -82,8 +84,13 @@ public class BiterSpider : MonoBehaviour, IDamageable
         eventfulAnimator = GetComponentInChildren<EventfulAnimator>();
 
 
+        // Play initial animation
+        UpdateAnimation();
+
+
         // Setup Acts
         theater = GetComponent<Theater>();
+        theater.OnActStatusChange += (Theater theater, Act act) => { UpdateAnimation(); };
 
         liveAct.prologue += (Act act) =>
         {

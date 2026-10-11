@@ -97,14 +97,6 @@ public class ShooterSpider : MonoBehaviour, IDamageable
     }
 
 
-    // Private Methods
-    private Vector2 GetLookDirection()  // current facing direction based on aimAct rotation
-    {
-        float rotationRad = aimAct.rb.rotation * Mathf.Deg2Rad;
-        return new Vector2(Mathf.Cos(rotationRad), Mathf.Sin(rotationRad));
-    }
-
-
     // Interface Methods
     public void TakeDamage(float amount)
     {
@@ -113,8 +105,13 @@ public class ShooterSpider : MonoBehaviour, IDamageable
     }
 
 
-    // Override Properties
-    void Update()
+    // Private Methods
+    private Vector2 GetLookDirection()  // current facing direction based on aimAct rotation
+    {
+        float rotationRad = aimAct.rb.rotation * Mathf.Deg2Rad;
+        return new Vector2(Mathf.Cos(rotationRad), Mathf.Sin(rotationRad));
+    }
+    private void UpdateAnimation()
     {
         // Return if any override animation playing
         if (damageAct.IsOngoing() || shootAct.IsOngoing())
@@ -136,12 +133,11 @@ public class ShooterSpider : MonoBehaviour, IDamageable
             eventfulAnimator.Play(idleAnim);
         }
     }
-    void Awake()
+
+
+    // Override Properties
+    void Start()
     {
-        // Setup Animator
-        eventfulAnimator = GetComponentInChildren<EventfulAnimator>();
-
-
         // Get Player
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
@@ -154,8 +150,17 @@ public class ShooterSpider : MonoBehaviour, IDamageable
         }
 
 
+        // Setup Animator
+        eventfulAnimator = GetComponentInChildren<EventfulAnimator>();
+
+
+        // Play initial animation
+        UpdateAnimation();
+
+
         // Setup Acts
         theater = GetComponent<Theater>();
+        theater.OnActStatusChange += (Theater theater, Act act) => { UpdateAnimation(); };
 
         liveAct.prologue += (Act act) =>
         {

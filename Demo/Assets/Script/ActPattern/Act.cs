@@ -293,6 +293,10 @@ public class Act
 	{
 		return _status;
 	}
+	public Status GetPrevStatus()
+	{
+		return _prevStatus;
+	}
 	public Outcome GetOutcome()
 	{
 		return _outcome;
@@ -690,9 +694,10 @@ public class Act
 			pAct._pendingEpilogueActs.Remove(ofAct);
 
 
-			// Recurse down, Incase Seq() linked stale acts that were never performed
+			// Recurse incase Seq() linked stale acts
 			if (pAct._epilogueActs.Count == 0)
 			{
+				pAct._hasPrecomputedPrologues = false;
 				ClearPrologueChain(pAct);
 			}
 		}
@@ -720,12 +725,15 @@ public class Act
 		}
 
 
+		// Store previous status & Assign new
 		_prevStatus = _status;
 		_status = newStatus;
 
+
+		// Let theater know act status has changed
 		if (_theater != null)
 		{
-			Theater.Friend.ActStatusChange(_theater, this, _prevStatus, _status);
+			Theater.Friend.ActStatusChange(_theater, this);
 		}
 	}
 	private bool CanPerformImpl(bool isRetrying = false)
@@ -1371,10 +1379,6 @@ public class Act
 		static public TickFlags GetTickFlags(Act act)
 		{
 			return act._tickFlags;
-		}
-		static public Status GetPrevStatus(Act act)
-		{
-			return act._prevStatus;
 		}
 		static public HashSet<Act> GetEpilogueActs(Act act)
 		{
