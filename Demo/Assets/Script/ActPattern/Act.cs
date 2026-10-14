@@ -155,12 +155,19 @@ public class Act
 			}
 
 
+			// Unblock if type changed to interrupted
+			if (IsPerforming() && _actsToBlock.ContainsKey(bAct) && blockType == BlockType.Interrupt)
+			{
+				bAct.UnblockSelf(this);
+			}
+
+
 			// Add to block list
 			_actsToBlock[bAct] = blockType;
 
 
-			// Block if performing
-			if (IsPerforming())
+			// Persistent block if performing
+			if (IsPerforming() && blockType == BlockType.Persistent)
 			{
 				bAct.BlockSelf(this, blockType);
 			}
@@ -279,7 +286,7 @@ public class Act
 	}
 	public GameObject GetOwner()
 	{
-		return _theater?.gameObject;
+		return _theater != null ? _theater.gameObject : null;
 	}
 	public HashSet<Act> GetBlockedByActs()
 	{
@@ -442,15 +449,15 @@ public class Act
 		}
 
 
-		// Finish interrupted incase performing
-		Finish(Outcome.Interrupted);
-
-
 		// Add to blocked by list if persistent
 		if (blockType == BlockType.Persistent)
 		{
 			_blockedByActs.Add(byAct);
 		}
+
+
+		// Finish interrupted incase performing
+		Finish(Outcome.Interrupted);
 
 
 		// Broadcast blocked
@@ -484,23 +491,6 @@ public class Act
 		if (byAct != this)
 		{
 			OnBlockChanged?.Invoke(this, byAct, BlockType.Persistent, false);
-		}
-	}
-	protected virtual void BlockOthers()
-	{
-		foreach (Act act in _actsToBlock.Keys)
-		{
-			act.BlockSelf(this, _actsToBlock[act]);
-		}
-	}
-	protected virtual void UnblockOthers()
-	{
-		foreach (Act act in _actsToBlock.Keys)
-		{
-			if (_actsToBlock[act] == BlockType.Persistent)
-			{
-				act.UnblockSelf(this);
-			}
 		}
 	}
 	protected virtual void WriteLog(string message, string overrideName = "")
@@ -862,9 +852,12 @@ public class Act
 		}
 
 
-		// Block
-		BlockOthers();
-		if (_status != Status.Prologuing) { return; }  // Guard
+		// Block Others
+		foreach (Act act in _actsToBlock.Keys)
+		{
+			act.BlockSelf(this, _actsToBlock[act]);
+			if (_status != Status.Prologuing) { return; }  // Guard
+		}
 
 
 		// Skip if no prologues
@@ -1167,7 +1160,6 @@ public class Act
 		// Cleanup prologues
 		FinishPrologues(this, _outcome == Outcome.Retry ? Outcome.Interrupted : _outcome);  // Set outcome to iterrupted incase retrying
 		ClearPrologueChain(this);
-		_epilogueActs.Clear();
 		_prologueActs.Clear();
 		_pendingPrologueActs.Clear();
 		_completedPrologueActs.Clear();
@@ -1189,8 +1181,15 @@ public class Act
 		}
 
 
-		// Unblock
-		UnblockOthers();
+		// Cleanup epilogues
+		_epilogueActs.Clear();
+
+
+		// Unblock others
+		foreach (Act act in _actsToBlock.Keys)
+		{
+			act.UnblockSelf(this);
+		}
 
 
 		// Redirect to None

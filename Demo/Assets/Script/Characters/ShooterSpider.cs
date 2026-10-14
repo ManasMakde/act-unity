@@ -113,6 +113,13 @@ public class ShooterSpider : MonoBehaviour, IDamageable
     }
     private void UpdateAnimation()
     {
+        // Return if animator object inactive
+        if (!eventfulAnimator.gameObject.activeInHierarchy)
+        {
+            return;
+        }
+
+
         // Return if any override animation playing
         if (damageAct.IsOngoing() || shootAct.IsOngoing())
         {

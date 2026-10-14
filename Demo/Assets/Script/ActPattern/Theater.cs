@@ -404,6 +404,10 @@ public class Theater : MonoBehaviour
         TickActs(ref _stagedLateTickActs, ref _actsToLateTick, _lateTickFilterList, Act.TickFlags.LateTick);
         DeferActs(ref _stagedDeferActs, ref _actsToDefer, _deferFilterList, Act.TickFlags.LateTick);
     }
+    private void OnDestroy()
+    {
+        AbortAll();
+    }
 
 
     // Friend Class
