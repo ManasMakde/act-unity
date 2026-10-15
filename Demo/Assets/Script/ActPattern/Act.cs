@@ -216,32 +216,6 @@ public class Act
 		// Broadcast enabled disabled
 		OnEnableChanged?.Invoke(this, IsEnabled());
 	}
-	public bool DidPerformInTick(TickFlags tickFlag = TickFlags.PhysicsTick)
-	{
-		// Return false if no flag provided
-		if (tickFlag == TickFlags.None)
-		{
-			return false;
-		}
-
-
-		// Check based on tick types
-		var hasPerformed = false;
-		if ((tickFlag & TickFlags.Tick) != 0)
-		{
-			hasPerformed = hasPerformed || _performedOnTick == Time.frameCount;
-		}
-		if ((tickFlag & TickFlags.PhysicsTick) != 0)
-		{
-			hasPerformed = hasPerformed || _performedOnPhysicsTick == Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
-		}
-		if ((tickFlag & TickFlags.LateTick) != 0)
-		{
-			hasPerformed = hasPerformed || _performedOnLateTick == Time.frameCount;
-		}
-
-		return hasPerformed;
-	}
 	public bool HasInitialized()
 	{
 		return _hasInitialized;
@@ -280,6 +254,10 @@ public class Act
 	{
 		return (_tickFlags & type) != 0;
 	}
+	public TickFlags GetTickFlags()
+	{
+		return _tickFlags;
+	}
 	public Theater GetTheater()
 	{
 		return _theater;
@@ -307,6 +285,10 @@ public class Act
 	public Outcome GetOutcome()
 	{
 		return _outcome;
+	}
+	public int GetLifetimePerformCount()
+	{
+		return _lifetimePerformCount;
 	}
 	public int GetPerformCount()
 	{
@@ -531,18 +513,11 @@ public class Act
 	private bool _isRetrying = false;
 	private bool _hasPrecomputedPrologues = false;
 
+	private int _lifetimePerformCount = 0;
 	private int _performCount = 0;
 	private int _tickCount = 0;
 	private int _physicsTickCount = 0;
 	private int _lateTickCount = 0;
-
-	private int _tickReqCount = 0;
-	private int _physicsTickReqCount = 0;
-	private int _lateTickReqCount = 0;
-
-	private int _performedOnTick = -1;
-	private int _performedOnPhysicsTick = -1;
-	private int _performedOnLateTick = -1;
 
 	private static void LinkPrologueArrays(List<Act> arrayB, List<Act> arrayA)
 	{
@@ -811,11 +786,9 @@ public class Act
 		Finish(Outcome.Interrupted);
 
 
-		// Store during which tick act was performed
+		// Increment perform count & lifetime perform count
 		_performCount++;
-		_performedOnTick = Time.frameCount;
-		_performedOnPhysicsTick = Mathf.RoundToInt(Time.fixedTime / Time.fixedDeltaTime);
-		_performedOnLateTick = Time.frameCount;
+		_lifetimePerformCount++;
 
 
 		// Clear deferred
@@ -1038,23 +1011,23 @@ public class Act
 		_tickCount++;
 
 
-		// Save tick request count
-		int currTickReqCount = _tickReqCount;
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
 
 
 		// Broadcast pre tick
 		OnPreTick?.Invoke(this);
-		if (_status != Status.Ticking || currTickReqCount != _tickReqCount) { return; }   // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }   // Guard
 
 
 		// Core tick
 		var newOutcome = Tick();
-		if (_status != Status.Ticking || currTickReqCount != _tickReqCount) { return; }  // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Broadcast post tick
 		OnPostTick?.Invoke(this);
-		if (_status != Status.Ticking || currTickReqCount != _tickReqCount) { return; }  // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Check if exit was requested
@@ -1076,23 +1049,23 @@ public class Act
 		_physicsTickCount++;
 
 
-		// Save physics tick request count
-		int currPhysicsTickReqCount = _physicsTickReqCount;
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
 
 
 		// Broadcast pre physics tick
 		OnPrePhysicsTick?.Invoke(this);
-		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount) { return; }  // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Core tick
 		var newOutcome = PhysicsTick();
-		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount) { return; }  // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Broadcast post physics tick
 		OnPostPhysicsTick?.Invoke(this);
-		if (_status != Status.Ticking || currPhysicsTickReqCount != _physicsTickReqCount) { return; }  // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Check if exit was requested
@@ -1114,23 +1087,23 @@ public class Act
 		_lateTickCount++;
 
 
-		// Save late tick request count
-		int currLateTickReqCount = _lateTickReqCount;
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
 
 
 		// Broadcast pre late tick
 		OnPreLateTick?.Invoke(this);
-		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount) { return; }  // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Core tick
 		var newOutcome = LateTick();
-		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount) { return; }  // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Broadcast post late tick
 		OnPostLateTick?.Invoke(this);
-		if (_status != Status.Ticking || currLateTickReqCount != _lateTickReqCount) { return; }  // Guard
+		if (_status != Status.Ticking || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Check if exit was requested
@@ -1234,17 +1207,14 @@ public class Act
 			SetStatus(Status.Ticking);
 			if (CanTick(TickFlags.Tick))
 			{
-				_tickReqCount++;
 				Theater.Friend.StageTick(_theater, this);
 			}
 			if (CanTick(TickFlags.PhysicsTick))
 			{
-				_physicsTickReqCount++;
 				Theater.Friend.StagePhysicsTick(_theater, this);
 			}
 			if (CanTick(TickFlags.LateTick))
 			{
-				_lateTickReqCount++;
 				Theater.Friend.StageLateTick(_theater, this);
 			}
 		}
@@ -1351,11 +1321,8 @@ public class Act
 			}
 
 
-			// Reset performed on ticks & Mark as deinitialized
+			// Reset perform count & Mark as deinitialized
 			_performCount = 0;
-			_performedOnTick = -1;
-			_performedOnPhysicsTick = -1;
-			_performedOnLateTick = -1;
 			_hasInitialized = false;
 
 
@@ -1391,10 +1358,6 @@ public class Act
 		{
 			return act._canReperform;
 		}
-		static public TickFlags GetTickFlags(Act act)
-		{
-			return act._tickFlags;
-		}
 		static public HashSet<Act> GetEpilogueActs(Act act)
 		{
 			return act._epilogueActs;
@@ -1418,30 +1381,6 @@ public class Act
 		static public bool GetHasPrecomputedPrologues(Act act)
 		{
 			return act._hasPrecomputedPrologues;
-		}
-		static public int GetTickReqCount(Act act)
-		{
-			return act._tickReqCount;
-		}
-		static public int GetPhysicsTickReqCount(Act act)
-		{
-			return act._physicsTickReqCount;
-		}
-		static public int GetLateTickReqCount(Act act)
-		{
-			return act._lateTickReqCount;
-		}
-		static public int GetPerformedOnTick(Act act)
-		{
-			return act._performedOnTick;
-		}
-		static public int GetPerformedOnPhysicsTick(Act act)
-		{
-			return act._performedOnPhysicsTick;
-		}
-		static public int GetPerformedOnLateTick(Act act)
-		{
-			return act._performedOnLateTick;
 		}
 	}
 }
