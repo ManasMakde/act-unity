@@ -1,5 +1,7 @@
 // v0.4.0-alpha
 // 
+// MIT License
+//
 // Copyright (c) 2025-present Manas Ravindra Makde
 // 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
