@@ -783,6 +783,7 @@ public class Act
 	private bool PerformImpl(bool isRetrying = false)
 	{
 		// Store retrying status
+		var wasRetrying = _isRetrying;
 		_isRetrying = isRetrying;
 
 
@@ -801,6 +802,7 @@ public class Act
 		// Return if perform condition failed
 		if (!willPerform)
 		{
+			_isRetrying = wasRetrying;
 			return false;
 		}
 
@@ -831,6 +833,13 @@ public class Act
 	}
 	private void PrologueImpl()
 	{
+		// Guard
+		if (_status != Status.Prologuing)
+		{
+			return;
+		}
+
+
 		// Broadcast perform start
 		OnPerformStart?.Invoke(this);
 		if (_status != Status.Prologuing) { return; }  // Guard
@@ -968,6 +977,13 @@ public class Act
 	}
 	private void EnterImpl()
 	{
+		// Guard
+		if (_status != Status.Entering)
+		{
+			return;
+		}
+
+
 		// Broadcast pre enter
 		OnPreEnter?.Invoke(this);
 		if (_status != Status.Entering) { return; }  // Guard
@@ -1200,8 +1216,8 @@ public class Act
 		// None/Concluding -> prologue
 		if ((_status == Status.None || _status == Status.Concluding) && newStatus == Status.Prologuing)
 		{
-			SetStatus(Status.Prologuing);
 			_outcome = Outcome.Pending;
+			SetStatus(Status.Prologuing);
 			PrologueImpl();
 		}
 
@@ -1236,16 +1252,16 @@ public class Act
 		// Enter/Tick -> Exit
 		else if ((_status == Status.Entering || _status == Status.Ticking) && newStatus == Status.Exiting)
 		{
-			SetStatus(Status.Exiting);
 			_outcome = newOutcome;
+			SetStatus(Status.Exiting);
 			ExitImpl();
 		}
 
 		// Prologue/Exit -> Conclude
 		else if ((_status == Status.Prologuing || _status == Status.Exiting) && newStatus == Status.Concluding)
 		{
+			_outcome = _status == Status.Prologuing ? newOutcome : _outcome;
 			SetStatus(Status.Concluding);
-			_outcome = _prevStatus == Status.Prologuing ? newOutcome : _outcome;
 			ConcludingImpl();
 		}
 
