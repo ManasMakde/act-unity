@@ -801,7 +801,7 @@ public class Act
 
 
 		// Start prologuing
-		Redirect(Status.Prologuing);
+		Redirect(Status.Prologuing, isRetrying ? Outcome.Retry : Outcome.Pending);
 
 
 		return true;
@@ -1188,8 +1188,8 @@ public class Act
 	}
 	private void Redirect(Status newStatus, Outcome newOutcome = Outcome.Pending)
 	{
-		// None/Concluding -> prologue
-		if ((_status == Status.None || _status == Status.Concluding) && newStatus == Status.Prologuing)
+		// None/Retrying Conclude -> prologue
+		if ((_status == Status.None || (_status == Status.Concluding && newOutcome == Outcome.Retry)) && newStatus == Status.Prologuing)
 		{
 			_outcome = Outcome.Pending;
 			SetStatus(Status.Prologuing);
@@ -1261,7 +1261,7 @@ public class Act
 
 
 
-		// None/Deinitialize -> Initialize
+		// None -> Initialize
 		else if (_status == Status.None && newStatus == Status.Initializing && !_hasInitialized)
 		{
 			SetStatus(Status.Initializing);
@@ -1301,7 +1301,7 @@ public class Act
 			OnPostSetup?.Invoke(this);
 		}
 
-		// None/Initialize -> Deinitialize
+		// None -> Deinitialize
 		else if (_status == Status.None && newStatus == Status.Deinitializing && _hasInitialized)
 		{
 			SetStatus(Status.Deinitializing);
