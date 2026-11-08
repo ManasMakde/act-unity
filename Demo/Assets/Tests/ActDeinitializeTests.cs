@@ -125,7 +125,7 @@ public class ActDeinitializeTests
         // Perform Act
         var mainAct = new Act();
         mainAct.Init("Main Act");
-        mainAct.prologue = (a) => new() { prologueAct };
+        mainAct.prologue = (a) => new() { new() { prologueAct } };
         mainAct.Perform();
         prologueAct.Deinit();
 
@@ -167,13 +167,13 @@ public class ActDeinitializeTests
         var act = new WaitInfiniAct();
         act.Init("Test Act", theaterObj);
         act.Perform();
-        var wasInAllActs = theaterObj.GetAllActs().Contains(act);
+        var wasInAllActs = theaterObj.HasAct(act);
         act.Deinit();
 
 
         // Assertions
         Assert.IsTrue(wasInAllActs, "Act was never added to theater's allActs!");
-        Assert.IsFalse(theaterObj.GetAllActs().Contains(act), "Act still present in theater's allActs after Deinit()!");
+        Assert.IsFalse(theaterObj.HasAct(act), "Act still present in theater's allActs after Deinit()!");
         Assert.IsFalse(theaterObj.AreAnyPerforming(), "Theater still reports act as performing after Deinit()!");
 
 

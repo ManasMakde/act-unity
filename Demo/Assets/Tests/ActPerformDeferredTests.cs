@@ -440,7 +440,7 @@ public class ActPerformDeferredTests
 
         // Perform Act
         var act = new ReperformableAct();
-        act.prologue = (a) => new List<Act> { prologueAct };
+        act.prologue = (a) => new() { new() { prologueAct } };
         act.OnPrePrologue += (a) =>
         {
             if (act.GetPerformCount() <= 2)
@@ -485,7 +485,7 @@ public class ActPerformDeferredTests
 
         // Perform Act
         var act = new ReperformableAct();
-        act.prologue = (a) => new List<Act> { prologue1Act, prologue2Act };
+        act.prologue = (a) => new() { new() { prologue1Act, prologue2Act } };
         act.OnPrologueComplete += (a, pA, pO) =>
         {
             if (pO != Act.Outcome.Success)
@@ -532,7 +532,7 @@ public class ActPerformDeferredTests
 
         // Perform Act
         var act = new ReperformableAct();
-        act.prologue = (a) => new List<Act> { prologueAct };
+        act.prologue = (a) => new() { new() { prologueAct } };
         act.OnPostPrologue += (a) =>
         {
             if (act.GetPerformCount() <= 2)

@@ -178,12 +178,12 @@ public class ShooterSpider : MonoBehaviour, IDamageable
 
 
             // Wander to Random positions -> Aim -> Shoot -> Wait
-            return Act.Seq(new() {
+            return new() {
                 new() { wanderAct, lookAct },
                 new() { aimAct },
                 new() { shootAct },
                 new() { waitAct }
-            });
+            };
         };
         liveAct.Init("Live Act", theater);
 

@@ -27,7 +27,7 @@ public class ActPrologue2Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actA1, actA2 };
+        mainAct.prologue = (a) => new() { new() { actA1, actA2 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -61,7 +61,7 @@ public class ActPrologue2Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -95,23 +95,23 @@ public class ActPrologue2Tests
 
         var actB1 = new Act();
         actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { actA1, actA2 };
+        actB1.prologue = (a) => new() { new() { actA1, actA2 } };
         actB1.Init("ActB1");
 
         var actB2 = new Act();
         actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { actA1, actA2 };
+        actB2.prologue = (a) => new() { new() { actA1, actA2 } };
         actB2.Init("ActB2");
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actB1, actB2 };
+        mainAct.prologue = (a) => new() { new() { actB1, actB2 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
 
-        Assert.IsTrue(actA1.GetPerformCount() == 2, $"Instant: ActA1 did not perform exactly once, Perform Count={actA1.GetPerformCount()}");
-        Assert.IsTrue(actA2.GetPerformCount() == 2, $"Instant: ActA2 did not perform exactly once, Perform Count={actA2.GetPerformCount()}");
+        Assert.IsTrue(actA1.GetPerformCount() == 2, $"Instant: ActA1 did not perform exactly twice, Perform Count={actA1.GetPerformCount()}");
+        Assert.IsTrue(actA2.GetPerformCount() == 2, $"Instant: ActA2 did not perform exactly twice, Perform Count={actA2.GetPerformCount()}");
         Assert.IsTrue(actB1.GetPerformCount() == 1, $"Instant: ActB1 did not perform exactly once, Perform Count={actB1.GetPerformCount()}");
         Assert.IsTrue(actB2.GetPerformCount() == 1, $"Instant: ActB2 did not perform exactly once, Perform Count={actB2.GetPerformCount()}");
         Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
@@ -148,17 +148,17 @@ public class ActPrologue2Tests
 
         var actB1 = new SingleTickAct();
         actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { actA1, actA2 };
+        actB1.prologue = (a) => new() { new() { actA1, actA2 } };
         actB1.Init("ActB1", theater);
 
         var actB2 = new SingleTickAct();
         actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { actA1, actA2 };
+        actB2.prologue = (a) => new() { new() { actA1, actA2 } };
         actB2.Init("ActB2", theater);
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actB1, actB2 };
+        mainAct.prologue = (a) => new() { new() { actB1, actB2 } };
         mainAct.Init("MainAct", theater);
 
         mainAct.Perform();
@@ -211,7 +211,7 @@ public class ActPrologue2Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2 }, new() { actB1, actB2 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2 }, new() { actB1, actB2 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -262,7 +262,7 @@ public class ActPrologue2Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2 }, new() { actB1, actB2 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2 }, new() { actB1, actB2 } };
         mainAct.Init("MainAct", theater);
 
         mainAct.Perform();
@@ -307,35 +307,35 @@ public class ActPrologue2Tests
 
         var actB1 = new Act();
         actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { actA1, actA2 };
+        actB1.prologue = (a) => new() { new() { actA1, actA2 } };
         actB1.Init("ActB1");
 
         var actB2 = new Act();
         actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { actA1, actA2 };
+        actB2.prologue = (a) => new() { new() { actA1, actA2 } };
         actB2.Init("ActB2");
 
         var actC1 = new Act();
         actC1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC1.prologue = (a) => new() { actB1, actB2 };
+        actC1.prologue = (a) => new() { new() { actB1, actB2 } };
         actC1.Init("ActC1");
 
         var actC2 = new Act();
         actC2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC2.prologue = (a) => new() { actB1, actB2 };
+        actC2.prologue = (a) => new() { new() { actB1, actB2 } };
         actC2.Init("ActC2");
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actC1, actC2 };
+        mainAct.prologue = (a) => new() { new() { actC1, actC2 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
 
-        Assert.IsTrue(actA1.GetPerformCount() == 4, $"Instant: ActA1 did not perform exactly once, Perform Count={actA1.GetPerformCount()}");
-        Assert.IsTrue(actA2.GetPerformCount() == 4, $"Instant: ActA2 did not perform exactly once, Perform Count={actA2.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 2, $"Instant: ActB1 did not perform exactly once, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 2, $"Instant: ActB2 did not perform exactly once, Perform Count={actB2.GetPerformCount()}");
+        Assert.IsTrue(actA1.GetPerformCount() == 4, $"Instant: ActA1 did not perform exactly 4 times, Perform Count={actA1.GetPerformCount()}");
+        Assert.IsTrue(actA2.GetPerformCount() == 4, $"Instant: ActA2 did not perform exactly 4 times, Perform Count={actA2.GetPerformCount()}");
+        Assert.IsTrue(actB1.GetPerformCount() == 2, $"Instant: ActB1 did not perform exactly 2 times, Perform Count={actB1.GetPerformCount()}");
+        Assert.IsTrue(actB2.GetPerformCount() == 2, $"Instant: ActB2 did not perform exactly 2 times, Perform Count={actB2.GetPerformCount()}");
         Assert.IsTrue(actC1.GetPerformCount() == 1, $"Instant: ActC1 did not perform exactly once, Perform Count={actC1.GetPerformCount()}");
         Assert.IsTrue(actC2.GetPerformCount() == 1, $"Instant: ActC2 did not perform exactly once, Perform Count={actC2.GetPerformCount()}");
         Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
@@ -371,27 +371,27 @@ public class ActPrologue2Tests
 
         var actB1 = new SingleTickAct();
         actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { actA1, actA2 };
+        actB1.prologue = (a) => new() { new() { actA1, actA2 } };
         actB1.Init("ActB1", theater);
 
         var actB2 = new SingleTickAct();
         actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { actA1, actA2 };
+        actB2.prologue = (a) => new() { new() { actA1, actA2 } };
         actB2.Init("ActB2", theater);
 
         var actC1 = new SingleTickAct();
         actC1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC1.prologue = (a) => new() { actB1, actB2 };
+        actC1.prologue = (a) => new() { new() { actB1, actB2 } };
         actC1.Init("ActC1", theater);
 
         var actC2 = new SingleTickAct();
         actC2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC2.prologue = (a) => new() { actB1, actB2 };
+        actC2.prologue = (a) => new() { new() { actB1, actB2 } };
         actC2.Init("ActC2", theater);
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actC1, actC2 };
+        mainAct.prologue = (a) => new() { new() { actC1, actC2 } };
         mainAct.Init("MainAct", theater);
 
         mainAct.Perform();
@@ -454,7 +454,7 @@ public class ActPrologue2Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2 }, new() { actB1, actB2 }, new() { actC1, actC2 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2 }, new() { actB1, actB2 }, new() { actC1, actC2 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -514,7 +514,7 @@ public class ActPrologue2Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2 }, new() { actB1, actB2 }, new() { actC1, actC2 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2 }, new() { actB1, actB2 }, new() { actC1, actC2 } };
         mainAct.Init("MainAct", theater);
 
         mainAct.Perform();

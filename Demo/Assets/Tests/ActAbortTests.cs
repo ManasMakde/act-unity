@@ -103,7 +103,7 @@ public class ActAbortTests
 
         var mainAct = new EnterAct();
         mainAct.OnPrePrologue += (a) => { mainAct.Abort(); };
-        mainAct.prologue = (a) => new List<Act> { prologueAct };
+        mainAct.prologue = (a) => new() { new() { prologueAct } };
         mainAct.Init("Main Act");
 
         mainAct.Perform();
@@ -122,7 +122,7 @@ public class ActAbortTests
         prologueAct.Init("Prologue Act");
 
         var mainAct = new EnterAct();
-        mainAct.prologue = (a) => new List<Act> { prologueAct };
+        mainAct.prologue = (a) => new() { new() { prologueAct } };
         mainAct.OnPrologueComplete += (a, pAct, outcome) => { mainAct.Abort(); };
         mainAct.Init("Main Act");
 
@@ -142,7 +142,7 @@ public class ActAbortTests
         prologueAct.Init("Prologue Act");
 
         var mainAct = new EnterAct();
-        mainAct.prologue = (a) => new List<Act> { prologueAct };
+        mainAct.prologue = (a) => new() { new() { prologueAct } };
         mainAct.OnPostPrologue += (a) => { mainAct.Abort(); };
         mainAct.Init("Main Act");
 

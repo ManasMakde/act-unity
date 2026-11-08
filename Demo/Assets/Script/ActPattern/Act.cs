@@ -92,8 +92,8 @@ public class Act
 	public event Action<Act /* act */, bool /* newIsEnabled */> OnEnableChanged;
 	public event Action<Act /* act */, Act /* blockingAct */, BlockType /* blockType */, bool /* didBlock */> OnBlockChanged;
 
-	public Func<Act, List<Act>> prologue = (act) => new List<Act>();
-	public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();
+	[NonSerialized] public Func<Act, List<List<Act>>> prologue = null;
+	[NonSerialized] public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();
 	public bool isVerbose = false;
 
 	public void Init(string newName = "", Theater newTheater = null)
@@ -320,53 +320,13 @@ public class Act
 	{
 		return _name;
 	}
-	public static List<Act> Seq(List<List<Act>> pArrays)
-	{
-		// Return if null
-		if (pArrays == null)
-		{
-			return new List<Act> { null };
-		}
-
-
-		// Return if any null
-		foreach (List<Act> pArray in pArrays)
-		{
-			if (pArray == null || pArray.Contains(null))
-			{
-				return new List<Act> { null };
-			}
-		}
-
-
-		// Remove empty lists before chaining
-		pArrays.RemoveAll(pArr => pArr.Count == 0);
-
-
-		// Return if empty list
-		var pLength = pArrays.Count;
-		if (pLength == 0)
-		{
-			return new List<Act>();
-		}
-
-
-		// Chain all prologues
-		for (int i = pLength - 1; i > 0; i--)
-		{
-			LinkPrologueArrays(pArrays[i], pArrays[i - 1]);
-		}
-
-
-		return pArrays[pLength - 1];  // Return last acts
-	}
 
 
 
 	// Protected
-	protected string _name = "";
-	protected bool _canReperform = false;
-	protected TickFlags _tickFlags = TickFlags.None;
+	[NonSerialized] protected string _name = "";
+	[NonSerialized] protected bool _canReperform = false;
+	[NonSerialized] protected TickFlags _tickFlags = TickFlags.None;
 
 	protected virtual void Setup()
 	{
@@ -406,7 +366,7 @@ public class Act
 		// Return incase null act
 		if (byAct == null)
 		{
-			WriteLog("Failed to block, null act provided!");
+			WriteLog("Cannot block, null act provided!");
 			return;
 		}
 
@@ -418,18 +378,11 @@ public class Act
 		}
 
 
-		// Return if both acts are in the same prologue chain
-		if (this != byAct && (_epilogueActs.Count != 0 || byAct._epilogueActs.Count != 0))
+		// Return if both acts in same prologue chain
+		if (byAct != this && InSamePrologueChain(byAct, this))
 		{
-			_resultTopEpilogues.Clear();
-			_visitedTopEpilogues.Clear();
-			byAct._resultTopEpilogues.Clear();
-			byAct._visitedTopEpilogues.Clear();
-			if (GetTopEpilogues(this, _resultTopEpilogues, _visitedTopEpilogues).Overlaps(GetTopEpilogues(byAct, byAct._resultTopEpilogues, byAct._visitedTopEpilogues)))
-			{
-				WriteLog("Failed to block, Both " + _name + " and " + byAct._name + " are in the same prologue chain!");
-				return;
-			}
+			WriteLog("Cannot block, Both " + _name + " & " + byAct._name + " are in the same prologue chain!");
+			return;
 		}
 
 
@@ -455,7 +408,7 @@ public class Act
 		// Return incase null act
 		if (byAct == null)
 		{
-			WriteLog("Failed to unblock, null act provided!");
+			WriteLog("Cannot unblock, null act provided!");
 			return;
 		}
 
@@ -490,163 +443,168 @@ public class Act
 
 
 	// Private
-	private Theater _theater = null;
-	private Status _status = Status.None;
-	private Status _prevStatus = Status.None;
-	private Outcome _outcome = Outcome.Pending;
-	private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();
-	private HashSet<Act> _blockedByActs = new();
+	[NonSerialized] private Theater _theater = null;
+	[NonSerialized] private Status _status = Status.None;
+	[NonSerialized] private Status _prevStatus = Status.None;
+	[NonSerialized] private Outcome _outcome = Outcome.Pending;
 
-	private HashSet<Act> _epilogueActs = new();
-	private HashSet<Act> _pendingEpilogueActs = new();
-	private HashSet<Act> _continueEpilogueActs = new();
+	[NonSerialized] private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();
+	[NonSerialized] private HashSet<Act> _blockedByActs = new();
 
-	private HashSet<Act> _prologueActs = new();
-	private HashSet<Act> _pendingPrologueActs = new();
-	private HashSet<Act> _completedPrologueActs = new();
+	[NonSerialized] private List<Act> _prologueActs = new();
+	[NonSerialized] private Dictionary<Act, bool /* isInSequence */> _epilogueActs = new();
+	[NonSerialized] private HashSet<Act> _continueEpilogueActs = new();
+	[NonSerialized] private HashSet<Act> _topEpilogueActs = new();
 
-	private HashSet<Act> _resultTopEpilogues = new();
-	private HashSet<Act> _visitedTopEpilogues = new();
+	[NonSerialized] private string _initName;
+	[NonSerialized] private Theater _initTheater;
 
-	private string _initName;
-	private Theater _initTheater;
+	[NonSerialized] private bool _hasInitialized = false;
+	[NonSerialized] private bool _isRetrying = false;
 
-	private bool _hasInitialized = false;
-	private bool _isRetrying = false;
-	private bool _hasPrecomputedPrologues = false;
+	[NonSerialized] private int _prologueIndex = 0;
+	[NonSerialized] private int _prologueCompletedCount = 0;
 
-	private int _lifetimePerformCount = 0;
-	private int _performCount = 0;
-	private int _tickCount = 0;
-	private int _physicsTickCount = 0;
-	private int _lateTickCount = 0;
+	[NonSerialized] private int _lifetimePerformCount = 0;
+	[NonSerialized] private int _performCount = 0;
+	[NonSerialized] private int _tickCount = 0;
+	[NonSerialized] private int _physicsTickCount = 0;
+	[NonSerialized] private int _lateTickCount = 0;
 
-	private static void LinkPrologueArrays(List<Act> arrayB, List<Act> arrayA)
+	public static Act GetFirst(HashSet<Act> collection)
 	{
-		for (int i = 0; i < arrayB.Count; i++)
+		foreach (var data in collection)
 		{
-			Act actB = arrayB[i];
-			for (int j = 0; j < arrayA.Count; j++)
+			return data;
+		}
+
+		return null;
+	}
+	public static bool InSamePrologueChain(Act actA, Act actB)
+	{
+		return actA._topEpilogueActs.Overlaps(actB._topEpilogueActs) || actA._topEpilogueActs.Contains(actB) || actB._topEpilogueActs.Contains(actA);
+	}
+	private static bool LinkPrologueArrays(List<Act> eArray, List<Act> pArray)
+	{
+		for (int i = 0; i < eArray.Count; i++)
+		{
+			for (int j = 0; j < pArray.Count; j++)
 			{
-				Act actA = arrayA[j];
-				actB._prologueActs.Add(actA);
-				actA._epilogueActs.Add(actB);
-				actA._pendingEpilogueActs.Add(actB);
+				if (!LinkPrologue(eArray[i], pArray[j], true))
+				{
+					return false;
+				}
 			}
 		}
+
+		return true;
 	}
-	private static HashSet<Act> GetTopEpilogues(Act ofAct, HashSet<Act> result, HashSet<Act> visited)
+	private static bool LinkPrologue(Act eAct, Act pAct, bool inSequence = false)
 	{
-		// Skip if already visited
-		if (visited.Contains(ofAct))
+		// Return if already past prologuing phase 
+		if (eAct.IsOngoing())
 		{
-			return result;
+			return false;
 		}
 
+		eAct._prologueActs.Add(pAct);
+		pAct._epilogueActs.TryAdd(eAct, inSequence);
 
-		// Mark as visited
-		visited.Add(ofAct);
-
-
-		// Add if top epilogue
-		if (ofAct._epilogueActs.Count == 0)
-		{
-			result.Add(ofAct);
-			return result;
-		}
-
-
-		// Recurse into each epilogue
-		foreach (Act eAct in ofAct._epilogueActs)
-		{
-			GetTopEpilogues(eAct, result, visited);
-		}
-
-		return result;
+		return true;
 	}
-	private static void PrecomputePrologueChain(Act ofAct)
+	private static bool BuildPrologueChain(Act ofAct, Act newTopEpilogue = null, Act oldTopEpilogue = null)
 	{
-		// Fail Incase directly null provided
-		var prologueActs = ofAct.prologue.Invoke(ofAct);
-		if (prologueActs == null)
+		// Assign top epilogue if not given
+		if (newTopEpilogue == null)
 		{
-			ofAct.Finish(Outcome.Failure);
-			return;
+			newTopEpilogue = ofAct;
 		}
 
 
-		// Iterate through prologue acts		
-		foreach (Act pAct in prologueActs)
+		// Calculate prologues/epilogues
+		if (ofAct._topEpilogueActs.Count == 0 && ofAct.prologue != null)
 		{
-			// Skip self
-			if (pAct == ofAct)
+			// Get prologue acts
+			var prologueSeq = ofAct.prologue.Invoke(ofAct);
+			if (prologueSeq == null)
 			{
-				continue;
+				ofAct.WriteLog("Cannot build prologue chain, prologue returned null!");
+				return false;
 			}
 
 
-			// Fail incase null
-			if (pAct == null)
+			// Iterate prologue lists
+			List<Act> prevArray = null;
+			for (int i = prologueSeq.Count - 1; i >= 0; i--)
 			{
-				ofAct.Finish(Outcome.Failure);
-				return;
+				// Return if any null
+				var pArray = prologueSeq[i];
+				if (pArray == null || pArray.Contains(null))
+				{
+					ofAct.WriteLog("Cannot build prologue chain, lists returned by prologue contains null!");
+					return false;
+				}
+
+
+				// Skip if empty list
+				if (pArray.Count == 0)
+				{
+					continue;
+				}
+
+
+				// Link with self
+				if (prevArray == null)
+				{
+					foreach (var pAct in pArray)
+					{
+						LinkPrologue(ofAct, pAct);
+					}
+				}
+				else if (!LinkPrologueArrays(prevArray, pArray))  // Link with prev
+				{
+					ofAct.WriteLog("Cannot build prologue chain, A prologue act is already ongoing!");
+					return false;
+				}
+
+
+				// Store previous array
+				prevArray = pArray;
+			}
+		}
+
+
+		// Iterate through prologue acts
+		foreach (Act pAct in ofAct._prologueActs)
+		{
+			// Recurse
+			if (!BuildPrologueChain(pAct, newTopEpilogue, oldTopEpilogue))
+			{
+				return false;
 			}
 
 
-			// Assign prologue and epilogue
-			ofAct._prologueActs.Add(pAct);
-			pAct._epilogueActs.Add(ofAct);
-
-
-			// Recurse into prologue
-			PrecomputePrologueChain(pAct);
+			// Change top epilogues
+			pAct._topEpilogueActs.Add(newTopEpilogue);
+			pAct._topEpilogueActs.Remove(oldTopEpilogue);
 		}
 
-
-		// Mark as precomputed
-		ofAct._hasPrecomputedPrologues = true;
+		return true;
 	}
-	private static void FinishPrologues(Act ofAct, Outcome newOutcome)
+	private static void ClearPrologueChain(Act ofAct, Act oldTopEpilogue = null)
 	{
-		// Set outcome to iterrupted incase retrying
-		var pOutcome = newOutcome == Outcome.Retry ? Outcome.Interrupted : newOutcome;
-
-
-		// Finish all pending prologues
-		while (ofAct._pendingPrologueActs.Count != 0)
+		// Assign top epilogue if not given
+		if (oldTopEpilogue == null)
 		{
-			Act pAct = GetFirst(ofAct._pendingPrologueActs);
-			ofAct._pendingPrologueActs.Remove(pAct);
-			pAct?.Finish(pOutcome);
+			oldTopEpilogue = ofAct;
 		}
-	}
-	private static void ContinueEpilogues(Act ofAct, HashSet<Act> pendingEpilogueActs, Outcome newOutcome)
-	{
-		// Continue and clear out epilogues
-		while (pendingEpilogueActs.Count != 0)
-		{
-			Act eAct = GetFirst(pendingEpilogueActs);
-			pendingEpilogueActs.Remove(eAct);
-			eAct._completedPrologueActs.Add(ofAct);
-			eAct.CompletedPrologue(ofAct, newOutcome);
-		}
-	}
-	private static void ClearPrologueChain(Act ofAct)
-	{
-		while (ofAct._prologueActs.Count != 0 || ofAct._completedPrologueActs.Count != 0)
+
+
+		// Iterate over prologue acts
+		for (int i = 0; i < ofAct._prologueActs.Count; i++)
 		{
 			// Get prologue act
-			Act pAct;
-			if (ofAct._prologueActs.Count == 0)
-			{
-				pAct = GetFirst(ofAct._completedPrologueActs);
-				ofAct._completedPrologueActs.Remove(pAct);
-			}
-			else
-			{
-				pAct = GetFirst(ofAct._prologueActs);
-				ofAct._prologueActs.Remove(pAct);
-			}
+			var pAct = ofAct._prologueActs[i];
 
 
 			// Skip if null
@@ -656,32 +614,62 @@ public class Act
 			}
 
 
-			// Remove self from epilogue
-			pAct._epilogueActs.Remove(ofAct);
-			pAct._pendingEpilogueActs.Remove(ofAct);
+			// Remove old top epilogue
+			pAct._topEpilogueActs.Remove(oldTopEpilogue);
 
 
-			// Recurse incase Seq() linked stale acts
-			if (pAct._epilogueActs.Count == 0)
+			// Clean up epilogues
+			if (ofAct._topEpilogueActs.Count == 0)
 			{
-				pAct._hasPrecomputedPrologues = false;
-				ClearPrologueChain(pAct);
+				pAct._epilogueActs.Remove(ofAct);
+			}
+
+
+			// Recurse
+			ClearPrologueChain(pAct, oldTopEpilogue);
+		}
+
+
+		// Clean up prologues
+		if (ofAct._topEpilogueActs.Count == 0)
+		{
+			ofAct._prologueActs.Clear();
+		}
+	}
+	private static void ShiftEpilogues(Act ofAct)
+	{
+		// Add all to continue epilogue
+		foreach (var kvp in ofAct._epilogueActs)
+		{
+			var eAct = kvp.Key;
+			var isInSequence = kvp.Value;
+
+			// Mark as already performed in sequence or if waiting on prologue completion
+			if (isInSequence || eAct._status == Status.Prologuing)
+			{
+				ofAct._continueEpilogueActs.Add(eAct);
+			}
+		}
+
+
+		// Filter out sequence acts
+		foreach (var eAct in ofAct._continueEpilogueActs)
+		{
+			var isInSequence = ofAct._epilogueActs[eAct];
+			if (isInSequence)
+			{
+				ofAct._epilogueActs.Remove(eAct);
 			}
 		}
 	}
-	private static Act GetFirst(HashSet<Act> data)
+	private static void ContinueEpilogues(Act ofAct, Outcome eOutcome)
 	{
-		if (data.Count == 0)
+		while (ofAct._continueEpilogueActs.Count != 0)
 		{
-			return null;
+			Act eAct = GetFirst(ofAct._continueEpilogueActs);
+			ofAct._continueEpilogueActs.Remove(eAct);
+			eAct.CompletedPrologue(ofAct, eOutcome);
 		}
-
-		foreach (Act act in data)
-		{
-			return act;
-		}
-
-		return null;
 	}
 	private void SetStatus(Status newStatus)
 	{
@@ -815,24 +803,11 @@ public class Act
 		}
 
 
-		// Broadcast perform start
-		OnPerformStart?.Invoke(this);
-		if (_status != Status.Prologuing) { return; }  // Guard
-
-
-		// Precompute prologue chain
-		if (!_hasPrecomputedPrologues)
+		// Create chain
+		if (_topEpilogueActs.Count == 0 && !BuildPrologueChain(this))
 		{
-			PrecomputePrologueChain(this);
-		}
-		if (_status != Status.Prologuing) { return; }  // Guard
-
-
-
-		// Assign self as pending epilogue
-		foreach (Act pAct in _prologueActs)
-		{
-			pAct._pendingEpilogueActs.Add(this);
+			Redirect(Status.Concluding, Outcome.Failure);
+			return;
 		}
 
 
@@ -857,55 +832,10 @@ public class Act
 		if (_status != Status.Prologuing) { return; }  // Guard
 
 
-		// Perform all prologues
-		while (_prologueActs.Count != 0)
-		{
-			// Guard
-			if (_status != Status.Prologuing)
-			{
-				return;
-			}
-
-
-			// Skip prologue if already performing
-			var pAct = GetFirst(_prologueActs);
-			if (pAct.IsPerforming())
-			{
-				_prologueActs.Remove(pAct);
-				_pendingPrologueActs.Add(pAct);
-				continue;
-			}
-
-
-			// Skip if already completed
-			if (_completedPrologueActs.Contains(pAct))
-			{
-				_prologueActs.Remove(pAct);
-				CompletedPrologue(pAct, Outcome.Success);
-				continue;
-			}
-
-
-			// Mark prologue as pending
-			_prologueActs.Remove(pAct);
-			_pendingPrologueActs.Add(pAct);
-
-
-			// Perform prologue
-			if (!pAct.PerformImpl())
-			{
-				// Revert pending
-				_pendingPrologueActs.Remove(pAct);
-				_prologueActs.Add(pAct);
-
-
-				// Conclude if failed to perform prologue
-				Redirect(Status.Concluding, Outcome.Failure);
-				return;
-			}
-		}
+		// Start performing prologues
+		PerformPrologues();
 	}
-	private void CompletedPrologue(Act pAct, Outcome newOutcome)
+	private void PerformPrologues()
 	{
 		// Guard
 		if (_status != Status.Prologuing)
@@ -914,28 +844,82 @@ public class Act
 		}
 
 
-		// Remove from pending
-		_pendingPrologueActs.Remove(pAct);
+		// Iterate and perform prologues
+		while (_prologueIndex < _prologueActs.Count)
+		{
+			// Get prologue act
+			var pAct = _prologueActs[_prologueIndex];
 
 
-		// Broadcast prologue completed
-		OnPrologueComplete?.Invoke(this, pAct, newOutcome);
+			// Increment prologue index
+			_prologueIndex++;
+
+
+			// When act has already performed in sequence
+			if (!pAct._epilogueActs.ContainsKey(this))
+			{
+				CompletedPrologue(pAct, Outcome.Success, true);
+				continue;
+			}
+
+
+			// Skip if already performing
+			if (pAct.IsPerforming())
+			{
+				continue;
+			}
+
+
+			// Perform prologue act
+			if (!pAct.PerformImpl())
+			{
+				Redirect(Status.Concluding, Outcome.Failure);
+				return;
+			}
+
+
+			// Guard
+			if (_status != Status.Prologuing) { return; }
+		}
+
+
+		// Cascade down incase sequenced with already ongoing act
+		for (int i = 0; i < _prologueActs.Count && _status == Status.Prologuing; i++)
+		{
+			_prologueActs[i].PerformPrologues();
+		}
+	}
+	private void CompletedPrologue(Act pAct, Outcome pOutcome, bool hadAlreadyCompleted = false)
+	{
+		// Guard
 		if (_status != Status.Prologuing)
 		{
 			return;
 		}
 
 
-		// Concluding if prologue act did not succeed
-		if (newOutcome != Outcome.Success)
+		// Broadcast prologue completed
+		if (!hadAlreadyCompleted)
 		{
-			Redirect(Status.Concluding, newOutcome);
+			OnPrologueComplete?.Invoke(this, pAct, pOutcome);
+		}
+		if (_status != Status.Prologuing) { return; }  // Guard
+
+
+		// Concluding if prologue act did not succeed
+		if (pOutcome != Outcome.Success)
+		{
+			Redirect(Status.Concluding, pOutcome);
 			return;
 		}
 
 
-		// Wait for all prologues to complete
-		if (_pendingPrologueActs.Count != 0 || _prologueActs.Count != 0)
+		// Increment prologues completed
+		_prologueCompletedCount++;
+
+
+		// Wait for all to complete
+		if (_prologueIndex < _prologueActs.Count || _prologueCompletedCount < _prologueActs.Count)
 		{
 			return;
 		}
@@ -944,7 +928,6 @@ public class Act
 		// Broadcast post prologue
 		OnPostPrologue?.Invoke(this);
 		if (_status != Status.Prologuing) { return; }  // Guard
-
 
 
 		// Redirect to enter
@@ -1148,13 +1131,24 @@ public class Act
 	}
 	private void ConcludingImpl()
 	{
-		// Cleanup prologues
-		FinishPrologues(this, _outcome == Outcome.Retry ? Outcome.Interrupted : _outcome);  // Set outcome to iterrupted incase retrying
-		ClearPrologueChain(this);
-		_prologueActs.Clear();
-		_pendingPrologueActs.Clear();
-		_completedPrologueActs.Clear();
-		_hasPrecomputedPrologues = false;
+		// Finish all prologues
+		Outcome pOutcome = _outcome == Outcome.Retry ? Outcome.Interrupted : _outcome;
+		for (int i = 0; i < _prologueActs.Count; i++)
+		{
+			_prologueActs[i]?.Finish(pOutcome);
+		}
+
+
+		// Clear any stales in the prologue chain
+		if (_topEpilogueActs.Count == 0)
+		{
+			ClearPrologueChain(this);
+		}
+
+
+		// Reset indices
+		_prologueIndex = 0;
+		_prologueCompletedCount = 0;
 
 
 		// Retry
@@ -1172,8 +1166,8 @@ public class Act
 		}
 
 
-		// Cleanup epilogues
-		_epilogueActs.Clear();
+		// Shift epilogues to allow independent continuing
+		ShiftEpilogues(this);
 
 
 		// Unblock others
@@ -1193,6 +1187,7 @@ public class Act
 		{
 			_outcome = Outcome.Pending;
 			SetStatus(Status.Prologuing);
+			OnPerformStart?.Invoke(this);
 			PrologueImpl();
 		}
 
@@ -1240,15 +1235,9 @@ public class Act
 		// Conclude -> None
 		else if (_status == Status.Concluding && newStatus == Status.None)
 		{
+			Outcome eOutcome = _outcome;
 			SetStatus(Status.None);
 			_isRetrying = false;
-
-
-			// Prerequisites for epilogue
-			Outcome epilogueOutcome = _outcome;
-			HashSet<Act> pendingEpilogueActs = _pendingEpilogueActs;
-			_pendingEpilogueActs = _continueEpilogueActs;
-			_continueEpilogueActs = pendingEpilogueActs;
 
 
 			// Broadcast perform end
@@ -1256,7 +1245,7 @@ public class Act
 
 
 			// Continue epilogues
-			ContinueEpilogues(this, pendingEpilogueActs, epilogueOutcome);
+			ContinueEpilogues(this, eOutcome);
 		}
 
 
@@ -1360,29 +1349,21 @@ public class Act
 		{
 			return act._canReperform;
 		}
-		static public HashSet<Act> GetEpilogueActs(Act act)
-		{
-			return act._epilogueActs;
-		}
-		static public HashSet<Act> GetPendingEpilogueActs(Act act)
-		{
-			return act._pendingEpilogueActs;
-		}
-		static public HashSet<Act> GetPrologueActs(Act act)
+		static public List<Act> GetPrologueActs(Act act)
 		{
 			return act._prologueActs;
 		}
-		static public HashSet<Act> GetPendingPrologueActs(Act act)
+		static public Dictionary<Act, bool> GetEpilogueActs(Act act)
 		{
-			return act._pendingPrologueActs;
+			return act._epilogueActs;
 		}
-		static public HashSet<Act> GetCompletedPrologueActs(Act act)
+		static public HashSet<Act> GetContinueEpilogueActs(Act act)
 		{
-			return act._completedPrologueActs;
+			return act._continueEpilogueActs;
 		}
-		static public bool GetHasPrecomputedPrologues(Act act)
+		static public HashSet<Act> GetTopEpilogueActs(Act act)
 		{
-			return act._hasPrecomputedPrologues;
+			return act._topEpilogueActs;
 		}
 	}
 }

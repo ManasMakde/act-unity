@@ -31,7 +31,7 @@ public class ActPrologue3Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actA1, actA2, actA3 };
+        mainAct.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -72,7 +72,7 @@ public class ActPrologue3Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2, actA3 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -113,22 +113,22 @@ public class ActPrologue3Tests
 
         var actB1 = new Act();
         actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB1.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB1.Init("ActB1");
 
         var actB2 = new Act();
         actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB2.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB2.Init("ActB2");
 
         var actB3 = new Act();
         actB3.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB3.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB3.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB3.Init("ActB3");
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actB1, actB2, actB3 };
+        mainAct.prologue = (a) => new() { new() { actB1, actB2, actB3 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -185,22 +185,22 @@ public class ActPrologue3Tests
 
         var actB1 = new SingleTickAct();
         actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB1.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB1.Init("ActB1", theater);
 
         var actB2 = new SingleTickAct();
         actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB2.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB2.Init("ActB2", theater);
 
         var actB3 = new SingleTickAct();
         actB3.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB3.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB3.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB3.Init("ActB3", theater);
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actB1, actB2, actB3 };
+        mainAct.prologue = (a) => new() { new() { actB1, actB2, actB3 } };
         mainAct.Init("MainAct", theater);
 
         mainAct.Perform();
@@ -271,7 +271,7 @@ public class ActPrologue3Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2, actA3 }, new() { actB1, actB2, actB3 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2, actA3 }, new() { actB1, actB2, actB3 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -340,7 +340,7 @@ public class ActPrologue3Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2, actA3 }, new() { actB1, actB2, actB3 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2, actA3 }, new() { actB1, actB2, actB3 } };
         mainAct.Init("MainAct", theater);
 
         mainAct.Perform();
@@ -399,37 +399,37 @@ public class ActPrologue3Tests
 
         var actB1 = new Act();
         actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB1.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB1.Init("ActB1");
 
         var actB2 = new Act();
         actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB2.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB2.Init("ActB2");
 
         var actB3 = new Act();
         actB3.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB3.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB3.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB3.Init("ActB3");
 
         var actC1 = new Act();
         actC1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC1.prologue = (a) => new() { actB1, actB2, actB3 };
+        actC1.prologue = (a) => new() { new() { actB1, actB2, actB3 } };
         actC1.Init("ActC1");
 
         var actC2 = new Act();
         actC2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC2.prologue = (a) => new() { actB1, actB2, actB3 };
+        actC2.prologue = (a) => new() { new() { actB1, actB2, actB3 } };
         actC2.Init("ActC2");
 
         var actC3 = new Act();
         actC3.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC3.prologue = (a) => new() { actB1, actB2, actB3 };
+        actC3.prologue = (a) => new() { new() { actB1, actB2, actB3 } };
         actC3.Init("ActC3");
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actC1, actC2, actC3 };
+        mainAct.prologue = (a) => new() { new() { actC1, actC2, actC3 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -501,37 +501,37 @@ public class ActPrologue3Tests
 
         var actB1 = new SingleTickAct();
         actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB1.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB1.Init("ActB1", theater);
 
         var actB2 = new SingleTickAct();
         actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB2.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB2.Init("ActB2", theater);
 
         var actB3 = new SingleTickAct();
         actB3.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB3.prologue = (a) => new() { actA1, actA2, actA3 };
+        actB3.prologue = (a) => new() { new() { actA1, actA2, actA3 } };
         actB3.Init("ActB3", theater);
 
         var actC1 = new SingleTickAct();
         actC1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC1.prologue = (a) => new() { actB1, actB2, actB3 };
+        actC1.prologue = (a) => new() { new() { actB1, actB2, actB3 } };
         actC1.Init("ActC1", theater);
 
         var actC2 = new SingleTickAct();
         actC2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC2.prologue = (a) => new() { actB1, actB2, actB3 };
+        actC2.prologue = (a) => new() { new() { actB1, actB2, actB3 } };
         actC2.Init("ActC2", theater);
 
         var actC3 = new SingleTickAct();
         actC3.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC3.prologue = (a) => new() { actB1, actB2, actB3 };
+        actC3.prologue = (a) => new() { new() { actB1, actB2, actB3 } };
         actC3.Init("ActC3", theater);
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { actC1, actC2, actC3 };
+        mainAct.prologue = (a) => new() { new() { actC1, actC2, actC3 } };
         mainAct.Init("MainAct", theater);
 
         mainAct.Perform();
@@ -630,7 +630,7 @@ public class ActPrologue3Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2, actA3 }, new() { actB1, actB2, actB3 }, new() { actC1, actC2, actC3 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2, actA3 }, new() { actB1, actB2, actB3 }, new() { actC1, actC2, actC3 } };
         mainAct.Init("MainAct");
 
         mainAct.Perform();
@@ -726,7 +726,7 @@ public class ActPrologue3Tests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => Act.Seq(new() { new() { actA1, actA2, actA3 }, new() { actB1, actB2, actB3 }, new() { actC1, actC2, actC3 } });
+        mainAct.prologue = (a) => new() { new() { actA1, actA2, actA3 }, new() { actB1, actB2, actB3 }, new() { actC1, actC2, actC3 } };
         mainAct.Init("MainAct", theater);
 
         mainAct.Perform();

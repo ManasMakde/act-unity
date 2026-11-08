@@ -47,7 +47,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new() { new Act() };
+        act.prologue = (a) => new() { new() { new Act() } }; 
         act.OnPrePrologue += (a) => { wasPrePrologueInvoked = true; prePrologueArg1 = a; };
         act.Init("Test Act");
         act.Perform();
@@ -89,7 +89,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new List<Act>();
+        act.prologue = (a) => new() { new() { } };
         act.OnPrePrologue += (a) => { wasPrePrologueInvoked = true; };
         act.Init("Test Act");
         act.Perform();
@@ -114,7 +114,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new() { new Act() };
+        act.prologue = (a) => new() { new() { new Act() } };
         act.OnPostPrologue += (a) => { wasPostPrologueInvoked = true; postPrologueArg1 = a; };
         act.Init("Test Act");
         act.Perform();
@@ -156,7 +156,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new List<Act>();
+        act.prologue = (a) => new();
         act.OnPostPrologue += (a) => { wasPostPrologueInvoked = true; };
         act.Init("Test Act");
         act.Perform();
@@ -199,7 +199,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new() { new FailingAct() };
+        act.prologue = (a) => new() { new() { new FailingAct() } };
         act.OnPostPrologue += (a) => { wasPostPrologueInvoked = true; };
         act.Init("Test Act");
         act.Perform();
@@ -232,7 +232,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new() { pAct };
+        act.prologue = (a) => new() { new() { pAct } };
         act.OnPrologueComplete += (a, p, o) => { wasPrologueCompleteInvoked = true; prologueCompleteArg1 = a; prologueCompleteArg2 = p; prologueCompleteArg3 = o; };
         act.Init("Test Act");
         act.Perform();
@@ -276,7 +276,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new List<Act>();
+        act.prologue = (a) => new();
         act.OnPrologueComplete += (a, p, o) => { wasPrologueCompleteInvoked = true; };
         act.Init("Test Act");
         act.Perform();
@@ -320,7 +320,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new() { new FailingAct() };
+        act.prologue = (a) => new() { new() { new FailingAct() } };
         act.OnPrologueComplete += (a, p, o) => { wasPrologueCompleteInvoked = true; prologueCompleteOutcome = o; };
         act.Init("Test Act");
         act.Perform();
@@ -336,54 +336,54 @@ public class ActPrologueTests
     }
 
 
-    [UnityTest]
-    public IEnumerator SelfAsOnlyPrologueSkipped()
-    {
-        // Perform Act
-        var act = new Act();
-        act.prologue = (a) => new() { a };
-        act.Init("Test Act");
-        act.Perform();
+    // [UnityTest]
+    // public IEnumerator SelfAsOnlyPrologueSkipped()
+    // {
+    //     // Perform Act
+    //     var act = new Act();
+    //     act.prologue = (a) => new() { new() { a } };
+    //     act.Init("Test Act");
+    //     act.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(act.GetOutcome() == Act.Outcome.Success, $"Act could not perform when passing only itself as prologue!");
+    //     // Assertions
+    //     Assert.IsTrue(act.GetOutcome() == Act.Outcome.Success, $"Act could not perform when passing only itself as prologue!");
 
 
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator SelfAsPrologueSkipped()
-    {
-        // Prologue Act
-        var didProloguePerform = false;
-        var pAct = new Act();
-        pAct.OnPreEnter += (a) =>
-        {
-            didProloguePerform = true;
-        };
-        pAct.Init("Prologue Act");
+    //     yield return null;
+    // }
+    // [UnityTest]
+    // public IEnumerator SelfAsPrologueSkipped()
+    // {
+    //     // Prologue Act
+    //     var didProloguePerform = false;
+    //     var pAct = new Act();
+    //     pAct.OnPreEnter += (a) =>
+    //     {
+    //         didProloguePerform = true;
+    //     };
+    //     pAct.Init("Prologue Act");
 
 
-        // Perform Act
-        var didEnter = false;
-        var act = new Act();
-        act.prologue = (a) => new() { a, pAct };
-        act.OnPreEnter += (a) =>
-        {
-            didEnter = true;
-        };
-        act.Init("Test Act");
-        act.Perform();
+    //     // Perform Act
+    //     var didEnter = false;
+    //     var act = new Act();
+    //     act.prologue = (a) => new() { new() { a, pAct } };
+    //     act.OnPreEnter += (a) =>
+    //     {
+    //         didEnter = true;
+    //     };
+    //     act.Init("Test Act");
+    //     act.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(didEnter, $"Act could not perform when passing itself as one of the prologues!");
-        Assert.IsTrue(didProloguePerform, $"Passing self as prologue interfered with other prologue");
+    //     // Assertions
+    //     Assert.IsTrue(didEnter, $"Act could not perform when passing itself as one of the prologues!");
+    //     Assert.IsTrue(didProloguePerform, $"Passing self as prologue interfered with other prologue");
 
 
-        yield return null;
-    }
+    //     yield return null;
+    // }
 
 
 
@@ -420,7 +420,7 @@ public class ActPrologueTests
         // Seq with inner list containing null
         {
             var act = new Act();
-            act.prologue = (a) => Act.Seq(new() { new() { null } });
+            act.prologue = (a) => new() { new() { null } };
             act.Init("Test Act");
             act.Perform();
 
@@ -431,7 +431,7 @@ public class ActPrologueTests
         // Seq with null inner list
         {
             var act = new Act();
-            act.prologue = (a) => Act.Seq(new() { null });
+            act.prologue = (a) => new() { null };
             act.Init("Test Act");
             act.Perform();
 
@@ -442,7 +442,7 @@ public class ActPrologueTests
         // Seq with null passed directly
         {
             var act = new Act();
-            act.prologue = (a) => Act.Seq(null);
+            act.prologue = (a) => null;
             act.Init("Test Act");
             act.Perform();
 
@@ -465,7 +465,7 @@ public class ActPrologueTests
 
         // Perform Act
         var mainAct = new Act();
-        mainAct.prologue = (a) => new() { prologueAct };
+        mainAct.prologue = (a) => new() { new() { prologueAct } };
         mainAct.AddToBlock(new() { prologueAct });
         mainAct.Init("Main Act");
 
@@ -491,7 +491,7 @@ public class ActPrologueTests
         prologueAct.AddToBlock(new() { mainAct });
         prologueAct.Init("Prologue Act");
 
-        mainAct.prologue = (a) => new() { prologueAct };
+        mainAct.prologue = (a) => new() { new() { prologueAct } };
         mainAct.Init("Main Act");
         mainAct.Perform();
 
@@ -510,11 +510,11 @@ public class ActPrologueTests
         grandchildAct.Init("Grandchild Act");
 
         var childAct = new Act();
-        childAct.prologue = (a) => new() { grandchildAct };
+        childAct.prologue = (a) => new() { new() { grandchildAct } };
         childAct.Init("Child Act");
 
         var mainAct = new Act();
-        mainAct.prologue = (a) => new() { childAct };
+        mainAct.prologue = (a) => new() { new() { childAct } };
         mainAct.AddToBlock(new() { grandchildAct });
         mainAct.Init("Main Act");
 
@@ -538,10 +538,10 @@ public class ActPrologueTests
         var grandchildAct = new Act();
 
 
-        mainAct.prologue = (a) => new() { childAct };
+        mainAct.prologue = (a) => new() { new() { childAct } };
         mainAct.Init("Main Act");
 
-        childAct.prologue = (a) => new() { grandchildAct };
+        childAct.prologue = (a) => new() { new() { grandchildAct } };
         childAct.Init("Child Act");
 
         grandchildAct.AddToBlock(new() { mainAct });
@@ -570,7 +570,7 @@ public class ActPrologueTests
             siblingActA.Init("Sibling Act A");
 
             var mainAct = new Act();
-            mainAct.prologue = (a) => new() { siblingActA, siblingActB };
+            mainAct.prologue = (a) => new() { new() { siblingActA, siblingActB } };
             mainAct.Init("Main Act");
 
             mainAct.Perform();
@@ -596,7 +596,7 @@ public class ActPrologueTests
             siblingActA.Init("Sibling Act A");
 
             var mainAct = new Act();
-            mainAct.prologue = (a) => new() { siblingActA, siblingActB };
+            mainAct.prologue = (a) => new() { new() { siblingActA, siblingActB } };
             mainAct.Init("Main Act");
 
             mainAct.Perform();

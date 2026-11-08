@@ -104,12 +104,12 @@ public class BiterSpider : MonoBehaviour, IDamageable
             // Attack -> Wait
             if (chaseAct.IsWithinRange())
             {
-                return Act.Seq(new() { new() { biteAct }, new() { delayAttackAct } });
+                return new() { new() { biteAct }, new() { delayAttackAct } };
             }
 
 
             // Goto player -> Wait
-            return Act.Seq(new() { new() { chaseAct }, new() { delayAttackAct } });
+            return new() { new() { chaseAct }, new() { delayAttackAct } };
         };
         liveAct.Init("Live Act", theater);
 
@@ -118,7 +118,7 @@ public class BiterSpider : MonoBehaviour, IDamageable
         lookAct.targetTransform = playerTransform;
         lookAct.Init("Turn Act", theater);
 
-        lookPerpAct.prologue += (Act act) => new() { lookAct };
+        lookPerpAct.prologue += (Act act) => new() { new() { lookAct } };
         lookPerpAct.Init("Look Act", theater);
 
         chaseAct.target = playerTransform;

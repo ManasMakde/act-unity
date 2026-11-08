@@ -94,7 +94,7 @@ public class ActMiscTests
         act.OnPostCleanup += (a) => { retryingInPostCleanup = a.IsRetrying(); };
         act.OnEnableChanged += (a, newIsEnabled) => { retryingInEnableChanged = a.IsRetrying(); };
         act.OnBlockChanged += (a, blockingAct, blockType, didBlock) => { retryingInBlockChanged = a.IsRetrying(); };
-        act.prologue += (a) => new() { prologueAct };
+        act.prologue += (a) => new() { new() { prologueAct } };
         act.Init("Misc Retrying Act", theater);
 
         act.Perform();
@@ -223,7 +223,7 @@ public class ActMiscTests
         act.OnPostCleanup += (a) => { performingInPostCleanup = a.IsPerforming(); };
         act.OnEnableChanged += (a, newIsEnabled) => { performingInEnableChanged = a.IsPerforming(); };
         act.OnBlockChanged += (a, blockingAct, blockType, didBlock) => { performingInBlockChanged = a.IsPerforming(); };
-        act.prologue += (a) => new() { prologueAct };
+        act.prologue += (a) => new() { new() { prologueAct } };
         act.Init("Misc Performing Act", theater);
 
         act.Perform();
@@ -339,7 +339,7 @@ public class ActMiscTests
         act.OnPostCleanup += (a) => { ongoingInPostCleanup = a.IsOngoing(); };
         act.OnEnableChanged += (a, newIsEnabled) => { ongoingInEnableChanged = a.IsOngoing(); };
         act.OnBlockChanged += (a, blockingAct, blockType, didBlock) => { ongoingInBlockChanged = a.IsOngoing(); };
-        act.prologue += (a) => new() { prologueAct };
+        act.prologue += (a) => new() { new() { prologueAct } };
         act.Init("Misc Ongoing Act", theater);
 
         act.Perform();
@@ -703,7 +703,7 @@ public class ActMiscTests
         act.OnPerformEnd += (a) => { statusInPerformEnd = a.GetStatus(); };
         act.OnPreCleanup += (a) => { statusInPreCleanup = a.GetStatus(); };
         act.OnPostCleanup += (a) => { statusInPostCleanup = a.GetStatus(); };
-        act.prologue += (a) => new() { prologueAct };
+        act.prologue += (a) => new() { new() { prologueAct } };
         act.Init("Misc Status Act", theater);
 
         statusBeforePerform = act.GetStatus();

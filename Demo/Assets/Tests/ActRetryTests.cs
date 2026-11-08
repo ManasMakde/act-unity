@@ -62,10 +62,10 @@ public class ActRetryTests
         {
             if (didPrologue)
             {
-                return new List<Act>();
+                return new();
             }
             didPrologue = true;
-            return new List<Act> { prologueAct };
+            return new() { new() { prologueAct } };
         };
         act.Init("Test Act");
         act.Perform();
@@ -87,7 +87,7 @@ public class ActRetryTests
         var prologueAct = new WaitInfiniAct();
         prologueAct.Init("Prologue Act");
         var act = new WaitInfiniAct();
-        act.prologue = (a) => new List<Act> { prologueAct };
+        act.prologue = (a) => new() { new() { prologueAct } };
         act.Init("Test Act");
         act.Perform();
 

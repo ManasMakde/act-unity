@@ -36,10 +36,6 @@ public class Theater : MonoBehaviour
 
 
     // Public Methods
-    public bool IsEnabled()
-    {
-        return _isEnabled;
-    }
     public void SetEnabled(bool newEnabled)
     {
         if (newEnabled == _isEnabled)
@@ -55,6 +51,18 @@ public class Theater : MonoBehaviour
         }
 
         OnEnableChanged?.Invoke(this, _isEnabled);
+    }
+    public bool IsEnabled()
+    {
+        return _isEnabled;
+    }
+    public bool HasAct(Act act)
+    {
+        return _allActs.Contains(act);
+    }
+    public bool AreAnyPerforming()
+    {
+        return _performingActs.Count != 0;
     }
     public void AbortAll()
     {
@@ -94,13 +102,13 @@ public class Theater : MonoBehaviour
         }
         _pendingModActs.Clear();
     }
-    public bool AreAnyPerforming()
+    public IReadOnlyCollection<Act> GetAllPerformingActs()
     {
-        return _performingActs.Count != 0;
+        return _performingActs;
     }
-    public HashSet<Act> GetAllActs()
+    public IReadOnlyCollection<Act> GetAllActs()
     {
-        return new HashSet<Act>(_allActs);
+        return _allActs;
     }
 
 
