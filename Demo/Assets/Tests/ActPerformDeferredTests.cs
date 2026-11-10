@@ -289,55 +289,6 @@ public class ActPerformDeferredTests
 
         UnityEngine.Object.Destroy(theater.gameObject);
     }
-    [UnityTest]
-    public IEnumerator PerformDeferredClearedUponPerformingImmediately()
-    {
-        // Prerequisites
-        var theater = new GameObject().AddComponent<Theater>();
-
-
-        // Perform Act
-        var act = new Act();
-        act.Init("Test Act", theater);
-        act.PerformDeferred(Act.TickFlags.PhysicsTick);
-        act.Perform();
-        var performCountAfterImmediate = act.GetPerformCount();
-        yield return new WaitForFixedUpdate();
-        yield return null;
-        var performCountAfterTick = act.GetPerformCount();
-
-
-        // Assertions
-        Assert.IsTrue(performCountAfterImmediate == 1, "Act did not perform immediately!");
-        Assert.IsTrue(performCountAfterTick == 1, "Deferred perform was not cleared after performing immediately!");
-
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-    [UnityTest]
-    public IEnumerator PerformDeferredClearedOnAbort()
-    {
-        // Prerequisites
-        var theater = new GameObject().AddComponent<Theater>();
-
-
-        // Perform Act
-        var act = new Act();
-        act.Init("Test Act", theater);
-        act.PerformDeferred();
-        act.Abort();
-        yield return new WaitForFixedUpdate();
-        yield return null;
-
-
-        // Assertions
-        Assert.IsTrue(act.GetPerformCount() == 0, "Act deferred performed despite being aborted!");
-
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-
-
 
     [UnityTest]
     public IEnumerator PerformDeferredFromOnPreSetup()

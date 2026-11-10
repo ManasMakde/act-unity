@@ -93,7 +93,7 @@ public class Act
 	public event Action<Act /* act */, Act /* blockingAct */, BlockType /* blockType */, bool /* didBlock */> OnBlockChanged;
 
 	[NonSerialized] public Func<Act, List<List<Act>>> prologue = null;
-	[NonSerialized] public List<Func<Act, bool>> performConditions = new List<Func<Act, bool>>();
+	[NonSerialized] public List<Func<Act, bool>> performConditions = new();
 	public bool isVerbose = false;
 
 	public void Init(string newName = "", Theater newTheater = null)
@@ -111,17 +111,6 @@ public class Act
 	{
 		return PerformImpl();
 	}
-	public void PerformDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
-	{
-		// Warn if null theater provided
-		if (_theater == null)
-		{
-			WriteLog("Cannot perform deferred, Assign a theater first!");
-			return;
-		}
-
-		Theater.Friend.StageDeferred(_theater, this, tickFlag);
-	}
 	public void Retry()
 	{
 		if (IsPerforming())
@@ -136,14 +125,95 @@ public class Act
 	public void Abort()
 	{
 		Finish(Outcome.Interrupted);
-
-
-		// Clear deferred
-		if (_theater != null)
+	}
+	public void PerformDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
+	{
+		// Warn if null theater
+		if (_theater == null)
 		{
-			Theater.Friend.UnstageDeferred(_theater, this);
+			WriteLog("Cannot perform deferred, Assign a theater first!");
 			return;
 		}
+
+		Theater.Friend.PerformDeferred(_theater, this, tickFlag);
+	}
+	public void RetryDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
+	{
+		// Warn if null theater
+		if (_theater == null)
+		{
+			WriteLog("Cannot retry deferred, Assign a theater first!");
+			return;
+		}
+
+		Theater.Friend.RetryDeferred(_theater, this, tickFlag);
+	}
+	public void AbortDeferred(TickFlags tickFlag = TickFlags.PhysicsTick)
+	{
+		// Warn if null theater
+		if (_theater == null)
+		{
+			WriteLog("Cannot abort deferred, Assign a theater first!");
+			return;
+		}
+
+		Theater.Friend.AbortDeferred(_theater, this, tickFlag);
+	}
+	public void CancelPerformDeferred()
+	{
+		// Warn if null theater provided
+		if (_theater == null)
+		{
+			WriteLog("Cannot cancel perform deferred, Assign a theater first!");
+			return;
+		}
+
+		Theater.Friend.CancelPerformDeferred(_theater, this);
+	}
+	public void CancelRetryDeferred()
+	{
+		// Warn if null theater provided
+		if (_theater == null)
+		{
+			WriteLog("Cannot cancel retry deferred, Assign a theater first!");
+			return;
+		}
+
+		Theater.Friend.CancelRetryDeferred(_theater, this);
+	}
+	public void CancelAbortDeferred()
+	{
+		// Warn if null theater provided
+		if (_theater == null)
+		{
+			WriteLog("Cannot cancel abort deferred, Assign a theater first!");
+			return;
+		}
+
+		Theater.Friend.CancelAbortDeferred(_theater, this);
+	}
+	public void SetEnabled(bool newEnabled)
+	{
+		// Return if trying to reassign same value
+		if (newEnabled == IsEnabled())
+		{
+			return;
+		}
+
+
+		// Block unblock self
+		if (!newEnabled)
+		{
+			BlockSelf(this, BlockType.Persistent);
+		}
+		else
+		{
+			UnblockSelf(this);
+		}
+
+
+		// Broadcast enabled disabled
+		OnEnableChanged?.Invoke(this, IsEnabled());
 	}
 	public void AddToBlock(List<Act> acts, BlockType blockType = BlockType.Persistent)
 	{
@@ -195,37 +265,6 @@ public class Act
 			_actsToBlock.Remove(bAct);
 		}
 	}
-	public void SetEnabled(bool newEnabled)
-	{
-		// Return if trying to reassign same value
-		if (newEnabled == IsEnabled())
-		{
-			return;
-		}
-
-
-		// Block unblock self
-		if (!newEnabled)
-		{
-			BlockSelf(this, BlockType.Persistent);
-		}
-		else
-		{
-			UnblockSelf(this);
-		}
-
-
-		// Broadcast enabled disabled
-		OnEnableChanged?.Invoke(this, IsEnabled());
-	}
-	public bool HasInitialized()
-	{
-		return _hasInitialized;
-	}
-	public bool IsRetrying()
-	{
-		return _isRetrying;
-	}
 	public bool IsPerforming()
 	{
 		return _status != Status.Initializing && _status != Status.Deinitializing && _status != Status.None;
@@ -233,6 +272,10 @@ public class Act
 	public bool IsOngoing()
 	{
 		return _status != Status.Initializing && _status != Status.Deinitializing && _status != Status.None && _status != Status.Prologuing;
+	}
+	public bool IsRetrying()
+	{
+		return _isRetrying;
 	}
 	public bool IsEnabled()
 	{
@@ -252,29 +295,17 @@ public class Act
 	{
 		return _blockedByActs.Contains(byAct);
 	}
-	public bool CanTick(TickFlags type)
+	public bool HasInitialized()
+	{
+		return _hasInitialized;
+	}
+	public bool CanTick(TickFlags type = TickFlags.Tick | TickFlags.PhysicsTick | TickFlags.LateTick)
 	{
 		return (_tickFlags & type) != 0;
 	}
-	public TickFlags GetTickFlags()
+	public string GetName()
 	{
-		return _tickFlags;
-	}
-	public Theater GetTheater()
-	{
-		return _theater;
-	}
-	public GameObject GetOwner()
-	{
-		return _theater != null ? _theater.gameObject : null;
-	}
-	public HashSet<Act> GetBlockedByActs()
-	{
-		return new HashSet<Act>(_blockedByActs);
-	}
-	public Dictionary<Act, BlockType> GetActsToBlock()
-	{
-		return new Dictionary<Act, BlockType>(_actsToBlock);
+		return _name;
 	}
 	public Status GetStatus()
 	{
@@ -288,9 +319,17 @@ public class Act
 	{
 		return _outcome;
 	}
-	public int GetLifetimePerformCount()
+	public TickFlags GetTickFlags()
 	{
-		return _lifetimePerformCount;
+		return _tickFlags;
+	}
+	public IReadOnlyCollection<Act> GetBlockedByActs()
+	{
+		return _blockedByActs;
+	}
+	public IReadOnlyDictionary<Act, BlockType> GetActsToBlock()
+	{
+		return _actsToBlock;
 	}
 	public int GetPerformCount()
 	{
@@ -308,6 +347,22 @@ public class Act
 	{
 		return _lateTickCount;
 	}
+	public int GetLifetimePerformCount()
+	{
+		return _lifetimePerformCount;
+	}
+	public int GetLifetimeTickCount()
+	{
+		return _lifetimeTickCount;
+	}
+	public int GetLifetimePhysicsTickCount()
+	{
+		return _lifetimePhysicsTickCount;
+	}
+	public int GetLifetimeLateTickCount()
+	{
+		return _lifetimeLateTickCount;
+	}
 	static public float GetDelta()
 	{
 		return Time.deltaTime;
@@ -316,11 +371,14 @@ public class Act
 	{
 		return Time.fixedDeltaTime;
 	}
-	public string GetName()
+	public GameObject GetOwner()
 	{
-		return _name;
+		return _theater != null ? _theater.gameObject : null;
 	}
-
+	public Theater GetTheater()
+	{
+		return _theater;
+	}
 
 
 	// Protected
@@ -448,7 +506,7 @@ public class Act
 	[NonSerialized] private Status _prevStatus = Status.None;
 	[NonSerialized] private Outcome _outcome = Outcome.Pending;
 
-	[NonSerialized] private Dictionary<Act, BlockType> _actsToBlock = new Dictionary<Act, BlockType>();
+	[NonSerialized] private Dictionary<Act, BlockType> _actsToBlock = new();
 	[NonSerialized] private HashSet<Act> _blockedByActs = new();
 
 	[NonSerialized] private List<Act> _prologueActs = new();
@@ -465,11 +523,16 @@ public class Act
 	[NonSerialized] private int _prologueIndex = 0;
 	[NonSerialized] private int _prologueCompletedCount = 0;
 
-	[NonSerialized] private int _lifetimePerformCount = 0;
 	[NonSerialized] private int _performCount = 0;
 	[NonSerialized] private int _tickCount = 0;
 	[NonSerialized] private int _physicsTickCount = 0;
 	[NonSerialized] private int _lateTickCount = 0;
+
+	[NonSerialized] private int _lifetimePerformCount = 0;
+	[NonSerialized] private int _lifetimeTickCount = 0;
+	[NonSerialized] private int _lifetimePhysicsTickCount = 0;
+	[NonSerialized] private int _lifetimeLateTickCount = 0;
+
 
 	public static Act GetFirst(HashSet<Act> collection)
 	{
@@ -655,6 +718,14 @@ public class Act
 		// Filter out sequence acts
 		foreach (var eAct in ofAct._continueEpilogueActs)
 		{
+			// Skip if not in epilogue
+			if (!ofAct._epilogueActs.ContainsKey(eAct))
+			{
+				continue;
+			}
+
+
+			// Remove if in sequence
 			var isInSequence = ofAct._epilogueActs[eAct];
 			if (isInSequence)
 			{
@@ -779,13 +850,6 @@ public class Act
 		// Increment perform count & lifetime perform count
 		_performCount++;
 		_lifetimePerformCount++;
-
-
-		// Clear deferred
-		if (_theater != null)
-		{
-			Theater.Friend.UnstageDeferred(_theater, this);
-		}
 
 
 		// Start prologuing
@@ -942,19 +1006,23 @@ public class Act
 		}
 
 
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
+
+
 		// Broadcast pre enter
 		OnPreEnter?.Invoke(this);
-		if (_status != Status.Entering) { return; }  // Guard
+		if (_status != Status.Entering || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Core enter
 		var newOutcome = Enter();
-		if (_status != Status.Entering) { return; }  // Guard 
+		if (_status != Status.Entering || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard 
 
 
 		// Broadcast post enter
 		OnPostEnter?.Invoke(this);
-		if (_status != Status.Entering) { return; }  // Guard
+		if (_status != Status.Entering || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Redirect to exit
@@ -994,6 +1062,7 @@ public class Act
 
 		// Increment tick count
 		_tickCount++;
+		_lifetimeTickCount++;
 
 
 		// Save life time count
@@ -1032,6 +1101,7 @@ public class Act
 
 		// Increment physics tick count
 		_physicsTickCount++;
+		_lifetimePhysicsTickCount++;
 
 
 		// Save life time count
@@ -1070,6 +1140,7 @@ public class Act
 
 		// Increment late tick count
 		_lateTickCount++;
+		_lifetimeLateTickCount++;
 
 
 		// Save life time count
@@ -1100,17 +1171,9 @@ public class Act
 	private void ExitImpl()
 	{
 		// Stop ticking
-		if (CanTick(TickFlags.Tick) && _theater != null)
+		if (_theater != null)
 		{
 			Theater.Friend.UnstageTick(_theater, this);
-		}
-		if (CanTick(TickFlags.PhysicsTick) && _theater != null)
-		{
-			Theater.Friend.UnstagePhysicsTick(_theater, this);
-		}
-		if (CanTick(TickFlags.LateTick) && _theater != null)
-		{
-			Theater.Friend.UnstageLateTick(_theater, this);
 		}
 
 
@@ -1202,18 +1265,7 @@ public class Act
 		else if (_status == Status.Entering && newStatus == Status.Ticking)
 		{
 			SetStatus(Status.Ticking);
-			if (CanTick(TickFlags.Tick))
-			{
-				Theater.Friend.StageTick(_theater, this);
-			}
-			if (CanTick(TickFlags.PhysicsTick))
-			{
-				Theater.Friend.StagePhysicsTick(_theater, this);
-			}
-			if (CanTick(TickFlags.LateTick))
-			{
-				Theater.Friend.StageLateTick(_theater, this);
-			}
+			Theater.Friend.StageTick(_theater, this);
 		}
 
 		// Enter/Tick -> Exit
@@ -1283,6 +1335,7 @@ public class Act
 			_hasInitialized = true;
 
 
+			// Reset status
 			SetStatus(Status.None);
 
 
@@ -1312,11 +1365,15 @@ public class Act
 			}
 
 
-			// Reset perform count & Mark as deinitialized
+			// Reset counts & Mark as deinitialized
 			_performCount = 0;
+			_tickCount = 0;
+			_physicsTickCount = 0;
+			_lateTickCount = 0;
 			_hasInitialized = false;
 
 
+			// Reset status
 			SetStatus(Status.None);
 
 
