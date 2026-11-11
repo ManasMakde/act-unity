@@ -150,9 +150,9 @@ public class Theater : MonoBehaviour
     private Dictionary<Act, Act.TickFlags> _abortDeferActs = new();
     private HashSet<Act> _tickActs = new();
 
-    private Dictionary<Act, Act.TickFlags> _unperformedDeferActs = new();
-    private Dictionary<Act, Act.TickFlags> _unretriedDeferActs = new();
-    private Dictionary<Act, Act.TickFlags> _unabortedDeferActs = new();
+    private Dictionary<Act, Act.TickFlags> _performingDeferActs = new();
+    private Dictionary<Act, Act.TickFlags> _retryingDeferActs = new();
+    private Dictionary<Act, Act.TickFlags> _abortingDeferActs = new();
     private HashSet<Act> _tickedActs = new();
 
     private bool _isEnabled = true;
@@ -204,51 +204,51 @@ public class Theater : MonoBehaviour
     }
     private void PerformDeferred(Act act, Act.TickFlags flag)
     {
-        // Return if invalid act or flag
-        if (act == null || flag == Act.TickFlags.None)
+        // Return if invalid act or Invalid flag or Reassigning
+        if (act == null || flag == Act.TickFlags.None || (_performDeferActs.ContainsKey(act) && _performDeferActs[act] == flag))
         {
             return;
         }
 
         _performDeferActs[act] = flag;
-        _unperformedDeferActs.Remove(act);
+        _performingDeferActs.Remove(act);
     }
     private void RetryDeferred(Act act, Act.TickFlags flag)
     {
-        // Return if invalid act or flag
-        if (act == null || flag == Act.TickFlags.None)
+        // Return if invalid act or Invalid flag or Reassigning
+        if (act == null || flag == Act.TickFlags.None || (_retryDeferActs.ContainsKey(act) && _retryDeferActs[act] == flag))
         {
             return;
         }
 
         _retryDeferActs[act] = flag;
-        _unretriedDeferActs.Remove(act);
+        _retryingDeferActs.Remove(act);
     }
     private void AbortDeferred(Act act, Act.TickFlags flag)
     {
-        // Return if invalid act or flag
-        if (act == null || flag == Act.TickFlags.None)
+        // Return if invalid act or Invalid flag or Reassigning
+        if (act == null || flag == Act.TickFlags.None || (_abortDeferActs.ContainsKey(act) && _abortDeferActs[act] == flag))
         {
             return;
         }
 
         _abortDeferActs[act] = flag;
-        _unabortedDeferActs.Remove(act);
+        _abortingDeferActs.Remove(act);
     }
     private void CancelPerformDeferred(Act act)
     {
         _performDeferActs.Remove(act);
-        _unperformedDeferActs.Remove(act);
+        _performingDeferActs.Remove(act);
     }
     private void CancelRetryDeferred(Act act)
     {
         _retryDeferActs.Remove(act);
-        _unretriedDeferActs.Remove(act);
+        _retryingDeferActs.Remove(act);
     }
     private void CancelAbortDeferred(Act act)
     {
         _abortDeferActs.Remove(act);
-        _unabortedDeferActs.Remove(act);
+        _abortingDeferActs.Remove(act);
     }
     private void StageTick(Act act)
     {
@@ -336,7 +336,7 @@ public class Theater : MonoBehaviour
         acts = tickedActs;
         tickedActs = temp;
     }
-    private static void InvokeOnActs(ref Dictionary<Act, Act.TickFlags> acts, ref Dictionary<Act, Act.TickFlags> unoperatedActs, Operation operation, Act.TickFlags flag)
+    private static void InvokeOnActs(ref Dictionary<Act, Act.TickFlags> acts, ref Dictionary<Act, Act.TickFlags> invokingActs, Operation operation, Act.TickFlags flag)
     {
         // Return if no acts to operate
         if (acts.Count == 0)
@@ -345,19 +345,25 @@ public class Theater : MonoBehaviour
         }
 
 
+        // Reference swap so no act can be readded
+        var temp = acts;
+        acts = invokingActs;
+        invokingActs = temp;
+
+
         // Iterate and invoke operations
-        while (acts.Count != 0)
+        while (invokingActs.Count != 0)
         {
             // Get act
-            var act = GetFirstKey(acts);
-            var actFlag = acts[act];
-            acts.Remove(act);
+            var act = GetFirstKey(invokingActs);
+            var actFlag = invokingActs[act];
+            invokingActs.Remove(act);
 
 
             // Continue if not to invoke
             if (!((actFlag & flag) != 0))
             {
-                unoperatedActs[act] = actFlag;
+                acts[act] = actFlag;
                 continue;
             }
 
@@ -376,12 +382,6 @@ public class Theater : MonoBehaviour
                 act.Abort();
             }
         }
-
-
-        // Reference swap
-        var temp = acts;
-        acts = unoperatedActs;
-        unoperatedActs = temp;
     }
 
 
@@ -389,23 +389,23 @@ public class Theater : MonoBehaviour
     private void Update()
     {
         TickActs(ref _tickActs, ref _tickedActs, Act.TickFlags.Tick);
-        InvokeOnActs(ref _performDeferActs, ref _unperformedDeferActs, Operation.Perform, Act.TickFlags.Tick);
-        InvokeOnActs(ref _retryDeferActs, ref _unretriedDeferActs, Operation.Retry, Act.TickFlags.Tick);
-        InvokeOnActs(ref _abortDeferActs, ref _unabortedDeferActs, Operation.Abort, Act.TickFlags.Tick);
+        InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.Tick);
+        InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.Tick);
+        InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.Tick);
     }
     private void FixedUpdate()
     {
         TickActs(ref _tickActs, ref _tickedActs, Act.TickFlags.PhysicsTick);
-        InvokeOnActs(ref _performDeferActs, ref _unperformedDeferActs, Operation.Perform, Act.TickFlags.PhysicsTick);
-        InvokeOnActs(ref _retryDeferActs, ref _unretriedDeferActs, Operation.Retry, Act.TickFlags.PhysicsTick);
-        InvokeOnActs(ref _abortDeferActs, ref _unabortedDeferActs, Operation.Abort, Act.TickFlags.PhysicsTick);
+        InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.PhysicsTick);
+        InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.PhysicsTick);
+        InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.PhysicsTick);
     }
     private void LateUpdate()
     {
         TickActs(ref _tickActs, ref _tickedActs, Act.TickFlags.LateTick);
-        InvokeOnActs(ref _performDeferActs, ref _unperformedDeferActs, Operation.Perform, Act.TickFlags.LateTick);
-        InvokeOnActs(ref _retryDeferActs, ref _unretriedDeferActs, Operation.Retry, Act.TickFlags.LateTick);
-        InvokeOnActs(ref _abortDeferActs, ref _unabortedDeferActs, Operation.Abort, Act.TickFlags.LateTick);
+        InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.LateTick);
+        InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.LateTick);
+        InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.LateTick);
     }
     private void OnDestroy()
     {
