@@ -236,6 +236,7 @@ public class Act
 
 			// Add to block list
 			_actsToBlock[bAct] = blockType;
+			_didModifyActsToBlock = true;
 
 
 			// Persistent block if performing
@@ -263,6 +264,7 @@ public class Act
 
 			// Remove from block list
 			_actsToBlock.Remove(bAct);
+			_didModifyActsToBlock = true;
 		}
 	}
 	public bool IsPerforming()
@@ -437,7 +439,7 @@ public class Act
 
 
 		// Return if both acts in same prologue chain
-		if (byAct != this && InSamePrologueChain(byAct, this))
+		if (byAct != this && _topEpilogueActs.Overlaps(byAct._topEpilogueActs))
 		{
 			WriteLog("Cannot block, Both " + _name + " & " + byAct._name + " are in the same prologue chain!");
 			return;
@@ -508,6 +510,7 @@ public class Act
 
 	[NonSerialized] private Dictionary<Act, BlockType> _actsToBlock = new();
 	[NonSerialized] private HashSet<Act> _blockedByActs = new();
+	[NonSerialized] private HashSet<Act> _alreadyBlockedActs = new();
 
 	[NonSerialized] private List<Act> _prologueActs = new();
 	[NonSerialized] private Dictionary<Act, bool /* isInSequence */> _epilogueActs = new();
@@ -519,6 +522,7 @@ public class Act
 
 	[NonSerialized] private bool _hasInitialized = false;
 	[NonSerialized] private bool _isRetrying = false;
+	[NonSerialized] private bool _didModifyActsToBlock = false;
 
 	[NonSerialized] private int _prologueIndex = 0;
 	[NonSerialized] private int _prologueCompletedCount = 0;
@@ -542,10 +546,6 @@ public class Act
 		}
 
 		return null;
-	}
-	public static bool InSamePrologueChain(Act actA, Act actB)
-	{
-		return actA._topEpilogueActs.Overlaps(actB._topEpilogueActs) || actA._topEpilogueActs.Contains(actB) || actB._topEpilogueActs.Contains(actA);
 	}
 	private static bool LinkPrologueArrays(List<Act> eArray, List<Act> pArray)
 	{
@@ -637,19 +637,26 @@ public class Act
 		}
 
 
+		// Change top epilogues
+		ofAct._topEpilogueActs.Add(newTopEpilogue);
+		ofAct._topEpilogueActs.Remove(oldTopEpilogue);
+
+
 		// Iterate through prologue acts
 		foreach (Act pAct in ofAct._prologueActs)
 		{
+			// Assign old epilogue
+			if (pAct._topEpilogueActs.Count == 1 && pAct._topEpilogueActs.Contains(pAct))
+			{
+				oldTopEpilogue = pAct;
+			}
+
+
 			// Recurse
 			if (!BuildPrologueChain(pAct, newTopEpilogue, oldTopEpilogue))
 			{
 				return false;
 			}
-
-
-			// Change top epilogues
-			pAct._topEpilogueActs.Add(newTopEpilogue);
-			pAct._topEpilogueActs.Remove(oldTopEpilogue);
 		}
 
 		return true;
@@ -661,6 +668,10 @@ public class Act
 		{
 			oldTopEpilogue = ofAct;
 		}
+
+
+		// Remove old top epilogue
+		ofAct._topEpilogueActs.Remove(oldTopEpilogue);
 
 
 		// Iterate over prologue acts
@@ -675,10 +686,6 @@ public class Act
 			{
 				continue;
 			}
-
-
-			// Remove old top epilogue
-			pAct._topEpilogueActs.Remove(oldTopEpilogue);
 
 
 			// Clean up epilogues
@@ -760,6 +767,79 @@ public class Act
 		if (_theater != null)
 		{
 			Theater.Friend.ActStatusChange(_theater, this);
+		}
+	}
+	private void BlockOthers(bool isFirstItr = true)
+	{
+		// Clear already blocked if first time iterating
+		if (isFirstItr)
+		{
+			_alreadyBlockedActs.Clear();
+		}
+
+
+		// Reset break condition
+		_didModifyActsToBlock = false;
+
+
+		// Iterate & block others
+		foreach (Act act in _actsToBlock.Keys)
+		{
+			// Skip if already blocked
+			if (_alreadyBlockedActs.Contains(act))
+			{
+				continue;
+			}
+
+
+			// Block
+			_alreadyBlockedActs.Add(act);
+			act.BlockSelf(this, _actsToBlock[act]);
+			if (_status != Status.Prologuing) { return; }  // Guard
+
+
+			// Try blocking again if modified in between
+			if (_didModifyActsToBlock)
+			{
+				BlockOthers(false);
+				break;
+			}
+		}
+	}
+	private void UnblockOthers(bool isFirstItr = true)
+	{
+		// Clear already unblocked if first time iterating
+		if (isFirstItr)
+		{
+			_alreadyBlockedActs.Clear();
+		}
+
+
+		// Reset break condition
+		_didModifyActsToBlock = false;
+
+
+		// Iterate & unblock others
+		foreach (Act act in _actsToBlock.Keys)
+		{
+			// Skip if already unblocked
+			if (_alreadyBlockedActs.Contains(act))
+			{
+				continue;
+			}
+
+
+			// Unblock
+			_alreadyBlockedActs.Add(act);
+			act.UnblockSelf(this);
+
+
+			// Try unblocking again if modified in between
+			if (_didModifyActsToBlock)
+			{
+				UnblockOthers(false);
+				break;
+			}
 		}
 	}
 	private bool CanPerformImpl(bool isRetrying = false)
@@ -875,12 +955,9 @@ public class Act
 		}
 
 
-		// Block Others
-		foreach (Act act in _actsToBlock.Keys)
-		{
-			act.BlockSelf(this, _actsToBlock[act]);
-			if (_status != Status.Prologuing) { return; }  // Guard
-		}
+		// Block all other acts
+		BlockOthers();
+		if (_status != Status.Prologuing) { return; }  // Guard
 
 
 		// Skip if no prologues
@@ -1202,8 +1279,8 @@ public class Act
 		}
 
 
-		// Clear any stales in the prologue chain
-		if (_topEpilogueActs.Count == 0)
+		// Clear prologue chain
+		if (_topEpilogueActs.Count == 0 || (_topEpilogueActs.Count == 1 && _topEpilogueActs.Contains(this)))
 		{
 			ClearPrologueChain(this);
 		}
@@ -1233,11 +1310,8 @@ public class Act
 		ShiftEpilogues(this);
 
 
-		// Unblock others
-		foreach (Act act in _actsToBlock.Keys)
-		{
-			act.UnblockSelf(this);
-		}
+		// Unblock all other acts
+		UnblockOthers();
 
 
 		// Redirect to None

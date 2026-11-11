@@ -272,7 +272,7 @@ public class Theater : MonoBehaviour
 
 
     // Private Static Methods
-    public static Act GetFirstKey(Dictionary<Act, Act.TickFlags> collection)
+    private static Act GetFirstKey(Dictionary<Act, Act.TickFlags> collection)
     {
         foreach (var kvp in collection)
         {
@@ -281,7 +281,7 @@ public class Theater : MonoBehaviour
 
         return null;
     }
-    public static Act GetFirst(HashSet<Act> collection)
+    private static Act GetFirst(HashSet<Act> collection)
     {
         foreach (var data in collection)
         {
