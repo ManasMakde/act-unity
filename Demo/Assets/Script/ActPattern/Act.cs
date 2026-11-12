@@ -478,7 +478,7 @@ public class Act
 	}
 	protected virtual void WriteLog(string message)
 	{
-		if (!isVerbose || _theater == null)
+		if (!isVerbose)
 		{
 			return;
 		}
@@ -941,17 +941,27 @@ public class Act
 		}
 
 
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
+
+
+		// Broadcast performing started
+		OnPerformStart?.Invoke(this);
+		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
+
+
 		// Create chain
 		if (_topEpilogueActs.Count == 0 && !BuildPrologueChain(this))
 		{
 			Redirect(Status.Concluding, Outcome.Failure);
 			return;
 		}
+		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Block all other acts
 		BlockOthers();
-		if (_status != Status.Prologuing) { return; }  // Guard
+		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Skip if no prologues
@@ -964,7 +974,7 @@ public class Act
 
 		// Broadcast pre prologue
 		OnPrePrologue?.Invoke(this);
-		if (_status != Status.Prologuing) { return; }  // Guard
+		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Start performing prologues
@@ -979,9 +989,17 @@ public class Act
 		}
 
 
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
+
+
 		// Iterate and perform prologues
 		while (_prologueIndex < _prologueActs.Count)
 		{
+			// Guard
+			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }
+
+
 			// Get prologue act
 			var pAct = _prologueActs[_prologueIndex];
 
@@ -1020,17 +1038,18 @@ public class Act
 				Redirect(Status.Concluding, Outcome.Failure);
 				return;
 			}
-
-
-			// Guard
-			if (_status != Status.Prologuing) { return; }
 		}
 
 
+		// Guard
+		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }
+
+
 		// Cascade down incase sequenced with already ongoing act
-		for (int i = 0; i < _prologueActs.Count && _status == Status.Prologuing; i++)
+		for (int i = 0; i < _prologueActs.Count; i++)
 		{
 			_prologueActs[i].PerformPrologues();
+			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 		}
 	}
 	private void CompletedPrologue(Act pAct, Outcome pOutcome, bool hadAlreadyCompleted = false)
@@ -1042,12 +1061,16 @@ public class Act
 		}
 
 
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
+
+
 		// Broadcast prologue completed
 		if (!hadAlreadyCompleted)
 		{
 			OnPrologueComplete?.Invoke(this, pAct, pOutcome);
 		}
-		if (_status != Status.Prologuing) { return; }  // Guard
+		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Concluding if prologue act did not succeed
@@ -1071,7 +1094,7 @@ public class Act
 
 		// Broadcast post prologue
 		OnPostPrologue?.Invoke(this);
-		if (_status != Status.Prologuing) { return; }  // Guard
+		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 		// Redirect to enter
@@ -1337,11 +1360,10 @@ public class Act
 		{
 			_outcome = Outcome.Pending;
 			SetStatus(Status.Prologuing);
-			OnPerformStart?.Invoke(this);
 			PrologueImpl();
 		}
 
-		// prologue -> Enter
+		// Prologue -> Enter
 		else if (_status == Status.Prologuing && newStatus == Status.Entering)
 		{
 			SetStatus(Status.Entering);
