@@ -19,9 +19,6 @@ using UnityEngine.TestTools;
 // 1. Is GetTheater() return accurate theater?
 // 1. Is GetTheater() return null when no theater is assigned?
 
-// 1. Is GetOwner() return accurate owner?
-// 1. Is GetOwner() return null when no theater is assigned?
-
 // 1. Is GetBlockedByActs() return accurate acts?
 // 1. Is GetActsToBlock() return accurate acts?
 
@@ -557,42 +554,6 @@ public class ActMiscTests
 
         yield return null;
     }
-
-
-
-    [UnityTest]
-    public IEnumerator GetOwnerAccurate()
-    {
-        // Prerequisites
-        var theaterGO = new GameObject("Misc Owner Get Theater");
-        var theater = theaterGO.AddComponent<Theater>();
-
-        // Perform Act
-        var act = new Act();
-        act.Init("Misc Owner Act", theater);
-
-
-        // Assertions
-        Assert.IsTrue(act.GetOwner() == theaterGO, "GetOwner() did not return theater owner gameobject!");
-
-        UnityEngine.Object.Destroy(theaterGO);
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator GetOwnerNullWhenNotAssigned()
-    {
-        // Perform Act
-        var act = new Act();
-        act.Init("Misc No Owner Act");
-
-
-        // Assertions
-        Assert.IsTrue(act.GetOwner() == null, "GetOwner() not null despite no theater assigned!");
-
-        yield return null;
-    }
-
 
 
     [UnityTest]

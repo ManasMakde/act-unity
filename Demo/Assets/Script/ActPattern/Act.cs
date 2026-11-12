@@ -25,7 +25,6 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 
 [Serializable]
@@ -364,18 +363,6 @@ public class Act
 	{
 		return _lifetimeLateTickCount;
 	}
-	static public float GetDelta()
-	{
-		return Time.deltaTime;
-	}
-	static public float GetPhysicsDelta()
-	{
-		return Time.fixedDeltaTime;
-	}
-	public GameObject GetOwner()
-	{
-		return _theater != null ? _theater.gameObject : null;
-	}
 	public Theater GetTheater()
 	{
 		return _theater;
@@ -489,14 +476,14 @@ public class Act
 			OnBlockChanged?.Invoke(this, byAct, BlockType.Persistent, false);
 		}
 	}
-	protected virtual void WriteLog(string message, string overrideName = "")
+	protected virtual void WriteLog(string message)
 	{
-		if (!isVerbose)
+		if (!isVerbose || _theater == null)
 		{
 			return;
 		}
 
-		Debug.LogWarning("[" + (overrideName != "" ? overrideName : _name) + "] " + message);
+		Theater.Friend.WriteLog(_theater, $"[{_name}] {message}");
 	}
 
 

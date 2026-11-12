@@ -272,6 +272,10 @@ public class Theater : MonoBehaviour
 
 
     // Private Static Methods
+    private static void WriteLog(string message)
+    {
+        Debug.LogWarning(message);
+    }
     private static Act GetFirstKey(Dictionary<Act, Act.TickFlags> collection)
     {
         foreach (var kvp in collection)
@@ -459,6 +463,10 @@ public class Theater : MonoBehaviour
         static public void UnstageTick(Theater theater, Act act)
         {
             theater.UnstageTick(act);
+        }
+        static public void WriteLog(Theater theater, string message)
+        {
+            Theater.WriteLog(message);
         }
     }
 }

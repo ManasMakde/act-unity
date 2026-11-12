@@ -10,7 +10,6 @@ using UnityEngine.TestTools;
 // 1. Are all Tick() methods being invoked?
 // 1. Is ticking not being invoked when tick flag is set to none?
 // 1. Does ticking fail if not theater is assigned?
-// 1. Does GetDelta() & GetPhysicsDelta() return accurate values?
 
 
 public class ActTickTests
@@ -205,14 +204,5 @@ public class ActTickTests
         }
 
         yield return null;
-    }
-    [UnityTest]
-    public IEnumerator GetDeltaAndPhysicsDelta()
-    {
-        yield return null;
-
-        // Assertions
-        Assert.IsTrue(Act.GetDelta() == Time.deltaTime, $"GetDelta() does not match Time.deltaTime! GetDelta={Act.GetDelta()}  Time.deltaTime={Time.deltaTime}");
-        Assert.IsTrue(Act.GetPhysicsDelta() == Time.fixedDeltaTime, $"GetPhysicsDelta() does not match Time.fixedDeltaTime! GetPhysicsDelta={Act.GetPhysicsDelta()}  Time.fixedDeltaTime={Time.fixedDeltaTime}");
     }
 }

@@ -69,7 +69,7 @@ public class GotoAct : Act
         // Auto get rigidBody if not provided
         if (rb == null)
         {
-            rb = GetOwner().GetComponent<Rigidbody2D>();
+            rb = GetTheater().gameObject.GetComponent<Rigidbody2D>();
         }
         rb.gravityScale = 0f;  // No gravity for top down
 
@@ -130,7 +130,7 @@ public class AttackAct : Act
     {
         if (animation != null)
         {
-            eventfulAnimator = GetOwner().GetComponentInChildren<EventfulAnimator>();
+            eventfulAnimator = GetTheater().gameObject.GetComponentInChildren<EventfulAnimator>();
         }
     }
     protected override bool CanPerform()
@@ -239,7 +239,7 @@ public class MoveAct : Act
     {
         if (rb == null)
         {
-            rb = GetOwner().GetComponent<Rigidbody2D>();
+            rb = GetTheater().gameObject.GetComponent<Rigidbody2D>();
         }
         rb.gravityScale = 0f;  // No gravity for top down
     }
@@ -249,7 +249,7 @@ public class MoveAct : Act
     }
     protected override Outcome Enter()
     {
-        Vector2 nextPosition = rb.position + direction * speed * GetPhysicsDelta();
+        Vector2 nextPosition = rb.position + direction * speed * Time.fixedDeltaTime;
 
         if (useBorder)
         {
@@ -297,14 +297,14 @@ public class ShootAct : Act
     private void SpawnBullet()
     {
         // Spawn Bullet
-        var spawnPosition = spawnAtOwner ? GetOwner().transform.position : (Vector3)spawnLocation;
+        var spawnPosition = spawnAtOwner ? GetTheater().gameObject.transform.position : (Vector3)spawnLocation;
         GameObject bullet = MonoBehaviour.Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
 
 
         // Set bullet direction and owner
         ProjectileBase bulletScript = bullet.GetComponent<ProjectileBase>();
         bulletScript.direction = direction;
-        bulletScript.SetOwner(GetOwner());
+        bulletScript.SetOwner(GetTheater().gameObject);
 
 
         // Set ignore list if any provided
@@ -342,7 +342,7 @@ public class ShootAct : Act
     {
         if (animation != null)
         {
-            eventfulAnimator = GetOwner().GetComponentInChildren<EventfulAnimator>();
+            eventfulAnimator = GetTheater().gameObject.GetComponentInChildren<EventfulAnimator>();
         }
     }
     protected override bool CanPerform()
@@ -482,11 +482,11 @@ public class DamageAct : Act
 
         if (toFlash)
         {
-            spriteRenderer = GetOwner().GetComponentInChildren<SpriteRenderer>();
+            spriteRenderer = GetTheater().gameObject.GetComponentInChildren<SpriteRenderer>();
         }
         if (animation != null)
         {
-            eventfulAnimator = GetOwner().GetComponentInChildren<EventfulAnimator>();
+            eventfulAnimator = GetTheater().gameObject.GetComponentInChildren<EventfulAnimator>();
         }
     }
     protected override bool CanPerform()
@@ -580,7 +580,7 @@ public class DamageAct : Act
         // Die
         if (_toDie)
         {
-            MonoBehaviour.Destroy(GetOwner());
+            MonoBehaviour.Destroy(GetTheater().gameObject);
         }
 
 
@@ -655,7 +655,7 @@ public class LookAct : Act
         // Auto get rigidBody if not provided
         if (rb == null)
         {
-            rb = GetOwner().GetComponent<Rigidbody2D>();
+            rb = GetTheater().gameObject.GetComponent<Rigidbody2D>();
         }
 
         // Enable ticking
@@ -671,7 +671,7 @@ public class LookAct : Act
         if (turnType == TurnType.Once)
         {
             float goalRotation = GetGoalRotation();
-            rb.MoveRotation(CalcRotationLerp(goalRotation, GetPhysicsDelta()));
+            rb.MoveRotation(CalcRotationLerp(goalRotation, Time.fixedDeltaTime));
             return Outcome.Success;
         }
 
@@ -688,7 +688,7 @@ public class LookAct : Act
     {
         // Turn owner
         float goalRotation = GetGoalRotation();
-        rb.MoveRotation(CalcRotationLerp(goalRotation, GetPhysicsDelta()));
+        rb.MoveRotation(CalcRotationLerp(goalRotation, Time.fixedDeltaTime));
 
 
         // Keep ticking if not meant to stop at goal
