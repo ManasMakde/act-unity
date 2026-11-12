@@ -153,7 +153,7 @@ public class Theater : MonoBehaviour
     private Dictionary<Act, Act.TickFlags> _performingDeferActs = new();
     private Dictionary<Act, Act.TickFlags> _retryingDeferActs = new();
     private Dictionary<Act, Act.TickFlags> _abortingDeferActs = new();
-    private HashSet<Act> _tickedActs = new();
+    private HashSet<Act> _tickingActs = new();
 
     private bool _isEnabled = true;
 
@@ -267,7 +267,7 @@ public class Theater : MonoBehaviour
         }
 
         _tickActs.Remove(act);
-        _tickedActs.Remove(act);
+        _tickingActs.Remove(act);
     }
 
 
@@ -294,7 +294,7 @@ public class Theater : MonoBehaviour
 
         return null;
     }
-    private static void TickActs(ref HashSet<Act> acts, ref HashSet<Act> tickedActs, Act.TickFlags flag)
+    private static void TickActs(ref HashSet<Act> acts, ref HashSet<Act> tickingActs, Act.TickFlags flag)
     {
         // Return if no acts to tick
         if (acts.Count == 0)
@@ -303,13 +303,19 @@ public class Theater : MonoBehaviour
         }
 
 
+        // Reference swap so no act can be readded
+        var temp = acts;
+        acts = tickingActs;
+        tickingActs = temp;
+
+
         // Iterate and invoke operations
-        while (acts.Count != 0)
+        while (tickingActs.Count != 0)
         {
             // Get act
-            var act = GetFirst(acts);
-            acts.Remove(act);
-            tickedActs.Add(act);  // Shift to completed
+            var act = GetFirst(tickingActs);
+            tickingActs.Remove(act);
+            acts.Add(act);
 
 
             // Continue if cannot tick
@@ -333,12 +339,6 @@ public class Theater : MonoBehaviour
                 Act.Friend.LateTickImpl(act);
             }
         }
-
-
-        // Reference swap
-        var temp = acts;
-        acts = tickedActs;
-        tickedActs = temp;
     }
     private static void InvokeOnActs(ref Dictionary<Act, Act.TickFlags> acts, ref Dictionary<Act, Act.TickFlags> invokingActs, Operation operation, Act.TickFlags flag)
     {
@@ -392,21 +392,21 @@ public class Theater : MonoBehaviour
     // Private Override Methods
     private void Update()
     {
-        TickActs(ref _tickActs, ref _tickedActs, Act.TickFlags.Tick);
+        TickActs(ref _tickActs, ref _tickingActs, Act.TickFlags.Tick);
         InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.Tick);
         InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.Tick);
         InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.Tick);
     }
     private void FixedUpdate()
     {
-        TickActs(ref _tickActs, ref _tickedActs, Act.TickFlags.PhysicsTick);
+        TickActs(ref _tickActs, ref _tickingActs, Act.TickFlags.PhysicsTick);
         InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.PhysicsTick);
         InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.PhysicsTick);
         InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.PhysicsTick);
     }
     private void LateUpdate()
     {
-        TickActs(ref _tickActs, ref _tickedActs, Act.TickFlags.LateTick);
+        TickActs(ref _tickActs, ref _tickingActs, Act.TickFlags.LateTick);
         InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.LateTick);
         InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.LateTick);
         InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.LateTick);
