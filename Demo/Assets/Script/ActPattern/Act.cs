@@ -66,7 +66,6 @@ public class Act
 	}
 
 
-
 	// Public
 	public event Action<Act /* act */> OnPreSetup;
 	public event Action<Act /* act */> OnPostSetup;
@@ -501,8 +500,14 @@ public class Act
 	}
 
 
-
 	// Private
+	private enum EpilogueType
+	{
+		Standalone,
+		Sequenced,
+		Completed
+	}
+
 	[NonSerialized] private Theater _theater = null;
 	[NonSerialized] private Status _status = Status.None;
 	[NonSerialized] private Status _prevStatus = Status.None;
@@ -513,7 +518,7 @@ public class Act
 	[NonSerialized] private HashSet<Act> _alreadyBlockedActs = new();
 
 	[NonSerialized] private List<Act> _prologueActs = new();
-	[NonSerialized] private Dictionary<Act, bool /* isInSequence */> _epilogueActs = new();
+	[NonSerialized] private Dictionary<Act, EpilogueType> _epilogueActs = new();
 	[NonSerialized] private HashSet<Act> _continueEpilogueActs = new();
 	[NonSerialized] private HashSet<Act> _topEpilogueActs = new();
 
@@ -537,7 +542,6 @@ public class Act
 	[NonSerialized] private int _lifetimePhysicsTickCount = 0;
 	[NonSerialized] private int _lifetimeLateTickCount = 0;
 
-
 	public static Act GetFirst(HashSet<Act> collection)
 	{
 		foreach (var data in collection)
@@ -553,7 +557,7 @@ public class Act
 		{
 			for (int j = 0; j < pArray.Count; j++)
 			{
-				if (!LinkPrologue(eArray[i], pArray[j], true))
+				if (!LinkPrologue(eArray[i], pArray[j], EpilogueType.Sequenced))
 				{
 					return false;
 				}
@@ -562,7 +566,7 @@ public class Act
 
 		return true;
 	}
-	private static bool LinkPrologue(Act eAct, Act pAct, bool inSequence = false)
+	private static bool LinkPrologue(Act eAct, Act pAct, EpilogueType eState = EpilogueType.Standalone)
 	{
 		// Return if already past prologuing phase 
 		if (eAct.IsOngoing())
@@ -571,7 +575,7 @@ public class Act
 		}
 
 		eAct._prologueActs.Add(pAct);
-		pAct._epilogueActs.TryAdd(eAct, inSequence);
+		pAct._epilogueActs.TryAdd(eAct, eState);
 
 		return true;
 	}
@@ -712,20 +716,20 @@ public class Act
 		foreach (var kvp in ofAct._epilogueActs)
 		{
 			var eAct = kvp.Key;
-			var isInSequence = kvp.Value;
+			var eState = kvp.Value;
 
-			// Mark as already performed in sequence or if waiting on prologue completion
-			if (isInSequence || eAct._status == Status.Prologuing)
+			// Shift to continue if in sequence or is awaiting on prologue
+			if (eState == EpilogueType.Sequenced || (eAct._status == Status.Prologuing && eState != EpilogueType.Completed))
 			{
 				ofAct._continueEpilogueActs.Add(eAct);
 			}
 		}
 
 
-		// Filter out sequence acts
+		// Mark as completed & Remove out sequence acts
 		foreach (var eAct in ofAct._continueEpilogueActs)
 		{
-			// Skip if not in epilogue
+			// Skip if does not contain act
 			if (!ofAct._epilogueActs.ContainsKey(eAct))
 			{
 				continue;
@@ -733,10 +737,13 @@ public class Act
 
 
 			// Remove if in sequence
-			var isInSequence = ofAct._epilogueActs[eAct];
-			if (isInSequence)
+			if (ofAct._epilogueActs[eAct] == EpilogueType.Sequenced)
 			{
 				ofAct._epilogueActs.Remove(eAct);
+			}
+			else  // Mark completed
+			{
+				ofAct._epilogueActs[eAct] = EpilogueType.Completed;
 			}
 		}
 	}
@@ -996,9 +1003,18 @@ public class Act
 			_prologueIndex++;
 
 
-			// When act has already performed in sequence
+			// Skip if already removed by being in sequence
 			if (!pAct._epilogueActs.ContainsKey(this))
 			{
+				CompletedPrologue(pAct, Outcome.Success, true);
+				continue;
+			}
+
+
+			// Skip if already completed
+			if (pAct._epilogueActs[this] == EpilogueType.Completed)
+			{
+				_prologueCompletedCount--;
 				CompletedPrologue(pAct, Outcome.Success, true);
 				continue;
 			}
@@ -1279,6 +1295,16 @@ public class Act
 		}
 
 
+		// Unmark prologues as completed
+		foreach (var pAct in _prologueActs)
+		{
+			if (pAct._epilogueActs.ContainsKey(this) && pAct._epilogueActs[this] == EpilogueType.Completed)
+			{
+				pAct._epilogueActs[this] = EpilogueType.Standalone;
+			}
+		}
+
+
 		// Clear prologue chain
 		if (_topEpilogueActs.Count == 0 || (_topEpilogueActs.Count == 1 && _topEpilogueActs.Contains(this)))
 		{
@@ -1457,7 +1483,6 @@ public class Act
 	}
 
 
-
 	// Friend Class
 	public class Friend
 	{
@@ -1484,9 +1509,15 @@ public class Act
 		{
 			return act._prologueActs;
 		}
-		static public Dictionary<Act, bool> GetEpilogueActs(Act act)
+		static public Dictionary<Act, int /* EpilogueType */> GetEpilogueActs(Act act)
 		{
-			return act._epilogueActs;
+			var result = new Dictionary<Act, int>();
+			foreach (var kvp in act._epilogueActs)
+			{
+				result[kvp.Key] = (int)kvp.Value;
+			}
+
+			return result;
 		}
 		static public HashSet<Act> GetContinueEpilogueActs(Act act)
 		{
