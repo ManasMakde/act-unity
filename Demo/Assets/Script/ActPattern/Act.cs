@@ -215,6 +215,11 @@ public class Act
 	}
 	public void AddToBlock(List<Act> acts, BlockType blockType = BlockType.Persistent)
 	{
+		if (acts == null)
+		{
+			return;
+		}
+
 		foreach (Act bAct in acts)
 		{
 			// Skip if self (reserved for enable/disable) or null
@@ -246,6 +251,11 @@ public class Act
 	}
 	public void RemoveFromBlock(List<Act> acts)
 	{
+		if (acts == null)
+		{
+			return;
+		}
+
 		foreach (Act bAct in acts)
 		{
 			// Skip if self (reserved for enable/disable) or null
@@ -492,7 +502,8 @@ public class Act
 	{
 		Standalone,
 		Sequenced,
-		Completed
+		Completed,
+		SeqCompleted
 	}
 
 	[NonSerialized] private Theater _theater = null;
@@ -694,53 +705,9 @@ public class Act
 		// Clean up prologues
 		if (ofAct._topEpilogueActs.Count == 0)
 		{
+			ofAct._prologueIndex = 0;
+			ofAct._prologueCompletedCount = 0;
 			ofAct._prologueActs.Clear();
-		}
-	}
-	private static void ShiftEpilogues(Act ofAct)
-	{
-		// Add all to continue epilogue
-		foreach (var kvp in ofAct._epilogueActs)
-		{
-			var eAct = kvp.Key;
-			var eState = kvp.Value;
-
-			// Shift to continue if in sequence or is awaiting on prologue
-			if (eState == EpilogueType.Sequenced || (eAct._status == Status.Prologuing && eState != EpilogueType.Completed))
-			{
-				ofAct._continueEpilogueActs.Add(eAct);
-			}
-		}
-
-
-		// Mark as completed & Remove out sequence acts
-		foreach (var eAct in ofAct._continueEpilogueActs)
-		{
-			// Skip if does not contain act
-			if (!ofAct._epilogueActs.ContainsKey(eAct))
-			{
-				continue;
-			}
-
-
-			// Remove if in sequence
-			if (ofAct._epilogueActs[eAct] == EpilogueType.Sequenced)
-			{
-				ofAct._epilogueActs.Remove(eAct);
-			}
-			else  // Mark completed
-			{
-				ofAct._epilogueActs[eAct] = EpilogueType.Completed;
-			}
-		}
-	}
-	private static void ContinueEpilogues(Act ofAct, Outcome eOutcome)
-	{
-		while (ofAct._continueEpilogueActs.Count != 0)
-		{
-			Act eAct = GetFirst(ofAct._continueEpilogueActs);
-			ofAct._continueEpilogueActs.Remove(eAct);
-			eAct.CompletedPrologue(ofAct, eOutcome);
 		}
 	}
 	private void SetStatus(Status newStatus)
@@ -765,6 +732,10 @@ public class Act
 	}
 	private void BlockOthers(bool isFirstItr = true)
 	{
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
+
+
 		// Clear already blocked if first time iterating
 		if (isFirstItr)
 		{
@@ -789,7 +760,7 @@ public class Act
 			// Block
 			_alreadyBlockedActs.Add(act);
 			act.BlockSelf(this, _actsToBlock[act]);
-			if (_status != Status.Prologuing) { return; }  // Guard
+			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 
 
 			// Try blocking again if modified in between
@@ -996,53 +967,39 @@ public class Act
 		// Iterate and perform prologues
 		while (_prologueIndex < _prologueActs.Count)
 		{
-			// Guard
-			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }
-
-
 			// Get prologue act
 			var pAct = _prologueActs[_prologueIndex];
-
-
-			// Increment prologue index
 			_prologueIndex++;
 
 
-			// Skip if already removed by being in sequence
+			// Skip if act not an epilogue
 			if (!pAct._epilogueActs.ContainsKey(this))
 			{
-				CompletedPrologue(pAct, Outcome.Success, true);
 				continue;
 			}
 
 
-			// Skip if already completed
-			if (pAct._epilogueActs[this] == EpilogueType.Completed)
+			// Try entering if already completed
+			var eType = pAct._epilogueActs[this];
+			if (eType == EpilogueType.Completed || eType == EpilogueType.SeqCompleted)
 			{
-				_prologueCompletedCount--;
 				CompletedPrologue(pAct, Outcome.Success, true);
-				continue;
 			}
-
 
 			// Skip if already performing
-			if (pAct.IsPerforming())
-			{
-				continue;
-			}
-
+			else if (pAct.IsPerforming()) { }
 
 			// Perform prologue act
-			if (!pAct.PerformImpl())
+			else if (!pAct.PerformImpl())
 			{
 				Redirect(Status.Concluding, Outcome.Failure);
 				return;
 			}
+
+
+			// Guard
+			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 		}
-
-
-		// Guard
-		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }
 
 
 		// Cascade down incase sequenced with already ongoing act
@@ -1052,37 +1009,54 @@ public class Act
 			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 		}
 	}
-	private void CompletedPrologue(Act pAct, Outcome pOutcome, bool hadAlreadyCompleted = false)
+	private void CompletedPrologue(Act pAct, Outcome pOutcome, bool alreadyCompleted = false)
 	{
-		// Guard
-		if (_status != Status.Prologuing)
-		{
-			return;
-		}
-
-
 		// Save life time count
 		int currLifetimePerformCount = _lifetimePerformCount;
 
 
-		// Broadcast prologue completed
-		if (!hadAlreadyCompleted)
+		// Skip if act was already completed
+		if (!alreadyCompleted)
 		{
+			// Return if entry was removed
+			if (!pAct._epilogueActs.ContainsKey(this))
+			{
+				return;
+			}
+
+
+			// Return if already completed
+			var eType = pAct._epilogueActs[this];
+			if (eType == EpilogueType.Completed || eType == EpilogueType.SeqCompleted)
+			{
+				return;
+			}
+
+
+			// Mark completed
+			pAct._epilogueActs[this] = eType == EpilogueType.Sequenced ? EpilogueType.SeqCompleted : (_status == Status.Prologuing ? EpilogueType.Completed : eType);
+			_prologueCompletedCount += eType == EpilogueType.Sequenced || _status == Status.Prologuing ? 1 : 0;
+
+
+			// Return if not prologuing
+			if (_status != Status.Prologuing)
+			{
+				return;
+			}
+
+
+			// Broadcast prologue completed
 			OnPrologueComplete?.Invoke(this, pAct, pOutcome);
+			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
+
+
+			// Conclude if prologue act did not succeed
+			if (pOutcome != Outcome.Success)
+			{
+				Redirect(Status.Concluding, pOutcome);
+				return;
+			}
 		}
-		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
-
-
-		// Concluding if prologue act did not succeed
-		if (pOutcome != Outcome.Success)
-		{
-			Redirect(Status.Concluding, pOutcome);
-			return;
-		}
-
-
-		// Increment prologues completed
-		_prologueCompletedCount++;
 
 
 		// Wait for all to complete
@@ -1308,9 +1282,10 @@ public class Act
 		// Unmark prologues as completed
 		foreach (var pAct in _prologueActs)
 		{
-			if (pAct._epilogueActs.ContainsKey(this) && pAct._epilogueActs[this] == EpilogueType.Completed)
+			if (pAct._epilogueActs.ContainsKey(this))
 			{
-				pAct._epilogueActs[this] = EpilogueType.Standalone;
+				var eType = pAct._epilogueActs[this];
+				pAct._epilogueActs[this] = eType == EpilogueType.Completed ? EpilogueType.Standalone : (eType == EpilogueType.SeqCompleted ? EpilogueType.Sequenced : eType);
 			}
 		}
 
@@ -1343,7 +1318,10 @@ public class Act
 
 
 		// Shift epilogues to allow independent continuing
-		ShiftEpilogues(this);
+		foreach (var kvp in _epilogueActs)
+		{
+			_continueEpilogueActs.Add(kvp.Key);
+		}
 
 
 		// Unblock all other acts
@@ -1405,8 +1383,13 @@ public class Act
 			OnPerformEnd?.Invoke(this);
 
 
-			// Continue epilogues
-			ContinueEpilogues(this, eOutcome);
+			// Continue all epilogues
+			while (_continueEpilogueActs.Count != 0)
+			{
+				var eAct = GetFirst(_continueEpilogueActs);
+				_continueEpilogueActs.Remove(eAct);
+				eAct.CompletedPrologue(this, eOutcome);
+			}
 		}
 
 
@@ -1418,7 +1401,7 @@ public class Act
 
 
 			// Assign new name
-			if (_initName != "")
+			if (!string.IsNullOrEmpty(_initName))
 			{
 				_name = _initName;
 			}
@@ -1474,7 +1457,11 @@ public class Act
 			}
 
 
-			// Reset counts & Mark as deinitialized
+			// Reset all
+			_name = "";
+			prologue = null;
+			performConditions.Clear();
+			_actsToBlock.Clear();
 			_performCount = 0;
 			_tickCount = 0;
 			_physicsTickCount = 0;
