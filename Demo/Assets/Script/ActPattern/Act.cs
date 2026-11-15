@@ -1462,6 +1462,8 @@ public class Act
 			prologue = null;
 			performConditions.Clear();
 			_actsToBlock.Clear();
+			_alreadyBlockedActs.Clear();
+			_didModifyActsToBlock = false;
 			_performCount = 0;
 			_tickCount = 0;
 			_physicsTickCount = 0;
