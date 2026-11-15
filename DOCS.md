@@ -5,7 +5,7 @@
 | Enums   | Constants |
 |---------|----------|
 | [TickFlags](#tickflags) | `None`, `Tick`, `PhysicsTick`, `LateTick` |
-| [Status](#status) | `None`, `Prologuing`, `Entering`, `Ticking`, `Exiting` |
+| [Status](#status) | `None`, `Initializing`, `Prologuing`, `Entering`, `Ticking`, `Exiting`, `Concluding`, `Deinitializing` |
 | [Outcome](#outcome) | `Interrupted`, `Failure`, `Pending`, `Success`, `Retry` |
 | [BlockType](#blocktype) | `Interrupt`, `Persistent` |
 
@@ -39,7 +39,7 @@
 
 | Access | Type | Properties |
 |--------|------|--------------|
-| public | Func\<Act, List\<Act\>\> | [prologue](#prologue) |
+| public | Func\<Act, List\<List\<Act\>\>\> | [prologue](#prologue) |
 | public | List\<Func\<Act, bool\>\> | [performConditions](#performconditions) |
 | public | bool | [isVerbose](#isverbose) |
 | protected | string | [_name](#_name) |
@@ -49,38 +49,44 @@
 
 | Access | Type | Methods |
 |--------|------|--------------|
-| public | void | [Init](#init)(string name = "", Theater theater = null, bool initiallyEnabled = true) |
+| public | void | [Init](#init)(string newName = "", Theater newTheater = null) |
 | public | void | [Deinit](#deinit)() |
 | public | bool | [Perform](#perform)() |
-| public | void | [PerformDeferred](#performdeferred)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
 | public | void | [Retry](#retry)() |
 | public | void | [Abort](#abort)() |
+| public | void | [PerformDeferred](#performdeferred)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
+| public | void | [RetryDeferred](#retrydeferred)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
+| public | void | [AbortDeferred](#abortdeferred)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
+| public | void | [CancelPerformDeferred](#cancelperformdeferred)() |
+| public | void | [CancelRetryDeferred](#cancelretrydeferred)() |
+| public | void | [CancelAbortDeferred](#cancelabortdeferred)() |
+| public | void | [SetEnabled](#setenabled)(bool newEnabled) |
 | public | void | [AddToBlock](#addtoblock)(List\<Act\> acts, [BlockType](#blocktype) blockType = BlockType.Persistent) |
 | public | void | [RemoveFromBlock](#removefromblock)(List\<Act\> acts) |
-| public | void | [SetEnabled](#setenabled)(bool newEnabled) |
-| public | bool | [DidPerformInTick](#didperformintick)([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick) |
-| public | bool | [HasInitialized](#hasinitialized)() |
-| public | bool | [IsInitializing](#isinitializing)() |
-| public | bool | [IsRetrying](#isretrying)() |
+| public | bool | [IsPerforming](#isperforming)() |
 | public | bool | [IsOngoing](#isongoing)() |
-| public | bool | [IsActive](#isactive)() |
+| public | bool | [IsRetrying](#isretrying)() |
 | public | bool | [IsEnabled](#isenabled)() |
 | public | bool | [IsBlocked](#isblocked)() |
-| public | bool | [CanTick](#cantick)([TickFlags](#tickflags) type) |
-| public | Theater | [GetTheater](#gettheater)() |
-| public | GameObject | [GetOwner](#getowner)() |
-| public | HashSet\<Act\> | [GetBlockedByActs](#getblockedbyacts)() |
-| public | Dictionary\<Act, [BlockType](#blocktype)\> | [GetActsToBlock](#getactstoblock)() |
+| public | bool | [IsBlockedBy](#isblockedby)(Act byAct) |
+| public | bool | [HasInitialized](#hasinitialized)() |
+| public | bool | [CanTick](#cantick)([TickFlags](#tickflags) type = TickFlags.Tick \| TickFlags.PhysicsTick \| TickFlags.LateTick) |
+| public | string | [GetName](#getname)() |
 | public | [Status](#status) | [GetStatus](#getstatus)() |
+| public | [Status](#status) | [GetPrevStatus](#getprevstatus)() |
 | public | [Outcome](#outcome) | [GetOutcome](#getoutcome)() |
+| public | [TickFlags](#tickflags) | [GetTickFlags](#gettickflags)() |
+| public | IReadOnlyCollection\<Act\> | [GetBlockedByActs](#getblockedbyacts)() |
+| public | IReadOnlyDictionary\<Act, [BlockType](#blocktype)\> | [GetActsToBlock](#getactstoblock)() |
 | public | int | [GetPerformCount](#getperformcount)() |
 | public | int | [GetTickCount](#gettickcount)() |
 | public | int | [GetPhysicsTickCount](#getphysicstickcount)() |
 | public | int | [GetLateTickCount](#getlatetickcount)() |
-| public static | float | [GetDelta](#getdelta)() |
-| public static | float | [GetPhysicsDelta](#getphysicsdelta)() |
-| public | string | [GetName](#getname)() |
-| public static | List\<Act\> | [Seq](#seq)(List\<List\<Act\>\> pArrays) |
+| public | int | [GetLifetimePerformCount](#getlifetimeperformcount)() |
+| public | int | [GetLifetimeTickCount](#getlifetimetickcount)() |
+| public | int | [GetLifetimePhysicsTickCount](#getlifetimephysicstickcount)() |
+| public | int | [GetLifetimeLateTickCount](#getlifetimelatetickcount)() |
+| public | Theater | [GetTheater](#gettheater)() |
 | protected virtual | void | [Setup](#setup)() <abbr title="">Virtual</abbr> |
 | protected virtual | bool | [CanPerform](#canperform)() <abbr title="">Virtual</abbr> |
 | protected virtual | [Outcome](#outcome) | [Enter](#enter)() <abbr title="">Virtual</abbr> |
@@ -94,7 +100,7 @@
 | protected virtual | void | [UnblockSelf](#unblockself)(Act byAct) <abbr title="">Virtual</abbr> |
 | protected virtual | void | [BlockOthers](#blockothers)() <abbr title="">Virtual</abbr> |
 | protected virtual | void | [UnblockOthers](#unblockothers)() <abbr title="">Virtual</abbr> |
-| protected virtual | void | [WriteLog](#writelog)(string message, string overrideName = "") <abbr title="">Virtual</abbr> |
+| protected virtual | void | [WriteLog](#writelog)(string message) <abbr title="">Virtual</abbr> |
 
 
 <br/>
@@ -105,18 +111,20 @@
 | Signature    | Events |
 |--------------|-------|
 | \<Theater theater, bool newEnabled\> | [OnEnableChanged](#onenablechangedtheater) |
-| \<Theater theater, Act act\> | [OnPerformStart](#onperformstart) |
-| \<Theater theater, Act act\> | [OnPerformEnd](#onperformend) |
-| \<Theater theater\> | [OnAllPerformEnd](#onallperformend) |
+| \<Theater theater, Act act\> | [OnActStatusChange](#onactstatuschange) |
 
 
 | Access | Type | Methods |
 |--------|------|--------------|
-| public | bool | [IsEnabled](#isenabledtheater)() |
-| public | void | [SetEnabled](#setenabledtheater)(bool newEnabled) |
+| public | void | [PerformAll](#performall)() |
+| public | void | [RetryAll](#retryall)() |
 | public | void | [AbortAll](#abortall)() |
-| public | bool | [AreAnyOngoing](#areanyongoing)() |
-| public | HashSet\<Act\> | [GetAllActs](#getallacts)() |
+| public | void | [SetEnabled](#setenabledtheater)(bool newEnabled) |
+| public | bool | [HasAct](#hasact)(Act act) |
+| public | bool | [IsEnabled](#isenabledtheater)() |
+| public | bool | [AreAnyPerforming](#areanyperforming)() |
+| public | IReadOnlyCollection\<Act\> | [GetAllPerformingActs](#getallperformingacts)() |
+| public | IReadOnlyCollection\<Act\> | [GetAllActs](#getallacts)() |
 
 
 <br/>
@@ -136,10 +144,13 @@
 
 ### <a id="status"></a> public enum Status
 - `None`: Indicates the act is not ongoing.  
-- `Prologuing`: Indicates the act is waiting on pending prologues to complete.
+- `Initializing`: Indicates the act is initializing i.e. [`Setup()`](#setup) is invoked.  
+- `Prologuing`: Indicates the act is waiting on pending prologues to complete.  
 - `Entering`: Indicates the act is carrying out its core behaviour.  
-- `Ticking`: Indicates the act is ticking within any or all of its [Tick](#tick)(), [PhysicsTick](#physicstick)() or [LateTick](#latetick)() methods.
-- `Exiting`: Indicates the act perform has ended and is now finalizing.  
+- `Ticking`: Indicates the act is ticking within any or all of its [`Tick()`](#tick), [`PhysicsTick()`](#physicstick) or [`LateTick()`](#latetick) methods.
+- `Exiting`: Indicates the act's core behaviour has ended. Can only be reached if `Entering` happened first.  
+- `Concluding`: (For internal use) Indicates the act is wrapping up after performing regardless of whether `Entering` happened first or not.
+- `Deinitializing`: Indicates the act is deinitializing i.e. [`Cleanup()`](#cleanup) is invoked.  
 
 
 ---
@@ -148,7 +159,7 @@
 ### <a id="outcome"></a> public enum Outcome
 - `Interrupted`: Indicates the act was interrupted externally while performing.  
 - `Failure`: Indicates the act failed to complete its core behaviour.  
-- `Pending`: Indicates the act is still pending for its core behaviour to complete which might also indicate ticking if [_tickFlags](#_tickflags) is assigned.  
+- `Pending`: Indicates the act is still pending for its core behaviour to complete.  
 - `Success`: Indicates the act successfully completed its core behaviour.  
 - `Retry`:  Indicates the act is retrying its core behaviour.  
 
@@ -157,7 +168,7 @@
 
 
 ### <a id="blocktype"></a> public enum BlockType
-- `Interrupt`: Merely interrupts the act (if ongoing) when the blocker act starts performing.
+- `Interrupt`: Merely interrupts the act (if ongoing) just when the blocker act starts performing.
 - `Persistent`: Keeps the act blocked for the entire duration of the blocker act performing.  
 
 
@@ -165,14 +176,14 @@
 
 
 ### <a id="onpresetup"></a> public event Action\<Act act\> OnPreSetup
-Invoked just before [Setup](#setup)() method is called.
+Invoked just before [`Setup()`](#setup) method is called.
 
 
 ---
 
 
 ### <a id="onpostsetup"></a> public event Action\<Act act\> OnPostSetup
-Invoked just after [Setup](#setup)() method has been called.
+Invoked just after [`Setup()`](#setup) method has been called.
 
 
 ---
@@ -194,7 +205,7 @@ Invoked whenever a perform is requested, after checking if the act can perform.
 
 
 ### <a id="onperformstartact"></a> public event Action\<Act act\> OnPerformStart
-Invoked just as [Perform](#perform)() has started, before prologuing.
+Invoked just as [`Perform()`](#perform) has started, before prologuing.
 
 
 ---
@@ -224,91 +235,91 @@ Will not be invoked if act has no prologues or If any of the prologues failed.
 
 
 ### <a id="onpreenter"></a> public event Action\<Act act\> OnPreEnter
-Invoked just before [Enter](#enter)() method is called.
+Invoked just before [`Enter()`](#enter) method is called.
 
 
 ---
 
 
 ### <a id="onpostenter"></a> public event Action\<Act act\> OnPostEnter
-Invoked just after [Enter](#enter)() method has been called.
+Invoked just after [`Enter()`](#enter) method has been called.
 
 
 ---
 
 
 ### <a id="onpretick"></a> public event Action\<Act act\> OnPreTick
-Invoked just before [Tick](#tick)() method is called.
+Invoked just before [`Tick()`](#tick) method is called.
 
 
 ---
 
 
 ### <a id="onposttick"></a> public event Action\<Act act\> OnPostTick
-Invoked just after [Tick](#tick)() method has been called.
+Invoked just after [`Tick()`](#tick) method has been called.
 
 
 ---
 
 
 ### <a id="onprephysicstick"></a> public event Action\<Act act\> OnPrePhysicsTick
-Invoked just before [PhysicsTick](#physicstick)() method is called.
+Invoked just before [`PhysicsTick()`](#physicstick) method is called.
 
 
 ---
 
 
 ### <a id="onpostphysicstick"></a> public event Action\<Act act\> OnPostPhysicsTick
-Invoked just after [PhysicsTick](#physicstick)() method has been called.
+Invoked just after [`PhysicsTick()`](#physicstick) method has been called.
 
 
 ---
 
 
 ### <a id="onprelatetick"></a> public event Action\<Act act\> OnPreLateTick
-Invoked just before [LateTick](#latetick)() method is called.
+Invoked just before [`LateTick()`](#latetick) method is called.
 
 
 ---
 
 
 ### <a id="onpostlatetick"></a> public event Action\<Act act\> OnPostLateTick
-Invoked just after [LateTick](#latetick)() method has been called.
+Invoked just after [`LateTick()`](#latetick) method has been called.
 
 
 ---
 
 
 ### <a id="onpreexit"></a> public event Action\<Act act\> OnPreExit
-Invoked just before [Exit](#exit)() method is called.
+Invoked just before [`Exit()`](#exit) method is called.
 
 
 ---
 
 
 ### <a id="onpostexit"></a> public event Action\<Act act\> OnPostExit
-Invoked just after [Exit](#exit)() method has been called.
+Invoked just after [`Exit()`](#exit) method has been called.
 
 
 ---
 
 
 ### <a id="onperformendact"></a> public event Action\<Act act\> OnPerformEnd
-Invoked just as [Perform](#perform)() has ended, after exiting.
+Invoked just as [`Perform()`](#perform) has completely ended.
 
 
 ---
 
 
 ### <a id="onprecleanup"></a> public event Action\<Act act\> OnPreCleanup
-Invoked just before [Cleanup](#cleanup)() method is called.
+Invoked just before [`Cleanup()`](#cleanup) method is called.
 
 
 ---
 
 
 ### <a id="onpostcleanup"></a> public event Action\<Act act\> OnPostCleanup
-Invoked just after [Cleanup](#cleanup)() method has been called.
+Invoked just after [`Cleanup()`](#cleanup) method has been called.
 
 
 ---
@@ -328,21 +339,55 @@ Invoked whenever the act has been blocked/unblocked.
 ---
 
 
-### <a id="prologue"></a> public Func\<Act, List\<Act\>\> prologue
-`Default: (act) => new List<Act>()`  
+### <a id="prologue"></a> public Func\<Act, List\<List\<Act\>\>\> prologue  
+`Default: null`
 
-Assign this with a function which returns a list of acts, All acts in that list will be performed in parallel before the main act is performed.  
-If the list contains `null` or if any act failed to perform it will be treated as prologuing failed & directly proceeed to [`Exit()`](#exit) with [`GetOutcome()`](#getoutcome) reflecting the failure.  
+If assigned, Then all acts returned by this function will be performed before this main act.  
+The return value of the function is a nested list.  
+The outer list are all the act groups to be performed in sequence.   
+The inner list are act groups which will all be performed in parallel.  
+If `null` is anywhere in the return value then the main act will fail.  
+If `prologue` itself is `null` then prologuing is skipped.  
+If any of the prologue acts fail or are interrupted, then the main act itself will also fail or be interrupted.   
+
+Example 1:
 ```csharp
-myAct.prologue += (Act act) => {
-
-    if(toFail){
-        return new() { null };  // This will intentionally fail the act
-    }
-
-    return new() { myAct1, myAct2 };  // myAct1 & myAct2 will be performed in parallel
+myMainAct.prologue += (Act act) => {
+    return new() {
+        new() { myActA1, myActA2 },
+        new() { myActB1, myActB2, myActB3 },
+        new() { myActC1 },
+    };
 };
 ```
+
+First `A1` & `A2` will enter in parallel,  
+After both are completed only then `B1`, `B2` & `B3` will enter,  
+After all 3 are completed only then `C1` will enter,  
+Then finally `main` will enter.  
+
+Example 2:  
+```csharp
+myMainAct.prologue = (Act act) => {
+    return null;
+    // or return new() { null };
+    // or return new() { new() { null } };
+    // or return new() { new() { myActA1, null } };
+};
+```
+In this case `main` will fail.
+
+Example 3:
+```csharp
+myMainAct.prologue = (Act act) => {
+    return new();
+};
+// 
+// or 
+// 
+// myMainAct.prologue = null;
+```
+In this case `main` will directly continue to enter.  
 
 
 ---
@@ -382,9 +427,6 @@ Controls whether or not to print warnings. Set to `false` to silence them.
 ### <a id="_name"></a> protected string _name
 `Default: ""`  
 
-> **Note:** If you want to give the act a default name assign this in [`Setup()`](#setup) method. However this will be overriden if name argument is passed to [`Init()`](#init).  
-
-
 Name of the act, Mainly useful for debugging purposes.
 
 
@@ -398,6 +440,7 @@ Name of the act, Mainly useful for debugging purposes.
 
 If `true` then calling `Perform()` on an ongoing act will abort the act interruptively and then perform.  
 If `false` then current ongoing perform must be completed/aborted manually before calling `Perform()` again.
+
 
 ---
 
@@ -413,7 +456,7 @@ Determines which tick methods are to be called. Look into [`Enter()`](#enter) & 
 ---
 
 
-### <a id="init"></a> public void Init(string name = "", Theater theater = null, bool initiallyEnabled = true)
+### <a id="init"></a> public void Init(string newName = "", Theater newTheater = null)
 This method is used to initialize the act. Generally this will be called in [`MonoBehaviour.Awake()`][Unity-Awake] or [`MonoBehaviour.Start()`][Unity-Start] though it can be used elsewhere if required.  
 ```csharp
 void Awake()
@@ -467,17 +510,8 @@ void FixedUpdate()
 ---
 
 
-### <a id="performdeferred"></a> public void PerformDeferred([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
-> **Note:** Requires a `Theater` to be assigned.
-
-This will delay off the [`Perform()`](#perform) until the next tick. Useful to avoid infinite recursion when trying to reperform an act.
-
-
----
-
-
 ### <a id="retry"></a> public void Retry()
-If the act is performing then this function will finish the act with [Outcome.Retry](#outcome) which will cause the act to reperform.   
+If the act is performing then this function will finish the act with [Outcome.Retry](#outcome) which will cause the act to reperform. 
 If the act is not performing this will simply call [`Perform()`](#perform).   
 
 
@@ -487,6 +521,72 @@ If the act is not performing this will simply call [`Perform()`](#perform).
 ### <a id="abort"></a> public void Abort()
 This will finish the act if its performing with [Outcome.Interrupted](#outcome).  
 Won't do anything if the act was not performing.
+
+
+---
+
+
+### <a id="performdeferred"></a> public void PerformDeferred([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
+> **Note:** Requires a `Theater` to be assigned.
+
+This will delay off the [`Perform()`](#perform) until the next designated tick. Useful to avoid infinite recursion when trying to reperform an act.
+
+
+---
+
+
+### <a id="retrydeferred"></a> public void RetryDeferred([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
+> **Note:** Requires a `Theater` to be assigned.
+
+This will delay off the [`Retry()`](#retry) until the next designated tick.
+
+
+---
+
+
+### <a id="abortdeferred"></a> public void AbortDeferred([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
+> **Note:** Requires a `Theater` to be assigned.
+
+This will delay off the [`Abort()`](#abort) until the next designated tick.
+
+
+
+---
+
+
+### <a id="cancelperformdeferred"></a> public void CancelPerformDeferred()
+> **Note:** Requires a `Theater` to be assigned.
+
+This will cancel the requested [`PerformDeferred()`](#performdeferred) if not already performed yet.  
+
+
+---
+
+
+### <a id="cancelretrydeferred"></a> public void CancelRetryDeferred()
+> **Note:** Requires a `Theater` to be assigned.
+
+This will cancel the requested [`RetryDeferred()`](#retrydeferred) if not already retried yet.  
+
+
+---
+
+
+### <a id="cancelabortdeferred"></a> public void CancelAbortDeferred()
+> **Note:** Requires a `Theater` to be assigned.
+
+This will cancel the requested [`AbortDeferred()`](#abortdeferred) if not already aborted yet.  
+
+
+---
+
+
+### <a id="setenabled"></a> public void SetEnabled(bool newEnabled)
+Disables/Enables the act i.e. If an act is disabled then it can no longer [`Perform()`](#perform) and any act that was ongoing will be interrupted.
+```csharp
+myAct.SetEnabled(false);  // Disable act
+myAct.SetEnabled(true);  // Enable act
+```
 
 
 ---
@@ -516,41 +616,15 @@ Removes given acts from being blocked.
 ---
 
 
-### <a id="setenabled"></a> public void SetEnabled(bool newEnabled)
-Disables/Enables the act i.e. If an act is disabled then it can no longer [`Perform()`](#perform) and any act that was ongoing will be interrupted.
-```csharp
-myAct.SetEnabled(false);  // Disable act
-myAct.SetEnabled(true);  // Enable act
-```
+### <a id="isperforming"></a> public bool IsPerforming()
+Returns `true` if the act is currently performing.
 
 
 ---
 
 
-### <a id="didperformintick"></a> public bool DidPerformInTick([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
-Returns `true` if the act has performed atleast once in the span of the current tick.  
-```csharp
-void FixedUpdate()
-{
-    Debug.Log(myAct.DidPerformInTick(TickFlags.PhysicsTick));  // false
-    myAct.Perform();
-    Debug.Log(myAct.DidPerformInTick(TickFlags.PhysicsTick));  // true
-}
-```
-
-
----
-
-
-### <a id="hasinitialized"></a> public bool HasInitialized()
-Returns `true` if the act has been [initialized](#init). Resets to `false` once [deinitialized](#deinit)
-
-
----
-
-
-### <a id="isinitializing"></a> public bool IsInitializing()
-Returns `true` if the act is currently in between [`Init()`](#init) or [`Deinit()`](#deinit).
+### <a id="isongoing"></a> public bool IsOngoing()
+Returns `true` if the act is currently performing but is past prologuing i.e. is carrying out the core behaviour.
 
 
 ---
@@ -558,20 +632,6 @@ Returns `true` if the act is currently in between [`Init()`](#init) or [`Deinit(
 
 ### <a id="isretrying"></a> public bool IsRetrying()
 Returns `true` if the act is currently performing due to a retry.
-
-
----
-
-
-### <a id="isongoing"></a> public bool IsOngoing()
-Returns `true` if the act is currently performing.
-
-
----
-
-
-### <a id="isactive"></a> public bool IsActive()
-Returns `true` if the act is currently between entering & exiting.
 
 
 ---
@@ -591,98 +651,22 @@ Returns `true` if the act is currently blocked by 1 or more other acts.
 ---
 
 
-### <a id="cantick"></a> public bool CanTick([TickFlags](#tickflags) type)
+### <a id="isblockedby"></a> public bool IsBlockedBy(Act byAct)
+Checks if the act is currently blocked by given act.  
+
+
+---
+
+
+### <a id="hasinitialized"></a> public bool HasInitialized()
+Returns `true` if the act has been [initialized](#init). Resets to `false` once [deinitialized](#deinit)
+
+
+---
+
+
+### <a id="cantick"></a> public bool CanTick([TickFlags](#tickflags) type = TickFlags.Tick | TickFlags.PhysicsTick | TickFlags.LateTick)
 Returns `true` if the act can tick on the given flag type(s).
-
-
----
-
-
-### <a id="gettheater"></a> public Theater GetTheater()
-> **Note:** Requires a `Theater` to be assigned.
-
-Returns the `Theater` the act belongs to. returns null if theater not assigned.
-
-
----
-
-
-### <a id="getowner"></a> public GameObject GetOwner()
-> **Note:** Requires a `Theater` to be assigned.
-
-Returns the [gameObject][Unity-GameObject] the `Theater` is attached to. Returns null if theater not assigned
-
-
----
-
-
-### <a id="getblockedbyacts"></a> public HashSet\<Act\> GetBlockedByActs()
-Returns a copy of the set of acts currently blocking this act.
-
-
----
-
-
-### <a id="getactstoblock"></a> public Dictionary\<Act, [BlockType](#blocktype)\> GetActsToBlock()
-Returns a copy of the acts this act will block along with their [BlockType](#blocktype), As assigned via [AddToBlock](#addtoblock).
-
-
----
-
-
-### <a id="getstatus"></a> public [Status](#status) GetStatus()
-Returns the current [Status](#status) of the act.
-
-
----
-
-
-### <a id="getoutcome"></a> public [Outcome](#outcome) GetOutcome()
-Returns the outcome of [`Enter()`](#enter) or any of the tick methods.  
-
-
----
-
-
-### <a id="getperformcount"></a> public int GetPerformCount()
-Returns how many times the act has performed since [initialized](#init).
-
-
----
-
-
-### <a id="gettickcount"></a> public int GetTickCount()
-Returns how many times [`Tick()`](#tick) has been called since [initialized](#init).
-
-
----
-
-
-### <a id="getphysicstickcount"></a> public int GetPhysicsTickCount()
-Returns how many times [`PhysicsTick()`](#physicstick) has been called since [initialized](#init).
-
-
----
-
-
-### <a id="getlatetickcount"></a> public int GetLateTickCount()
-Returns how many times [`LateTick()`](#latetick) has been called since [initialized](#init).
-
-
----
-
-
-### <a id="getdelta"></a> public static float GetDelta()
-Returns [`Time.deltaTime`][Unity-DeltaTime]  
-(Kept for consistency sake)
-
-
----
-
-
-### <a id="getphysicsdelta"></a> public static float GetPhysicsDelta()
-Returns [`Time.fixedDeltaTime`][Unity-FixedDeltaTime]  
-(Kept for consistency sake)
 
 
 ---
@@ -696,40 +680,109 @@ Mainly useful for debugging purposes.
 ---
 
 
-### <a id="seq"></a> public static List\<Act\> Seq(List\<List\<Act\>\> pArrays)
-This method is to be used **only** inside [prologue](#prologue), It allows you to call prologue acts in sequence.  
-```csharp
-myAct.prologue += (Act act) => {
-    return Act.Seq(new() {
-        new() { myActA1 },
-        new() { myActB1, myActB2 },
-        new() { myActC1 },
-    });
-};
-```
-In the above example `myAct1` will perform first,  
-then `myActB1` & `myActB2` will perform in parallel,  
-then `myActC1` will perform last.  
-And then after all prologue acts are complete would `myAct` be performed.  
+### <a id="getstatus"></a> public [Status](#status) GetStatus()
+Returns the current [Status](#status) of the act.
 
-This is how to do it without using `Seq()`:
-```csharp
-myAct.prologue += (Act act) => {
-    return new() { myActC1 };
-};
 
-myActC1.prologue += (Act act) => {
-    return new() { myActB1, myActB2 };
-};
+---
 
-myActB1.prologue += (Act act) => {
-    return new() { myActA1 };
-};
 
-myActB2.prologue += (Act act) => {
-    return new() { myActA1 };
-};
-```
+### <a id="getprevstatus"></a> public [Status](#status) GetPrevStatus()
+Returns the previous [Status](#status) the act was in before the current one.
+
+
+---
+
+
+### <a id="getoutcome"></a> public [Outcome](#outcome) GetOutcome()
+Returns the outcome of the last perform of the act.  
+
+
+---
+
+
+### <a id="gettickflags"></a> public [TickFlags](#tickflags) GetTickFlags()
+Returns the assigned [`_tickFlags`](#_tickflags)
+
+
+---
+
+
+### <a id="getblockedbyacts"></a> public IReadOnlyCollection\<Act\> GetBlockedByActs()
+Returns all the acts currently blocking this act.
+
+
+---
+
+
+### <a id="getactstoblock"></a> public IReadOnlyDictionary\<Act, [BlockType](#blocktype)\> GetActsToBlock()
+Returns all the acts this act will block along with their [BlockType](#blocktype), As assigned via [AddToBlock](#addtoblock).
+
+
+---
+
+
+### <a id="getperformcount"></a> public int GetPerformCount()
+Returns how many times the act has performed since [initialized](#init). Resets once [deinitialized](#deinit).
+
+
+---
+
+
+### <a id="gettickcount"></a> public int GetTickCount()
+Returns how many times [`Tick()`](#tick) has been invoked since [initialized](#init). Resets once [deinitialized](#deinit).
+
+
+---
+
+
+### <a id="getphysicstickcount"></a> public int GetPhysicsTickCount()
+Returns how many times [`PhysicsTick()`](#physicstick) has been invoked since [initialized](#init). Resets once [deinitialized](#deinit).
+
+
+---
+
+
+### <a id="getlatetickcount"></a> public int GetLateTickCount()
+Returns how many times [`LateTick()`](#latetick) has been invoked since [initialized](#init). Resets once [deinitialized](#deinit).
+
+
+---
+
+
+### <a id="getlifetimeperformcount"></a> public int GetLifetimePerformCount()
+Returns how many times the act has performed since its existance. Never resets.
+
+
+---
+
+
+### <a id="getlifetimetickcount"></a> public int GetLifetimeTickCount()
+Returns how many times [`Tick()`](#tick) has been invoked since the act existed. Never resets.
+
+
+
+---
+
+
+### <a id="getlifetimephysicstickcount"></a> public int GetLifetimePhysicsTickCount()
+Returns how many times [`PhysicsTick()`](#physicstick) has been invoked since the act existed. Never resets.
+
+
+---
+
+
+### <a id="getlifetimelatetickcount"></a> public int GetLifetimeLateTickCount()
+Returns how many times [`LateTick()`](#latetick) has been invoked since the act existed. Never resets.
+
+
+---
+
+
+### <a id="gettheater"></a> public Theater GetTheater()
+> **Note:** Requires a `Theater` to be assigned.
+
+Returns the `Theater` the act belongs to. returns null if theater not assigned.
 
 
 ---
@@ -748,7 +801,7 @@ public class MyAct : Act
 	protected override void Setup(){
         _canReperform = true;
         _tickFlags = TickFlags.Tick;
-        rigidBody2D = GetOwner().GetComponent<Rigidbody2D>();
+        rigidBody2D = GetTheater().GetComponent<Rigidbody2D>();
         // etc etc
     }
 }
@@ -827,7 +880,7 @@ public class GotoAct : Act
 
         // Move logic here...
 
-        // Returning Pending continues ticking, returning anything else makes the act proceeed into Exit()
+        // Returning Pending continues ticking, returning anything else makes the act proceed into Exit()
         return ReachedDestination() ? Outcome.Success : Outcome.Pending;  
     }
 }
@@ -892,14 +945,14 @@ Look into [`Enter()`](#enter) to understand how the return value works.
 ### <a id="exit"></a> protected virtual void Exit()
 > **Note:** This method is only meant to be overridden never invoked, Except when using `base.Exit()`.
 
-This method is meant to be overridden and should contain the finialization logic after [Entering](#enter).  
+This method is meant to be overridden and should contain the finalization logic after [Entering](#enter).  
 ```csharp
 [Serializable]
 public class MoveAct : Act
 {
     public Vector2 direction = new();
 
-    protected override void Enter() { ... }
+    protected override Outcome Enter() { ... }
 
     protected override void Exit()
     {
@@ -934,7 +987,7 @@ public class MyAct : Act
 
 
 ### <a id="finish"></a> protected void Finish([Outcome](#outcome) newOutcome = Outcome.Success)
-This method is only meant to be invoked in [`Enter()`](#enter) and should not be overridden.  
+This method is only meant to be invoked in [`Enter()`](#enter) or any of the ticking methods. It should not be overridden.  
 
 
 ---
@@ -954,6 +1007,7 @@ public class MyAct : Act
     }
 }
 ```
+
 
 ---
 
@@ -1015,7 +1069,7 @@ public class MyAct : Act
 ---
 
 
-### <a id="writelog"></a> protected virtual void WriteLog(string message, string overrideName = "")
+### <a id="writelog"></a> protected virtual void WriteLog(string message)
 Used internally to log warning messages when [isVerbose](#isverbose) is `true`. Only kept incase some special functionality needs to be hooked when a warning is logged.
 
 
@@ -1034,30 +1088,30 @@ Invoked whenever theater has been enabled/disabled.
 ---
 
 
-### <a id="onperformstart"></a> public event Action\<Theater theater, Act act\> OnPerformStart
-Invoked whenever any of acts assigned to the theater has started to performed.
+### <a id="onactstatuschange"></a> public event Action\<Theater theater, Act act\> OnActStatusChange
+Invoked whenever any act associated with the theater has its status changed.
 
 
 ---
 
 
-### <a id="onperformend"></a> public event Action\<Theater theater, Act act\> OnPerformEnd
-Invoked whenever any of acts assigned to the theater has completed performing.
+### <a id="performall"></a> public void PerformAll()
+Performs all acts associated with the theater.
 
 
 ---
 
 
-### <a id="onallperformend"></a> public event Action\<Theater theater\> OnAllPerformEnd
-Invoked whenever all of the acts assigned to the theater have completed performing and none are ongoing anymore.  
-Useful for idle checking, etc.
+### <a id="retryall"></a> public void RetryAll()
+Retries all acts associated with the theater.
 
 
 ---
 
 
-### <a id="isenabledtheater"></a> public bool IsEnabled()
-Returns `true` if theater is currently enabled.
+### <a id="abortall"></a> public void AbortAll()
+Aborts all acts associated with the theater.
+
 
 ---
 
@@ -1073,32 +1127,40 @@ theater.SetEnabled(true);  // Enable theater
 ---
 
 
-### <a id="abortall"></a> public void AbortAll()
-Calls [`Abort()`](#abort) on all currently ongoing acts.
+### <a id="hasact"></a> public bool HasAct(Act act)
+Checks if the given act is associated with the theater.  
 
 
 ---
 
 
-### <a id="areanyongoing"></a> public bool AreAnyOngoing()
-Returns `true` if any act is currently performing.
+### <a id="isenabledtheater"></a> public bool IsEnabled()
+Returns `true` if theater is currently enabled.
 
 
 ---
 
 
-### <a id="getallacts"></a> public HashSet\<Act\> GetAllActs()
+### <a id="areanyperforming"></a> public bool AreAnyPerforming()
+Checks if any acts associated with the theater are currently performing.  
+
+
+---
+
+
+### <a id="getallperformingacts"></a> public IReadOnlyCollection\<Act\> GetAllPerformingActs()
+Returns all acts associated with the theater that are currently performing.  
+
+
+---
+
+
+### <a id="getallacts"></a> public IReadOnlyCollection\<Act\> GetAllActs()
 Returns all the acts assigned to the theater.
 
-
-
-[Act-Lifecycle]: https://github.com/ManasMakde/act/blob/main/images/act-lifecycle.png
 [Unity-Awake]: https://docs.unity3d.com/ScriptReference/MonoBehaviour.Awake.html
 [Unity-Start]: https://docs.unity3d.com/ScriptReference/MonoBehaviour.Start.html
 [Unity-Update]: https://docs.unity3d.com/ScriptReference/MonoBehaviour.Update.html
 [Unity-FixedUpdate]: https://docs.unity3d.com/ScriptReference/MonoBehaviour.FixedUpdate.html
 [Unity-LateUpdate]: https://docs.unity3d.com/ScriptReference/MonoBehaviour.LateUpdate.html
 [Unity-OnDestroy]: https://docs.unity3d.com/ScriptReference/MonoBehaviour.OnDestroy.html
-[Unity-GameObject]: https://docs.unity3d.com/ScriptReference/Component-gameObject.html
-[Unity-DeltaTime]: https://docs.unity3d.com/ScriptReference/Time-deltaTime.html
-[Unity-FixedDeltaTime]: https://docs.unity3d.com/ScriptReference/Time-fixedDeltaTime.html
