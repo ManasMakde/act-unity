@@ -92,19 +92,38 @@ public class Theater : MonoBehaviour
     }
     public void SetEnabled(bool newEnabled)
     {
+        // Return if reassigning same value
         if (newEnabled == _isEnabled)
         {
             return;
         }
 
+
+        // Assign new value
+        var oldIsEnabled = IsEnabled();
         _isEnabled = newEnabled;
 
-        if (!_isEnabled)
+
+        // Return if final value not changed
+        var newIsEnabled = IsEnabled();
+        if (oldIsEnabled == newIsEnabled)
         {
-            AbortAll();
+            return;
         }
 
-        OnEnableChanged?.Invoke(this, _isEnabled);
+
+        // Abort all if disabled
+        if (!newIsEnabled)
+        {
+            AbortAll();
+            CancelAllPerformDeferred();
+            CancelAllRetryDeferred();
+            CancelAllAbortDeferred();
+        }
+
+
+        // Broadcast
+        OnEnableChanged?.Invoke(this, newIsEnabled);
     }
     public bool HasAct(Act act)
     {
@@ -112,7 +131,7 @@ public class Theater : MonoBehaviour
     }
     public bool IsEnabled()
     {
-        return _isEnabled;
+        return _isEnabled && enabled && gameObject.activeInHierarchy;
     }
     public bool AreAnyPerforming()
     {
@@ -237,18 +256,48 @@ public class Theater : MonoBehaviour
     }
     private void CancelPerformDeferred(Act act)
     {
+        if (act == null)
+        {
+            return;
+        }
+
         _performDeferActs.Remove(act);
         _performingDeferActs.Remove(act);
     }
     private void CancelRetryDeferred(Act act)
     {
+        if (act == null)
+        {
+            return;
+        }
+
         _retryDeferActs.Remove(act);
         _retryingDeferActs.Remove(act);
     }
     private void CancelAbortDeferred(Act act)
     {
+        if (act == null)
+        {
+            return;
+        }
+
         _abortDeferActs.Remove(act);
         _abortingDeferActs.Remove(act);
+    }
+    private void CancelAllPerformDeferred()
+    {
+        _performDeferActs.Clear();
+        _performingDeferActs.Clear();
+    }
+    private void CancelAllRetryDeferred()
+    {
+        _retryDeferActs.Clear();
+        _retryingDeferActs.Clear();
+    }
+    private void CancelAllAbortDeferred()
+    {
+        _abortDeferActs.Clear();
+        _abortingDeferActs.Clear();
     }
     private void StageTick(Act act)
     {
@@ -411,9 +460,30 @@ public class Theater : MonoBehaviour
         InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.LateTick);
         InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.LateTick);
     }
+    private void OnEnable()
+    {
+        if (_isEnabled)
+        {
+            OnEnableChanged?.Invoke(this, IsEnabled());
+        }
+    }
+    private void OnDisable()
+    {
+        AbortAll();
+        CancelAllPerformDeferred();
+        CancelAllRetryDeferred();
+        CancelAllAbortDeferred();
+        if (_isEnabled)
+        {
+            OnEnableChanged?.Invoke(this, false);
+        }
+    }
     private void OnDestroy()
     {
         AbortAll();
+        CancelAllPerformDeferred();
+        CancelAllRetryDeferred();
+        CancelAllAbortDeferred();
     }
 
 
