@@ -486,6 +486,85 @@ public class Act
 			OnBlockChanged?.Invoke(this, byAct, BlockType.Persistent, false);
 		}
 	}
+	protected virtual void BlockOthers()
+	{
+		// Save life time count
+		int currLifetimePerformCount = _lifetimePerformCount;
+
+
+		// Clear already blocked
+		_alreadyBlockedActs.Clear();
+
+
+		// Repeat until all are blocked
+		_didModifyActsToBlock = true;
+		while (_didModifyActsToBlock)
+		{
+			// Reset break condition
+			_didModifyActsToBlock = false;
+
+
+			// Iterate & block others
+			foreach (Act act in _actsToBlock.Keys)
+			{
+				// Skip if already blocked
+				if (_alreadyBlockedActs.Contains(act))
+				{
+					continue;
+				}
+
+
+				// Block
+				_alreadyBlockedActs.Add(act);
+				act.BlockSelf(this, _actsToBlock[act]);
+				if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
+
+
+				// Restart if modified in between
+				if (_didModifyActsToBlock)
+				{
+					break;
+				}
+			}
+		}
+	}
+	protected virtual void UnblockOthers()
+	{
+		// Clear already unblocked
+		_alreadyBlockedActs.Clear();
+
+
+		// Repeat until all are unblocked
+		_didModifyActsToBlock = true;
+		while (_didModifyActsToBlock)
+		{
+			// Reset break condition
+			_didModifyActsToBlock = false;
+
+
+			// Iterate & unblock others
+			foreach (Act act in _actsToBlock.Keys)
+			{
+				// Skip if already unblocked
+				if (_alreadyBlockedActs.Contains(act))
+				{
+					continue;
+				}
+
+
+				// Unblock
+				_alreadyBlockedActs.Add(act);
+				act.UnblockSelf(this);
+
+
+				// Restart if modified in between
+				if (_didModifyActsToBlock)
+				{
+					break;
+				}
+			}
+		}
+	}
 	protected virtual void WriteLog(string message)
 	{
 		if (!isVerbose)
@@ -728,83 +807,6 @@ public class Act
 		if (_theater != null)
 		{
 			Theater.Friend.ActStatusChange(_theater, this);
-		}
-	}
-	private void BlockOthers(bool isFirstItr = true)
-	{
-		// Save life time count
-		int currLifetimePerformCount = _lifetimePerformCount;
-
-
-		// Clear already blocked if first time iterating
-		if (isFirstItr)
-		{
-			_alreadyBlockedActs.Clear();
-		}
-
-
-		// Reset break condition
-		_didModifyActsToBlock = false;
-
-
-		// Iterate & block others
-		foreach (Act act in _actsToBlock.Keys)
-		{
-			// Skip if already blocked
-			if (_alreadyBlockedActs.Contains(act))
-			{
-				continue;
-			}
-
-
-			// Block
-			_alreadyBlockedActs.Add(act);
-			act.BlockSelf(this, _actsToBlock[act]);
-			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
-
-
-			// Try blocking again if modified in between
-			if (_didModifyActsToBlock)
-			{
-				BlockOthers(false);
-				break;
-			}
-		}
-	}
-	private void UnblockOthers(bool isFirstItr = true)
-	{
-		// Clear already unblocked if first time iterating
-		if (isFirstItr)
-		{
-			_alreadyBlockedActs.Clear();
-		}
-
-
-		// Reset break condition
-		_didModifyActsToBlock = false;
-
-
-		// Iterate & unblock others
-		foreach (Act act in _actsToBlock.Keys)
-		{
-			// Skip if already unblocked
-			if (_alreadyBlockedActs.Contains(act))
-			{
-				continue;
-			}
-
-
-			// Unblock
-			_alreadyBlockedActs.Add(act);
-			act.UnblockSelf(this);
-
-
-			// Try unblocking again if modified in between
-			if (_didModifyActsToBlock)
-			{
-				UnblockOthers(false);
-				break;
-			}
 		}
 	}
 	private bool CanPerformImpl(bool isRetrying = false)
