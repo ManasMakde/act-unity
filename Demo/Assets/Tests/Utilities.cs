@@ -407,3 +407,52 @@ public class StatusCheckAct : Act
         statusInCleanup = GetStatus();
     }
 }
+public class PrevStatusCheckAct : Act
+{
+    public Status prevStatusInSetup = Status.None;
+    public Status prevStatusInEnter = Status.None;
+    public Status prevStatusInTick = Status.None;
+    public Status prevStatusInPhysicsTick = Status.None;
+    public Status prevStatusInLateTick = Status.None;
+    public Status prevStatusInExit = Status.None;
+    public Status prevStatusInCleanup = Status.None;
+    public void ForceFinish(Outcome outcome = Outcome.Success)
+    {
+        Finish(outcome);
+    }
+
+
+    protected override void Setup()
+    {
+        _tickFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
+        prevStatusInSetup = GetPrevStatus();
+    }
+    protected override Outcome Enter()
+    {
+        prevStatusInEnter = GetPrevStatus();
+        return Outcome.Pending;
+    }
+    protected override Outcome Tick()
+    {
+        prevStatusInTick = GetPrevStatus();
+        return Outcome.Pending;
+    }
+    protected override Outcome PhysicsTick()
+    {
+        prevStatusInPhysicsTick = GetPrevStatus();
+        return Outcome.Pending;
+    }
+    protected override Outcome LateTick()
+    {
+        prevStatusInLateTick = GetPrevStatus();
+        return Outcome.Pending;
+    }
+    protected override void Exit()
+    {
+        prevStatusInExit = GetPrevStatus();
+    }
+    protected override void Cleanup()
+    {
+        prevStatusInCleanup = GetPrevStatus();
+    }
+}

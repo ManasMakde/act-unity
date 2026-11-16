@@ -34,6 +34,22 @@ using UnityEngine.TestTools;
 
 // 1. GetName() return accurate value?
 
+// 1. Is IsBlockedBy() true only for the acts actually blocking?
+// 1. Is IsBlockedBy() false after unblock?
+// 1. Is IsBlockedBy(self) false when act is disabled?
+
+// 1. Is HasInitialized() false before Init(), true after Init(), false after Deinit()?
+
+// 1. Is GetPrevStatus() valid everywhere?
+
+// 1. Is GetTickFlags() accurate for every flag combination?
+
+// 1. Is GetLifetimePerformCount() accurate?
+// 1. Is GetLifetimeTickCount() accurate?
+// 1. Is GetLifetimePhysicsTickCount() accurate?
+// 1. Is GetLifetimeLateTickCount() accurate?
+// 1. Do lifetime counts persist after Deinit() while normal counts reset?
+
 
 public class ActMiscTests
 {
@@ -865,6 +881,543 @@ public class ActMiscTests
         // Assertions
         Assert.IsTrue(act.GetName() == actName, $"GetName() inaccurate! Name='{act.GetName()}'  Expected name='{actName}'");
 
+        yield return null;
+    }
+
+
+    [UnityTest]
+    public IEnumerator IsBlockedByOnlyActualBlockers()
+    {
+        // Prerequisites
+        var targetName = "Misc Target Act";
+        var otherTargetName = "Misc Other Target Act";
+        var blockerName = "Misc Blocker Act";
+        var otherBlockerName = "Misc Other Blocker Act";
+        var idleBlockerName = "Misc Idle Blocker Act";
+
+        var target = new Act();
+        var otherTarget = new Act();
+        var blocker = new ManualFinishAct();
+        var otherBlocker = new ManualFinishAct();
+        var idleBlocker = new ManualFinishAct();
+
+        target.Init(targetName);
+        otherTarget.Init(otherTargetName);
+        blocker.Init(blockerName);
+        otherBlocker.Init(otherBlockerName);
+        idleBlocker.Init(idleBlockerName);
+
+        blocker.AddToBlock(new List<Act> { target });
+        otherBlocker.AddToBlock(new List<Act> { otherTarget });
+        idleBlocker.AddToBlock(new List<Act> { target });
+
+
+        // Perform blockers, idle blocker never performs
+        blocker.Perform();
+        otherBlocker.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(target.IsBlockedBy(blocker), "IsBlockedBy() false for the act actually blocking!");
+        Assert.IsFalse(target.IsBlockedBy(otherBlocker), "IsBlockedBy() true for an act blocking someone else!");
+        Assert.IsFalse(target.IsBlockedBy(idleBlocker), "IsBlockedBy() true for an act that is not performing!");
+        Assert.IsFalse(target.IsBlockedBy(target), "IsBlockedBy() true for self while enabled!");
+        Assert.IsFalse(otherTarget.IsBlockedBy(blocker), "IsBlockedBy() true for blocker of another target!");
+        Assert.IsTrue(otherTarget.IsBlockedBy(otherBlocker), "IsBlockedBy() false for other target's actual blocker!");
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator IsBlockedByFalseAfterUnblock()
+    {
+        // Prerequisites
+        var targetName = "Misc Target Act";
+        var blockerName = "Misc Blocker Act";
+
+
+        // Unblock by blocker finishing
+        {
+            var target = new Act();
+            var blocker = new ManualFinishAct();
+            target.Init(targetName);
+            blocker.Init(blockerName);
+            blocker.AddToBlock(new List<Act> { target });
+
+            blocker.Perform();
+            var wasBlockedBy = target.IsBlockedBy(blocker);
+            blocker.ManualFinish();
+            var isBlockedByAfterFinish = target.IsBlockedBy(blocker);
+
+
+            // Assertions
+            Assert.IsTrue(wasBlockedBy, "IsBlockedBy() false while blocker is performing!");
+            Assert.IsFalse(isBlockedByAfterFinish, "IsBlockedBy() true after blocker finished!");
+        }
+
+
+        // Unblock by removing from block list
+        {
+            var target = new Act();
+            var blocker = new ManualFinishAct();
+            target.Init(targetName);
+            blocker.Init(blockerName);
+            blocker.AddToBlock(new List<Act> { target });
+
+            blocker.Perform();
+            var wasBlockedBy = target.IsBlockedBy(blocker);
+            blocker.RemoveFromBlock(new List<Act> { target });
+            var isBlockedByAfterRemove = target.IsBlockedBy(blocker);
+
+
+            // Assertions
+            Assert.IsTrue(wasBlockedBy, "IsBlockedBy() false while blocker is performing! Remove variation");
+            Assert.IsFalse(isBlockedByAfterRemove, "IsBlockedBy() true after removed from block list!");
+        }
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator IsBlockedBySelfFalseWhenDisabled()
+    {
+        // Prerequisites
+        var actName = "Misc Disabled Act";
+        var blockerName = "Misc Blocker Act";
+
+
+        // Only disabled
+        {
+            var act = new Act();
+            act.Init(actName);
+            act.SetEnabled(false);
+
+
+            // Assertions
+            Assert.IsFalse(act.IsEnabled(), "IsEnabled() true despite being disabled!");
+            Assert.IsFalse(act.IsBlockedBy(act), "IsBlockedBy(self) true when act is disabled!");
+        }
+
+
+        // Disabled and blocked by another act
+        {
+            var act = new Act();
+            var blocker = new ManualFinishAct();
+            act.Init(actName);
+            blocker.Init(blockerName);
+            blocker.AddToBlock(new List<Act> { act });
+
+            act.SetEnabled(false);
+            blocker.Perform();
+
+
+            // Assertions
+            Assert.IsFalse(act.IsBlockedBy(act), "IsBlockedBy(self) true when act is disabled and blocked!");
+            Assert.IsTrue(act.IsBlockedBy(blocker), "IsBlockedBy() false for blocker when act is also disabled!");
+        }
+
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator HasInitializedValid()
+    {
+        // Prerequisites
+        var actName = "Misc Initialized Act";
+        var act = new Act();
+
+
+        // Check at every stage
+        var beforeInit = act.HasInitialized();
+        act.Init(actName);
+        var afterInit = act.HasInitialized();
+        act.Deinit();
+        var afterDeinit = act.HasInitialized();
+
+
+        // Assertions
+        Assert.IsFalse(beforeInit, "HasInitialized() true before Init()!");
+        Assert.IsTrue(afterInit, "HasInitialized() false after Init()!");
+        Assert.IsFalse(afterDeinit, "HasInitialized() true after Deinit()!");
+
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator GetPrevStatus()
+    {
+        // Prerequisites
+        var theaterName = "Misc Prev Status Theater";
+        var prologueName = "Prologue Act";
+        var actName = "Misc Prev Status Act";
+        var waitFrames = 2;
+
+        var theaterGO = new GameObject(theaterName);
+        var theater = theaterGO.AddComponent<Theater>();
+
+        var prologueAct = new Act();
+        prologueAct.Init(prologueName);
+
+        var prevInPreSetup = Act.Status.Entering;
+        var prevInPostSetup = Act.Status.Entering;
+        var prevInPerformStart = Act.Status.Entering;
+        var prevInPrePrologue = Act.Status.Entering;
+        var prevInPrologueComplete = Act.Status.Entering;
+        var prevInPostPrologue = Act.Status.Entering;
+        var prevInPreEnter = Act.Status.Entering;
+        var prevInPostEnter = Act.Status.Entering;
+        var prevInPreTick = Act.Status.None;
+        var prevInPostTick = Act.Status.None;
+        var prevInPrePhysicsTick = Act.Status.None;
+        var prevInPostPhysicsTick = Act.Status.None;
+        var prevInPreLateTick = Act.Status.None;
+        var prevInPostLateTick = Act.Status.None;
+        var prevInPreExit = Act.Status.None;
+        var prevInPostExit = Act.Status.None;
+        var prevInPerformEnd = Act.Status.None;
+        var prevInPreCleanup = Act.Status.Entering;
+        var prevInPostCleanup = Act.Status.Entering;
+
+
+        // Setup act
+        var act = new PrevStatusCheckAct();
+        act.OnPreSetup += (a) => { prevInPreSetup = a.GetPrevStatus(); };
+        act.OnPostSetup += (a) => { prevInPostSetup = a.GetPrevStatus(); };
+        act.OnPerformStart += (a) => { prevInPerformStart = a.GetPrevStatus(); };
+        act.OnPrePrologue += (a) => { prevInPrePrologue = a.GetPrevStatus(); };
+        act.OnPrologueComplete += (a, pAct, pOutcome) => { prevInPrologueComplete = a.GetPrevStatus(); };
+        act.OnPostPrologue += (a) => { prevInPostPrologue = a.GetPrevStatus(); };
+        act.OnPreEnter += (a) => { prevInPreEnter = a.GetPrevStatus(); };
+        act.OnPostEnter += (a) => { prevInPostEnter = a.GetPrevStatus(); };
+        act.OnPreTick += (a) => { prevInPreTick = a.GetPrevStatus(); };
+        act.OnPostTick += (a) => { prevInPostTick = a.GetPrevStatus(); };
+        act.OnPrePhysicsTick += (a) => { prevInPrePhysicsTick = a.GetPrevStatus(); };
+        act.OnPostPhysicsTick += (a) => { prevInPostPhysicsTick = a.GetPrevStatus(); };
+        act.OnPreLateTick += (a) => { prevInPreLateTick = a.GetPrevStatus(); };
+        act.OnPostLateTick += (a) => { prevInPostLateTick = a.GetPrevStatus(); };
+        act.OnPreExit += (a) => { prevInPreExit = a.GetPrevStatus(); };
+        act.OnPostExit += (a) => { prevInPostExit = a.GetPrevStatus(); };
+        act.OnPerformEnd += (a) => { prevInPerformEnd = a.GetPrevStatus(); };
+        act.OnPreCleanup += (a) => { prevInPreCleanup = a.GetPrevStatus(); };
+        act.OnPostCleanup += (a) => { prevInPostCleanup = a.GetPrevStatus(); };
+        act.prologue += (a) => new() { new() { prologueAct } };
+        act.Init(actName, theater);
+
+        var prevAfterInit = act.GetPrevStatus();
+
+        act.Perform();
+
+        for (var i = 0; i < waitFrames; i++)
+        {
+            yield return new WaitForFixedUpdate();
+            yield return null;
+        }
+
+        act.ForceFinish();
+
+        var prevAfterPerform = act.GetPrevStatus();
+
+        act.Deinit();
+
+
+        // Assertions for init
+        Assert.IsTrue(prevInPreSetup == Act.Status.None, $"PrevStatus wrong in OnPreSetup! Prev='{prevInPreSetup}'");
+        Assert.IsTrue(act.prevStatusInSetup == Act.Status.None, $"PrevStatus wrong in Setup()! Prev='{act.prevStatusInSetup}'");
+        Assert.IsTrue(prevInPostSetup == Act.Status.Initializing, $"PrevStatus wrong in OnPostSetup! Prev='{prevInPostSetup}'");
+        Assert.IsTrue(prevAfterInit == Act.Status.Initializing, $"PrevStatus wrong after Init()! Prev='{prevAfterInit}'");
+
+
+        // Assertions for prologue
+        Assert.IsTrue(prevInPerformStart == Act.Status.None, $"PrevStatus wrong in OnPerformStart! Prev='{prevInPerformStart}'");
+        Assert.IsTrue(prevInPrePrologue == Act.Status.None, $"PrevStatus wrong in OnPrePrologue! Prev='{prevInPrePrologue}'");
+        Assert.IsTrue(prevInPrologueComplete == Act.Status.None, $"PrevStatus wrong in OnPrologueComplete! Prev='{prevInPrologueComplete}'");
+        Assert.IsTrue(prevInPostPrologue == Act.Status.None, $"PrevStatus wrong in OnPostPrologue! Prev='{prevInPostPrologue}'");
+
+
+        // Assertions for enter
+        Assert.IsTrue(prevInPreEnter == Act.Status.Prologuing, $"PrevStatus wrong in OnPreEnter! Prev='{prevInPreEnter}'");
+        Assert.IsTrue(act.prevStatusInEnter == Act.Status.Prologuing, $"PrevStatus wrong in Enter()! Prev='{act.prevStatusInEnter}'");
+        Assert.IsTrue(prevInPostEnter == Act.Status.Prologuing, $"PrevStatus wrong in OnPostEnter! Prev='{prevInPostEnter}'");
+
+
+        // Assertions for ticks
+        Assert.IsTrue(prevInPreTick == Act.Status.Entering, $"PrevStatus wrong in OnPreTick! Prev='{prevInPreTick}'");
+        Assert.IsTrue(act.prevStatusInTick == Act.Status.Entering, $"PrevStatus wrong in Tick()! Prev='{act.prevStatusInTick}'");
+        Assert.IsTrue(prevInPostTick == Act.Status.Entering, $"PrevStatus wrong in OnPostTick! Prev='{prevInPostTick}'");
+        Assert.IsTrue(prevInPrePhysicsTick == Act.Status.Entering, $"PrevStatus wrong in OnPrePhysicsTick! Prev='{prevInPrePhysicsTick}'");
+        Assert.IsTrue(act.prevStatusInPhysicsTick == Act.Status.Entering, $"PrevStatus wrong in PhysicsTick()! Prev='{act.prevStatusInPhysicsTick}'");
+        Assert.IsTrue(prevInPostPhysicsTick == Act.Status.Entering, $"PrevStatus wrong in OnPostPhysicsTick! Prev='{prevInPostPhysicsTick}'");
+        Assert.IsTrue(prevInPreLateTick == Act.Status.Entering, $"PrevStatus wrong in OnPreLateTick! Prev='{prevInPreLateTick}'");
+        Assert.IsTrue(act.prevStatusInLateTick == Act.Status.Entering, $"PrevStatus wrong in LateTick()! Prev='{act.prevStatusInLateTick}'");
+        Assert.IsTrue(prevInPostLateTick == Act.Status.Entering, $"PrevStatus wrong in OnPostLateTick! Prev='{prevInPostLateTick}'");
+
+
+        // Assertions for exit
+        Assert.IsTrue(prevInPreExit == Act.Status.Ticking, $"PrevStatus wrong in OnPreExit! Prev='{prevInPreExit}'");
+        Assert.IsTrue(act.prevStatusInExit == Act.Status.Ticking, $"PrevStatus wrong in Exit()! Prev='{act.prevStatusInExit}'");
+        Assert.IsTrue(prevInPostExit == Act.Status.Ticking, $"PrevStatus wrong in OnPostExit! Prev='{prevInPostExit}'");
+        Assert.IsTrue(prevInPerformEnd == Act.Status.Concluding, $"PrevStatus wrong in OnPerformEnd! Prev='{prevInPerformEnd}'");
+        Assert.IsTrue(prevAfterPerform == Act.Status.Concluding, $"PrevStatus wrong after perform ended! Prev='{prevAfterPerform}'");
+
+
+        // Assertions for cleanup
+        Assert.IsTrue(prevInPreCleanup == Act.Status.None, $"PrevStatus wrong in OnPreCleanup! Prev='{prevInPreCleanup}'");
+        Assert.IsTrue(act.prevStatusInCleanup == Act.Status.None, $"PrevStatus wrong in Cleanup()! Prev='{act.prevStatusInCleanup}'");
+        Assert.IsTrue(prevInPostCleanup == Act.Status.Deinitializing, $"PrevStatus wrong in OnPostCleanup! Prev='{prevInPostCleanup}'");
+
+        UnityEngine.Object.Destroy(theaterGO);
+
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator GetTickFlagsAccurate()
+    {
+        // Prerequisites
+        var actName = "Misc Tick Flags Act";
+        var allCombos = new Act.TickFlags[]
+        {
+            Act.TickFlags.None,
+            Act.TickFlags.Tick,
+            Act.TickFlags.PhysicsTick,
+            Act.TickFlags.LateTick,
+            Act.TickFlags.Tick | Act.TickFlags.PhysicsTick,
+            Act.TickFlags.Tick | Act.TickFlags.LateTick,
+            Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick,
+            Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick,
+        };
+
+
+        // Check every combo
+        foreach (var combo in allCombos)
+        {
+            var act = new ReperformableInfiAct();
+            act.overrideTickFlag = combo;
+            act.Init(actName);
+
+
+            // Assertions
+            Assert.IsTrue(act.GetTickFlags() == combo, $"GetTickFlags() wrong for combo='{combo}'! Flags='{act.GetTickFlags()}'");
+        }
+
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator GetLifetimePerformCountAccurate()
+    {
+        // Prerequisites
+        var actName = "Misc Lifetime Perform Act";
+        var failActName = "Misc Fail Perform Act";
+        var performAttempts = 3;
+        var extraAttempts = 1;
+
+
+        // Successful performs
+        var act = new Act();
+        act.Init(actName);
+
+        for (var i = 0; i < performAttempts; i++)
+        {
+            act.Perform();
+        }
+
+        var lifetimeBeforeDeinit = act.GetLifetimePerformCount();
+        var countBeforeDeinit = act.GetPerformCount();
+
+
+        // Reinit and perform again
+        act.Deinit();
+        act.Init(actName);
+
+        for (var i = 0; i < extraAttempts; i++)
+        {
+            act.Perform();
+        }
+
+
+        // Failed performs
+        var failAct = new FalseCanPerformAct();
+        failAct.Init(failActName);
+
+        for (var i = 0; i < performAttempts; i++)
+        {
+            failAct.Perform();
+        }
+
+
+        // Assertions
+        Assert.IsTrue(lifetimeBeforeDeinit == performAttempts, $"GetLifetimePerformCount() inaccurate! Count={lifetimeBeforeDeinit}  Expected={performAttempts}");
+        Assert.IsTrue(lifetimeBeforeDeinit == countBeforeDeinit, $"GetLifetimePerformCount() differs from GetPerformCount() before deinit! Lifetime={lifetimeBeforeDeinit}  Normal={countBeforeDeinit}");
+        Assert.IsTrue(act.GetLifetimePerformCount() == performAttempts + extraAttempts, $"GetLifetimePerformCount() did not accumulate after reinit! Count={act.GetLifetimePerformCount()}");
+        Assert.IsTrue(failAct.GetLifetimePerformCount() == 0, $"GetLifetimePerformCount() counted failed performs! Count={failAct.GetLifetimePerformCount()}");
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator GetLifetimeTickCountAccurate()
+    {
+        // Prerequisites
+        var theaterName = "Misc Lifetime Tick Theater";
+        var actName = "Misc Lifetime Tick Act";
+        var waitFrames = 3;
+
+        var theaterGO = new GameObject(theaterName);
+        var theater = theaterGO.AddComponent<Theater>();
+
+        var tickEventCount = 0;
+
+
+        // Perform Act
+        var act = new TickAct();
+        act.OnPostTick += (a) => { tickEventCount++; };
+        act.Init(actName, theater);
+        act.Perform();
+
+        for (var i = 0; i < waitFrames; i++)
+        {
+            yield return null;
+        }
+
+        act.Abort();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetLifetimeTickCount() == tickEventCount && tickEventCount > 0, $"GetLifetimeTickCount() inaccurate! Count='{act.GetLifetimeTickCount()}' Expected='{tickEventCount}'");
+        Assert.IsTrue(act.GetLifetimeTickCount() == act.GetTickCount(), $"GetLifetimeTickCount() differs from GetTickCount() before deinit! Lifetime='{act.GetLifetimeTickCount()}' Normal='{act.GetTickCount()}'");
+
+        UnityEngine.Object.Destroy(theaterGO);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator GetLifetimePhysicsTickCountAccurate()
+    {
+        // Prerequisites
+        var theaterName = "Misc Lifetime Physics Tick Theater";
+        var actName = "Misc Lifetime Physics Tick Act";
+        var waitFrames = 3;
+
+        var theaterGO = new GameObject(theaterName);
+        var theater = theaterGO.AddComponent<Theater>();
+
+        var physicsTickEventCount = 0;
+
+
+        // Perform Act
+        var act = new PhysicsTickAct();
+        act.OnPostPhysicsTick += (a) => { physicsTickEventCount++; };
+        act.Init(actName, theater);
+        act.Perform();
+
+        for (var i = 0; i < waitFrames; i++)
+        {
+            yield return new WaitForFixedUpdate();
+        }
+
+        act.Abort();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetLifetimePhysicsTickCount() == physicsTickEventCount && physicsTickEventCount > 0, $"GetLifetimePhysicsTickCount() inaccurate! Count='{act.GetLifetimePhysicsTickCount()}' Expected='{physicsTickEventCount}'");
+        Assert.IsTrue(act.GetLifetimePhysicsTickCount() == act.GetPhysicsTickCount(), $"GetLifetimePhysicsTickCount() differs from GetPhysicsTickCount() before deinit! Lifetime='{act.GetLifetimePhysicsTickCount()}' Normal='{act.GetPhysicsTickCount()}'");
+
+        UnityEngine.Object.Destroy(theaterGO);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator GetLifetimeLateTickCountAccurate()
+    {
+        // Prerequisites
+        var theaterName = "Misc Lifetime Late Tick Theater";
+        var actName = "Misc Lifetime Late Tick Act";
+        var waitFrames = 3;
+
+        var theaterGO = new GameObject(theaterName);
+        var theater = theaterGO.AddComponent<Theater>();
+
+        var lateTickEventCount = 0;
+
+
+        // Perform Act
+        var act = new LateTickAct();
+        act.OnPostLateTick += (a) => { lateTickEventCount++; };
+        act.Init(actName, theater);
+        act.Perform();
+
+        for (var i = 0; i < waitFrames; i++)
+        {
+            yield return null;
+        }
+
+        act.Abort();
+
+
+        // Assertions
+        Assert.IsTrue(act.GetLifetimeLateTickCount() == lateTickEventCount && lateTickEventCount > 0, $"GetLifetimeLateTickCount() inaccurate! Count='{act.GetLifetimeLateTickCount()}' Expected='{lateTickEventCount}'");
+        Assert.IsTrue(act.GetLifetimeLateTickCount() == act.GetLateTickCount(), $"GetLifetimeLateTickCount() differs from GetLateTickCount() before deinit! Lifetime='{act.GetLifetimeLateTickCount()}' Normal='{act.GetLateTickCount()}'");
+
+        UnityEngine.Object.Destroy(theaterGO);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator LifetimeCountsPersistAfterDeinit()
+    {
+        // Prerequisites
+        var theaterName = "Misc Lifetime Deinit Theater";
+        var actName = "Misc Lifetime Deinit Act";
+        var waitFrames = 3;
+        var resetCount = 0;
+
+        var theaterGO = new GameObject(theaterName);
+        var theater = theaterGO.AddComponent<Theater>();
+
+
+        // Perform Act
+        var act = new PerformingCheckAct();
+        act.Init(actName, theater);
+        act.Perform();
+
+        for (var i = 0; i < waitFrames; i++)
+        {
+            yield return new WaitForFixedUpdate();
+            yield return null;
+        }
+
+
+        // Store counts before deinit
+        var lifetimePerformBefore = act.GetLifetimePerformCount();
+        var lifetimeTickBefore = act.GetLifetimeTickCount();
+        var lifetimePhysicsTickBefore = act.GetLifetimePhysicsTickCount();
+        var lifetimeLateTickBefore = act.GetLifetimeLateTickCount();
+
+        act.Deinit();
+
+
+        // Assertions for lifetime counts
+        Assert.IsTrue(lifetimePerformBefore > 0, $"Act did not perform before deinit! Lifetime Perform Count={lifetimePerformBefore}");
+        Assert.IsTrue(lifetimeTickBefore > 0, $"Act did not tick before deinit! Lifetime Tick Count={lifetimeTickBefore}");
+        Assert.IsTrue(lifetimePhysicsTickBefore > 0, $"Act did not physics tick before deinit! Lifetime Physics Tick Count={lifetimePhysicsTickBefore}");
+        Assert.IsTrue(lifetimeLateTickBefore > 0, $"Act did not late tick before deinit! Lifetime Late Tick Count={lifetimeLateTickBefore}");
+        Assert.IsTrue(act.GetLifetimePerformCount() == lifetimePerformBefore, $"Lifetime perform count changed after Deinit()! Count={act.GetLifetimePerformCount()}  Expected={lifetimePerformBefore}");
+        Assert.IsTrue(act.GetLifetimeTickCount() == lifetimeTickBefore, $"Lifetime tick count changed after Deinit()! Count={act.GetLifetimeTickCount()}  Expected={lifetimeTickBefore}");
+        Assert.IsTrue(act.GetLifetimePhysicsTickCount() == lifetimePhysicsTickBefore, $"Lifetime physics tick count changed after Deinit()! Count={act.GetLifetimePhysicsTickCount()}  Expected={lifetimePhysicsTickBefore}");
+        Assert.IsTrue(act.GetLifetimeLateTickCount() == lifetimeLateTickBefore, $"Lifetime late tick count changed after Deinit()! Count={act.GetLifetimeLateTickCount()}  Expected={lifetimeLateTickBefore}");
+
+
+        // Assertions for normal counts
+        Assert.IsTrue(act.GetPerformCount() == resetCount, $"Perform count did not reset after Deinit()! Count={act.GetPerformCount()}");
+        Assert.IsTrue(act.GetTickCount() == resetCount, $"Tick count did not reset after Deinit()! Count={act.GetTickCount()}");
+        Assert.IsTrue(act.GetPhysicsTickCount() == resetCount, $"Physics tick count did not reset after Deinit()! Count={act.GetPhysicsTickCount()}");
+        Assert.IsTrue(act.GetLateTickCount() == resetCount, $"Late tick count did not reset after Deinit()! Count={act.GetLateTickCount()}");
+
+        UnityEngine.Object.Destroy(theaterGO);
         yield return null;
     }
 }

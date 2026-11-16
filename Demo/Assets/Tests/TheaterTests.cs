@@ -7,20 +7,39 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Is enabled changed action broadcasted with correct arguments?
-// 1. Is perform start action broadcasted with correct arguments?
-// 1. Is perform end action broadcasted with correct arguments?
-// 1. Is all perform end action broadcasted with correct arguments?
+// 1. Is "enable changed" action broadcasted with correct arguments when enabled/disabled?
+// 1. Is "enable changed" action not broadcasted when reassigning same value?
+// 1. Is "enable changed" action broadcasted when component or game object is disabled/enabled?
 
-// 1. Does IsEnabled() return correct state?
-// 1. Does disabling theater abort all acts?
-// 1. Can disabled theater acts perform?
+// 1. Is "act status change" action broadcasted with correct arguments on every status change?
+// 1. Is "act status change" action not broadcasted for acts without theater?
 
-// 1. Does AbortAll() abort all acts?
-// 1. Can all acts perform after AbortAll() is invoked?
+// 1. Does PerformAll() perform all acts exactly once?
+// 1. Does PerformAll() not perform all when theater is disabled?
+// 1. Does PerformAll() not perform acts that are disabled, blocked or when theater is disabled?
 
-// 1. Does AreAnyPerforming() return correct state?
-// 1. Does GetAllActs() return all acts assigned to theater?
+// 1. Does RetryAll() retry performing acts and perform non performing acts?
+// 1. Does RetryAll() not retry acts when theater is disabled?
+
+// 1. Does AbortAll() abort all performing acts with "Interrupted" outcome?
+// 1. Does AbortAll() not affect acts of another theater?
+// 1. Can all acts perform again after AbortAll()?
+
+// 1. Does SetEnabled() change IsEnabled()?
+// 1. Does SetEnabled(false) abort all performing acts?
+// 1. Does SetEnabled(false) cancel all deferred performs, retries and aborts?
+// 1. Can acts perform again after SetEnabled(true)?
+
+// 1. Does HasAct() return true only for acts added to the theater (false after Deinit(), other theater, null)?
+
+// 1. Does IsEnabled() return false when SetEnabled(false), component disabled or game object inactive?
+
+// 1. Does AreAnyPerforming() return correct state (none, some, all, after finish)?
+// 1. Does GetAllPerformingActs() return only performing acts?
+// 1. Does GetAllActs() return all acts assigned to theater and drop them after Deinit()?
+
+// 1. Does disabling component, deactivating game object or destroying theater abort all acts and cancel deferred operations?
+// 1. Do acts tick on matching updates (Update, FixedUpdate, LateUpdate) and stop after finish?
 
 
 public class TheaterTests
@@ -29,458 +48,983 @@ public class TheaterTests
     public IEnumerator EnabledChanged()
     {
         // Prerequisites
-        bool wasInvoked = false;
-        Theater arg1 = null;
-        bool arg2 = false;
+        var theaterName = "Test Theater";
+        var expectedCount = 2;
+        var receivedTheaters = new List<Theater>();
+        var receivedStates = new List<bool>();
 
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
+
+        // Setup theater
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
         theater.OnEnableChanged += (t, newIsEnabled) =>
         {
-            wasInvoked = true;
-            arg1 = t;
-            arg2 = newIsEnabled;
+            receivedTheaters.Add(t);
+            receivedStates.Add(newIsEnabled);
         };
 
+
+        // Disable then enable
         theater.SetEnabled(false);
-
-
-        // Assertions
-        Assert.IsTrue(wasInvoked, "OnEnableChanged not invoked!");
-        Assert.IsTrue(arg1 == theater, $"OnEnableChanged first argument is invalid! Arg1='{arg1}'");
-        Assert.IsTrue(arg2 == false, $"OnEnableChanged second argument is invalid! Arg2='{arg2}'");
-
-        yield return null;
-    }
-    // [UnityTest]
-    // public IEnumerator PerformStart()
-    // {
-    //     // Prerequisites
-    //     bool wasInvoked = false;
-    //     Theater arg1 = null;
-    //     Act arg2 = null;
-
-    //     // Setup Theater
-    //     var theaterObj = new GameObject("Test Theater");
-    //     var theater = theaterObj.AddComponent<Theater>();
-    //     theater.OnPerformStart += (t, a) =>
-    //     {
-    //         wasInvoked = true;
-    //         arg1 = t;
-    //         arg2 = a;
-    //     };
-
-    //     // Perform Act
-    //     var act = new ManualFinishAct();
-    //     act.Init("Test Act", theater);
-    //     act.Perform();
-
-
-    //     // Assertions
-    //     Assert.IsTrue(wasInvoked, "OnPerformStart not invoked!");
-    //     Assert.IsTrue(arg1 == theater, $"OnPerformStart first argument is invalid! Arg1='{arg1}'");
-    //     Assert.IsTrue(arg2 == act, $"OnPerformStart second argument is invalid! Arg2='{arg2}'");
-
-    //     yield return null;
-    // }
-    // [UnityTest]
-    // public IEnumerator PerformEnd()
-    // {
-    //     // Prerequisites
-    //     bool wasInvoked = false;
-    //     Theater arg1 = null;
-    //     Act arg2 = null;
-
-    //     // Setup Theater
-    //     var theaterObj = new GameObject("Test Theater");
-    //     var theater = theaterObj.AddComponent<Theater>();
-    //     theater.OnPerformEnd += (t, a) =>
-    //     {
-    //         wasInvoked = true;
-    //         arg1 = t;
-    //         arg2 = a;
-    //     };
-
-    //     // Perform Act
-    //     var act = new ManualFinishAct();
-    //     act.Init("Test Act", theater);
-    //     act.Perform();
-    //     act.ManualFinish();
-
-
-    //     // Assertions
-    //     Assert.IsTrue(wasInvoked, "OnPerformEnd not invoked!");
-    //     Assert.IsTrue(arg1 == theater, $"OnPerformEnd first argument is invalid! Arg1='{arg1}'");
-    //     Assert.IsTrue(arg2 == act, $"OnPerformEnd second argument is invalid! Arg2='{arg2}'");
-
-    //     yield return null;
-    // }
-    // [UnityTest]
-    // public IEnumerator AllPerformEnd()
-    // {
-    //     // Prerequisites
-    //     int invokeCount = 0;
-    //     Theater arg1 = null;
-
-    //     // Setup Theater
-    //     var theaterObj = new GameObject("Test Theater");
-    //     var theater = theaterObj.AddComponent<Theater>();
-    //     theater.OnAllPerformEnd += (t) =>
-    //     {
-    //         invokeCount++;
-    //         arg1 = t;
-    //     };
-
-    //     // Perform Acts
-    //     var actA = new ManualFinishAct();
-    //     actA.Init("Test Act A", theater);
-    //     actA.Perform();
-    //     var actB = new ManualFinishAct();
-    //     actB.Init("Test Act B", theater);
-    //     actB.Perform();
-
-    //     // Finish first act only
-    //     actA.ManualFinish();
-
-
-    //     // Assertions
-    //     Assert.IsTrue(invokeCount == 0, $"OnAllPerformEnd invoked despite one act still performing! Invoke Count='{invokeCount}'");
-
-    //     // Finish second act
-    //     actB.ManualFinish();
-
-
-    //     // Assertions
-    //     Assert.IsTrue(invokeCount == 1, $"OnAllPerformEnd not invoked exactly once! Invoke Count='{invokeCount}'");
-    //     Assert.IsTrue(arg1 == theater, $"OnAllPerformEnd argument is invalid! Arg1='{arg1}'");
-
-    //     yield return null;
-    // }
-
-
-
-    [UnityTest]
-    public IEnumerator IsEnabled()
-    {
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-        var isEnabled0 = theater.IsEnabled();
         theater.SetEnabled(true);
-        var isEnabled1 = theater.IsEnabled();
-        theater.SetEnabled(false);
-        var isEnabled2 = theater.IsEnabled();
+
+
+        // Assertions
+        Assert.IsTrue(receivedStates.Count == expectedCount, $"OnEnableChanged not invoked exactly {expectedCount} times! Count={receivedStates.Count}");
+        Assert.IsTrue(receivedTheaters.All(t => t == theater), "OnEnableChanged first argument is invalid!");
+        Assert.IsFalse(receivedStates[0], "OnEnableChanged second argument is not false on disable!");
+        Assert.IsTrue(receivedStates[1], "OnEnableChanged second argument is not true on enable!");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator EnabledChangedNotOnSameValue()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var invokeCount = 0;
+        var expectedCountAfterFirstChange = 1;
+
+
+        // Setup theater
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        theater.OnEnableChanged += (t, newIsEnabled) => { invokeCount++; };
+
+
+        // Reassign enabled value
         theater.SetEnabled(true);
-        var isEnabled3 = theater.IsEnabled();
+        var countAfterSameEnable = invokeCount;
 
 
-        // Assertions
-        Assert.IsTrue(isEnabled0, "IsEnabled() is false despite theater being enabled by default!");
-        Assert.IsTrue(isEnabled1, "IsEnabled() is false despite theater being set enabled!");
-        Assert.IsTrue(!isEnabled2, "IsEnabled() is true despite theater being set disabled!");
-        Assert.IsTrue(isEnabled3, "IsEnabled() is false despite theater being set enabled again!");
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator DisablingTheaterAbortsAllActs()
-    {
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-        // Perform Acts
-        var actA = new WaitInfiniAct();
-        actA.Init("Test Act A", theater);
-
-        var actB = new WaitInfiniAct();
-        actB.Init("Test Act B", theater);
-
-        var actC = new WaitInfiniAct();
-        actC.Init("Test Act C", theater);
-
-
-        actA.Perform();
-        actB.Perform();
-        actC.Perform();
-
-        // Disable Theater
+        // Disable twice
+        theater.SetEnabled(false);
         theater.SetEnabled(false);
 
 
         // Assertions
-        Assert.IsTrue(!actA.IsPerforming(), "Act A still performing despite theater being disabled!");
-        Assert.IsTrue(!actB.IsPerforming(), "Act B still performing despite theater being disabled!");
-        Assert.IsTrue(!actC.IsPerforming(), "Act C still performing despite theater being disabled!");
+        Assert.IsTrue(countAfterSameEnable == 0, $"OnEnableChanged invoked despite reassigning same value! Count={countAfterSameEnable}");
+        Assert.IsTrue(invokeCount == expectedCountAfterFirstChange, $"OnEnableChanged invoked again despite disabling twice! Count={invokeCount}");
 
+
+        UnityEngine.Object.Destroy(theater.gameObject);
         yield return null;
     }
     [UnityTest]
-    public IEnumerator DisabledTheaterActsCannotPerform()
+    public IEnumerator EnabledChangedOnComponentOrGameObject()
     {
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-        theater.SetEnabled(false);
-
-        // Perform Acts
-        var actA = new WaitInfiniAct();
-        actA.Init("Test Act A", theater);
-
-        var actB = new WaitInfiniAct();
-        actB.Init("Test Act B", theater);
-
-        var actC = new WaitInfiniAct();
-        actC.Init("Test Act C", theater);
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var expectedStates = new List<bool> { false, true, false, true };
+        var receivedStates = new List<bool>();
 
 
-        actA.Perform();
-        actB.Perform();
-        actC.Perform();
+        // Setup theater
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        theater.OnEnableChanged += (t, newIsEnabled) => { receivedStates.Add(newIsEnabled); };
+
+
+        // Toggle component then game object
+        theater.enabled = false;
+        theater.enabled = true;
+        theater.gameObject.SetActive(false);
+        theater.gameObject.SetActive(true);
 
 
         // Assertions
-        Assert.IsTrue(!actA.IsPerforming(), "Act A is performing despite theater being disabled!");
-        Assert.IsTrue(!actB.IsPerforming(), "Act B is performing despite theater being disabled!");
-        Assert.IsTrue(!actC.IsPerforming(), "Act C is performing despite theater being disabled!");
+        Assert.IsTrue(receivedStates.SequenceEqual(expectedStates), $"OnEnableChanged states invalid! Received='{string.Join(",", receivedStates)}'  Expected='{string.Join(",", expectedStates)}'");
 
+
+        UnityEngine.Object.Destroy(theater.gameObject);
         yield return null;
     }
 
 
 
     [UnityTest]
-    public IEnumerator AbortAll()
+    public IEnumerator ActStatusChange()
     {
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-        // Perform Acts
-        var actA = new WaitInfiniAct();
-        actA.Init("Test Act A", theater);
-
-
-        var actB = new WaitInfiniAct();
-        actB.Init("Test Act B", theater);
-
-
-        var actC = new WaitInfiniAct();
-        actC.Init("Test Act C", theater);
-
-
-        actA.Perform();
-        actB.Perform();
-        actC.Perform();
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var actName = "Test Act";
+        var expectedStatuses = new List<Act.Status>
+        {
+            Act.Status.Prologuing,
+            Act.Status.Entering,
+            Act.Status.Exiting,
+            Act.Status.Concluding,
+            Act.Status.None
+        };
+        var receivedTheaters = new List<Theater>();
+        var receivedActs = new List<Act>();
+        var receivedStatuses = new List<Act.Status>();
 
 
-        // Abort All
+        // Setup theater and act, Subscribed after init
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var act = new ManualFinishAct();
+        act.Init(actName, theater);
+        theater.OnActStatusChange += (t, a) =>
+        {
+            receivedTheaters.Add(t);
+            receivedActs.Add(a);
+            receivedStatuses.Add(a.GetStatus());
+        };
+
+
+        // Perform and finish
+        act.Perform();
+        act.ManualFinish();
+
+
+        // Assertions
+        Assert.IsTrue(receivedStatuses.SequenceEqual(expectedStatuses), $"OnActStatusChange statuses invalid! Received='{string.Join(",", receivedStatuses)}'  Expected='{string.Join(",", expectedStatuses)}'");
+        Assert.IsTrue(receivedTheaters.All(t => t == theater), "OnActStatusChange first argument is invalid!");
+        Assert.IsTrue(receivedActs.All(a => a == act), "OnActStatusChange second argument is invalid!");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator ActStatusChangeNotForActsWithoutTheater()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var actName = "Test Act";
+        var invokeCount = 0;
+
+
+        // Setup theater and act without theater
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        theater.OnActStatusChange += (t, a) => { invokeCount++; };
+
+        var act = new ManualFinishAct();
+        act.Init(actName);
+
+
+        // Perform and finish
+        act.Perform();
+        act.ManualFinish();
+
+
+        // Assertions
+        Assert.IsTrue(invokeCount == 0, $"OnActStatusChange invoked for act without theater! Count={invokeCount}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator PerformAllPerformsAllOnce()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var actNamePrefix = "Test Act ";
+        var actCount = 3;
+        var expectedPerformCount = 1;
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var acts = new List<Act>();
+        for (var i = 0; i < actCount; i++)
+        {
+            var act = new Act();
+            act.Init(actNamePrefix + i, theater);
+            acts.Add(act);
+        }
+
+
+        // Perform all
+        theater.PerformAll();
+
+
+        // Assertions
+        foreach (var act in acts)
+        {
+            Assert.IsTrue(act.GetPerformCount() == expectedPerformCount, $"{act.GetName()} did not perform exactly once! Perform Count={act.GetPerformCount()}");
+        }
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformAllNotWhenTheaterDisabled()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var actNamePrefix = "Test Act ";
+        var actCount = 3;
+        var expectedPerformCount = 0;
+
+
+        // Setup disabled theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var acts = new List<Act>();
+        for (var i = 0; i < actCount; i++)
+        {
+            var act = new Act();
+            act.Init(actNamePrefix + i, theater);
+            acts.Add(act);
+        }
+        theater.SetEnabled(false);
+
+
+        // Perform all
+        theater.PerformAll();
+
+
+        // Assertions
+        foreach (var act in acts)
+        {
+            Assert.IsTrue(act.GetPerformCount() == expectedPerformCount, $"{act.GetName()} performed despite theater being disabled! Perform Count={act.GetPerformCount()}");
+        }
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PerformAllSkipsDisabledAndBlockedActs()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var expectedPerformCount = 1;
+        var expectedSkippedCount = 0;
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+        var normalAct = new Act();
+        normalAct.Init("Normal Act", theater);
+
+        var disabledAct = new Act();
+        disabledAct.Init("Disabled Act", theater);
+        disabledAct.SetEnabled(false);
+
+        var blockedAct = new Act();
+        blockedAct.Init("Blocked Act", theater);
+
+        var blockerAct = new WaitInfiniAct();
+        blockerAct.Init("Blocker Act");
+        blockerAct.AddToBlock(new List<Act> { blockedAct });
+        blockerAct.Perform();
+
+
+        // Perform all
+        theater.PerformAll();
+
+
+        // Assertions
+        Assert.IsTrue(blockedAct.IsBlocked(), "Blocked act is not blocked!");
+        Assert.IsTrue(normalAct.GetPerformCount() == expectedPerformCount, $"Normal act did not perform exactly once! Perform Count={normalAct.GetPerformCount()}");
+        Assert.IsTrue(disabledAct.GetPerformCount() == expectedSkippedCount, $"Disabled act performed! Perform Count={disabledAct.GetPerformCount()}");
+        Assert.IsTrue(blockedAct.GetPerformCount() == expectedSkippedCount, $"Blocked act performed! Perform Count={blockedAct.GetPerformCount()}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator RetryAllRetriesAndPerforms()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var expectedRetriedCount = 2;
+        var expectedPerformedCount = 1;
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+        var performingAct = new WaitInfiniAct();
+        performingAct.Init("Performing Act", theater);
+        performingAct.Perform();
+
+        var idleAct = new Act();
+        idleAct.Init("Idle Act", theater);
+
+
+        // Retry all
+        theater.RetryAll();
+
+
+        // Assertions
+        Assert.IsTrue(performingAct.GetPerformCount() == expectedRetriedCount, $"Performing act did not retry! Perform Count={performingAct.GetPerformCount()}");
+        Assert.IsTrue(performingAct.GetStatus() == Act.Status.Entering, $"Performing act did not re enter after retrying! Status={performingAct.GetStatus()}");
+        Assert.IsTrue(idleAct.GetPerformCount() == expectedPerformedCount, $"Idle act did not perform on RetryAll()! Perform Count={idleAct.GetPerformCount()}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator RetryAllNotWhenTheaterDisabled()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var expectedPerformingCount = 1;
+        var expectedIdleCount = 0;
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+        var performingAct = new WaitInfiniAct();
+        performingAct.Init("Performing Act", theater);
+        performingAct.Perform();
+
+        var idleAct = new Act();
+        idleAct.Init("Idle Act", theater);
+
+
+        // Disable theater then retry all
+        theater.SetEnabled(false);
+        theater.RetryAll();
+
+
+        // Assertions
+        Assert.IsTrue(performingAct.GetPerformCount() == expectedPerformingCount, $"Performing act retried despite theater being disabled! Perform Count={performingAct.GetPerformCount()}");
+        Assert.IsFalse(performingAct.IsPerforming(), "Performing act is still performing despite theater being disabled!");
+        Assert.IsTrue(idleAct.GetPerformCount() == expectedIdleCount, $"Idle act performed despite theater being disabled! Perform Count={idleAct.GetPerformCount()}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator AbortAllInterruptsAllActs()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var actNamePrefix = "Test Act ";
+        var actCount = 3;
+
+
+        // Setup theater and perform acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var acts = new List<Act>();
+        for (var i = 0; i < actCount; i++)
+        {
+            var act = new WaitInfiniAct();
+            act.Init(actNamePrefix + i, theater);
+            act.Perform();
+            acts.Add(act);
+        }
+
+
+        // Abort all
         theater.AbortAll();
 
 
         // Assertions
-        Assert.IsTrue(!actA.IsPerforming(), "Act A still performing despite AbortAll() being invoked!");
-        Assert.IsTrue(!actB.IsPerforming(), "Act B still performing despite AbortAll() being invoked!");
-        Assert.IsTrue(!actC.IsPerforming(), "Act C still performing despite AbortAll() being invoked!");
+        foreach (var act in acts)
+        {
+            Assert.IsFalse(act.IsPerforming(), $"{act.GetName()} still performing despite AbortAll()!");
+            Assert.IsTrue(act.GetOutcome() == Act.Outcome.Interrupted, $"{act.GetName()} outcome is not 'Interrupted'! Outcome={act.GetOutcome()}");
+        }
 
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator AbortAllNotAffectOtherTheater()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var otherTheaterName = "Other Test Theater";
+
+
+        // Setup theaters and perform acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var otherTheater = new GameObject(otherTheaterName).AddComponent<Theater>();
+
+        var act = new WaitInfiniAct();
+        act.Init("Test Act", theater);
+        act.Perform();
+
+        var otherAct = new WaitInfiniAct();
+        otherAct.Init("Other Test Act", otherTheater);
+        otherAct.Perform();
+
+
+        // Abort all on first theater
+        theater.AbortAll();
+
+
+        // Assertions
+        Assert.IsFalse(act.IsPerforming(), "Act still performing despite AbortAll()!");
+        Assert.IsTrue(otherAct.IsPerforming(), "Act of other theater aborted by AbortAll()!");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        UnityEngine.Object.Destroy(otherTheater.gameObject);
         yield return null;
     }
     [UnityTest]
     public IEnumerator PerformAfterAbortAll()
     {
-        // Setup Theater
-        var theaterObj = new GameObject("Test Theater");
-        var theater = theaterObj.AddComponent<Theater>();
-
-        // Perform Acts
-        var actA = new WaitInfiniAct();
-        actA.Init("Test Act A", theater);
-        var actB = new WaitInfiniAct();
-        actB.Init("Test Act B", theater);
-        var actC = new WaitInfiniAct();
-        actC.Init("Test Act C", theater);
-
-        actA.Perform();
-        actB.Perform();
-        actC.Perform();
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var actNamePrefix = "Test Act ";
+        var actCount = 3;
 
 
-        // Abort All
+        // Setup theater and perform acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var acts = new List<Act>();
+        for (var i = 0; i < actCount; i++)
+        {
+            var act = new WaitInfiniAct();
+            act.Init(actNamePrefix + i, theater);
+            act.Perform();
+            acts.Add(act);
+        }
+
+
+        // Abort all then reperform
         theater.AbortAll();
-
-
-        // Reperform Acts
-        actA.Perform();
-        actB.Perform();
-        actC.Perform();
+        foreach (var act in acts)
+        {
+            act.Perform();
+        }
 
 
         // Assertions
-        Assert.IsTrue(actA.IsPerforming(), "Act A did not perform after AbortAll() was invoked!");
-        Assert.IsTrue(actB.IsPerforming(), "Act B did not perform after AbortAll() was invoked!");
-        Assert.IsTrue(actC.IsPerforming(), "Act C did not perform after AbortAll() was invoked!");
+        foreach (var act in acts)
+        {
+            Assert.IsTrue(act.IsPerforming(), $"{act.GetName()} did not perform after AbortAll()!");
+        }
 
+
+        UnityEngine.Object.Destroy(theater.gameObject);
         yield return null;
     }
 
 
 
     [UnityTest]
-    public IEnumerator AreAnyPerforming()
+    public IEnumerator SetEnabledChangesIsEnabled()
     {
-        // All acts performing
-        {
-            // Setup Theater
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
-
-            // Perform Acts
-            var actA = new WaitInfiniAct();
-            actA.Init("Test Act A", theater);
-            actA.Perform();
-
-            var actB = new WaitInfiniAct();
-            actB.Init("Test Act B", theater);
-            actB.Perform();
-
-            var actC = new WaitInfiniAct();
-            actC.Init("Test Act C", theater);
-            actC.Perform();
+        // Prerequisites
+        var theaterName = "Test Theater";
 
 
-            // Assertions
-            Assert.IsTrue(theater.AreAnyPerforming(), "AreAnyPerforming() is false despite all acts performing!");
-        }
+        // Toggle enabled
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
 
-        // One act performing rest not
-        {
-            // Setup Theater
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
-
-            // Perform Acts
-            var actA = new WaitInfiniAct();
-            actA.Init("Test Act A", theater);
-            actA.Perform();
-
-            var actB = new ManualFinishAct();
-            actB.Init("Test Act B", theater);
-            actB.Perform();
-            actB.ManualFinish();
-
-            var actC = new ManualFinishAct();
-            actC.Init("Test Act C", theater);
-            actC.Perform();
-            actC.ManualFinish();
+        var isEnabledByDefault = theater.IsEnabled();
+        theater.SetEnabled(false);
+        var isEnabledAfterDisable = theater.IsEnabled();
+        theater.SetEnabled(true);
+        var isEnabledAfterEnable = theater.IsEnabled();
 
 
-            // Assertions
-            Assert.IsTrue(theater.AreAnyPerforming(), "AreAnyPerforming() is false despite one act still performing!");
-        }
-
-        // No acts performing
-        {
-            // Setup Theater
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
-
-            // Perform Acts
-            var actA = new ManualFinishAct();
-            actA.Init("Test Act A", theater);
-            actA.Perform();
-            actA.ManualFinish();
-
-            var actB = new ManualFinishAct();
-            actB.Init("Test Act B", theater);
-            actB.Perform();
-            actB.ManualFinish();
-
-            var actC = new ManualFinishAct();
-            actC.Init("Test Act C", theater);
-            actC.Perform();
-            actC.ManualFinish();
+        // Assertions
+        Assert.IsTrue(isEnabledByDefault, "IsEnabled() false despite theater being enabled by default!");
+        Assert.IsFalse(isEnabledAfterDisable, "IsEnabled() true despite SetEnabled(false)!");
+        Assert.IsTrue(isEnabledAfterEnable, "IsEnabled() false despite SetEnabled(true)!");
 
 
-            // Assertions
-            Assert.IsFalse(theater.AreAnyPerforming(), "AreAnyPerforming() is true despite no acts performing!");
-        }
-
+        UnityEngine.Object.Destroy(theater.gameObject);
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetAllActsReturnsAllActs()
+    public IEnumerator SetEnabledFalseAbortsAllActs()
     {
-        // Only 1 act passed
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var actNamePrefix = "Test Act ";
+        var actCount = 3;
+
+
+        // Setup theater and perform acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var acts = new List<Act>();
+        for (var i = 0; i < actCount; i++)
         {
-            // Setup Theater
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
+            var act = new WaitInfiniAct();
+            act.Init(actNamePrefix + i, theater);
+            act.Perform();
+            acts.Add(act);
+        }
 
-            // Init Acts
-            var actA = new ManualFinishAct();
-            actA.Init("Test Act A", theater);
 
-            // Get All Acts
-            var allActs = theater.GetAllActs();
+        // Disable theater
+        theater.SetEnabled(false);
+
+
+        // Assertions
+        foreach (var act in acts)
+        {
+            Assert.IsFalse(act.IsPerforming(), $"{act.GetName()} still performing despite theater being disabled!");
+            Assert.IsTrue(act.GetOutcome() == Act.Outcome.Interrupted, $"{act.GetName()} outcome is not 'Interrupted'! Outcome={act.GetOutcome()}");
+        }
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator SetEnabledFalseCancelsDeferred()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var allFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
+        var expectedPerformDeferCount = 0;
+        var expectedRetryDeferCount = 2;
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+        var performDeferAct = new Act();
+        performDeferAct.Init("Perform Defer Act", theater);
+
+        var retryDeferAct = new WaitInfiniAct();
+        retryDeferAct.Init("Retry Defer Act", theater);
+        retryDeferAct.Perform();
+
+        var abortDeferAct = new WaitInfiniAct();
+        abortDeferAct.Init("Abort Defer Act", theater);
+        abortDeferAct.Perform();
+
+
+        // Defer operations then disable and enable theater
+        performDeferAct.PerformDeferred(allFlags);
+        retryDeferAct.RetryDeferred(allFlags);
+        abortDeferAct.AbortDeferred(allFlags);
+
+        theater.SetEnabled(false);
+        theater.SetEnabled(true);
+
+
+        // Reperform so leftover deferred operations would be visible
+        retryDeferAct.Perform();
+        abortDeferAct.Perform();
+
+        yield return new WaitForFixedUpdate();
+        yield return null;
+
+
+        // Assertions
+        Assert.IsTrue(performDeferAct.GetPerformCount() == expectedPerformDeferCount, $"Deferred perform fired despite theater being disabled! Perform Count={performDeferAct.GetPerformCount()}");
+        Assert.IsTrue(retryDeferAct.GetPerformCount() == expectedRetryDeferCount, $"Deferred retry fired despite theater being disabled! Perform Count={retryDeferAct.GetPerformCount()}");
+        Assert.IsTrue(abortDeferAct.IsPerforming(), "Deferred abort fired despite theater being disabled!");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+    }
+    [UnityTest]
+    public IEnumerator PerformAfterSetEnabledTrue()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+
+
+        // Setup theater and act
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var act = new WaitInfiniAct();
+        act.Init("Test Act", theater);
+
+
+        // Perform while disabled then enabled
+        theater.SetEnabled(false);
+        act.Perform();
+        var performingWhileDisabled = act.IsPerforming();
+
+        theater.SetEnabled(true);
+        act.Perform();
+
+
+        // Assertions
+        Assert.IsFalse(performingWhileDisabled, "Act performed while theater was disabled!");
+        Assert.IsTrue(act.IsPerforming(), "Act did not perform after theater was enabled again!");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator HasActValid()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var otherTheaterName = "Other Test Theater";
+
+
+        // Setup theaters and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var otherTheater = new GameObject(otherTheaterName).AddComponent<Theater>();
+
+        var act = new Act();
+        act.Init("Test Act", theater);
+
+        var otherAct = new Act();
+        otherAct.Init("Other Test Act", otherTheater);
+
+        var neverAddedAct = new Act();
+        neverAddedAct.Init("Never Added Act");
+
+
+        // Check before and after deinit
+        var hasActBeforeDeinit = theater.HasAct(act);
+        act.Deinit();
+        var hasActAfterDeinit = theater.HasAct(act);
+
+
+        // Assertions
+        Assert.IsTrue(hasActBeforeDeinit, "HasAct() false for act added to theater!");
+        Assert.IsFalse(hasActAfterDeinit, "HasAct() true after Deinit()!");
+        Assert.IsFalse(theater.HasAct(otherAct), "HasAct() true for act of other theater!");
+        Assert.IsFalse(theater.HasAct(neverAddedAct), "HasAct() true for act without theater!");
+        Assert.IsFalse(theater.HasAct(null), "HasAct() true for null!");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        UnityEngine.Object.Destroy(otherTheater.gameObject);
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator IsEnabledFalseCases()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+
+
+        // Toggle each condition one at a time
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+        theater.SetEnabled(false);
+        var isEnabledSetDisabled = theater.IsEnabled();
+        theater.SetEnabled(true);
+        var isEnabledSetReenabled = theater.IsEnabled();
+
+        theater.enabled = false;
+        var isEnabledComponentDisabled = theater.IsEnabled();
+        theater.enabled = true;
+        var isEnabledComponentReenabled = theater.IsEnabled();
+
+        theater.gameObject.SetActive(false);
+        var isEnabledObjectInactive = theater.IsEnabled();
+        theater.gameObject.SetActive(true);
+        var isEnabledObjectReactivated = theater.IsEnabled();
+
+
+        // Assertions
+        Assert.IsFalse(isEnabledSetDisabled, "IsEnabled() true despite SetEnabled(false)!");
+        Assert.IsTrue(isEnabledSetReenabled, "IsEnabled() false after SetEnabled(true)!");
+        Assert.IsFalse(isEnabledComponentDisabled, "IsEnabled() true despite component being disabled!");
+        Assert.IsTrue(isEnabledComponentReenabled, "IsEnabled() false after component was enabled again!");
+        Assert.IsFalse(isEnabledObjectInactive, "IsEnabled() true despite game object being inactive!");
+        Assert.IsTrue(isEnabledObjectReactivated, "IsEnabled() false after game object was reactivated!");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator AreAnyPerformingValid()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+        var actA = new WaitInfiniAct();
+        actA.Init("Test Act A", theater);
+
+        var actB = new ManualFinishAct();
+        actB.Init("Test Act B", theater);
+
+
+        // Check at every stage
+        var anyWhenNone = theater.AreAnyPerforming();
+
+        actA.Perform();
+        var anyWhenSome = theater.AreAnyPerforming();
+
+        actB.Perform();
+        var anyWhenAll = theater.AreAnyPerforming();
+
+        actA.Abort();
+        actB.ManualFinish();
+        var anyAfterFinish = theater.AreAnyPerforming();
+
+
+        // Assertions
+        Assert.IsFalse(anyWhenNone, "AreAnyPerforming() true despite no acts performing!");
+        Assert.IsTrue(anyWhenSome, "AreAnyPerforming() false despite one act performing!");
+        Assert.IsTrue(anyWhenAll, "AreAnyPerforming() false despite all acts performing!");
+        Assert.IsFalse(anyAfterFinish, "AreAnyPerforming() true after all acts finished!");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator GetAllPerformingActsValid()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var expectedPerformingCount = 2;
+        var expectedCountAfterAbort = 1;
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+        var actA = new WaitInfiniAct();
+        actA.Init("Test Act A", theater);
+        actA.Perform();
+
+        var actB = new WaitInfiniAct();
+        actB.Init("Test Act B", theater);
+        actB.Perform();
+
+        var idleAct = new Act();
+        idleAct.Init("Idle Act", theater);
+
+
+        // Check before and after abort
+        var performingActs = theater.GetAllPerformingActs().ToList();
+        actA.Abort();
+        var performingActsAfterAbort = theater.GetAllPerformingActs().ToList();
+
+
+        // Assertions
+        Assert.IsTrue(performingActs.Contains(actA), "GetAllPerformingActs() does not contain Act A!");
+        Assert.IsTrue(performingActs.Contains(actB), "GetAllPerformingActs() does not contain Act B!");
+        Assert.IsFalse(performingActs.Contains(idleAct), "GetAllPerformingActs() contains idle act!");
+        Assert.IsTrue(performingActs.Count == expectedPerformingCount, $"GetAllPerformingActs() returned incorrect count! Count={performingActs.Count}");
+        Assert.IsTrue(performingActsAfterAbort.Count == expectedCountAfterAbort && performingActsAfterAbort.Contains(actB), $"GetAllPerformingActs() invalid after abort! Count={performingActsAfterAbort.Count}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator GetAllActsValid()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var actNamePrefix = "Test Act ";
+        var actCount = 3;
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+        var acts = new List<Act>();
+        for (var i = 0; i < actCount; i++)
+        {
+            var act = new Act();
+            act.Init(actNamePrefix + i, theater);
+            acts.Add(act);
+        }
+
+
+        // Check before and after deinit
+        var allActs = theater.GetAllActs().ToList();
+        var deinitAct = acts[0];
+        deinitAct.Deinit();
+        var allActsAfterDeinit = theater.GetAllActs().ToList();
+
+
+        // Assertions
+        foreach (var act in acts)
+        {
+            Assert.IsTrue(allActs.Contains(act), $"GetAllActs() does not contain {act.GetName()}!");
+        }
+        Assert.IsTrue(allActs.Count == actCount, $"GetAllActs() returned incorrect count! Count={allActs.Count}");
+        Assert.IsFalse(allActsAfterDeinit.Contains(deinitAct), "GetAllActs() still contains act after Deinit()!");
+        Assert.IsTrue(allActsAfterDeinit.Count == actCount - 1, $"GetAllActs() returned incorrect count after Deinit()! Count={allActsAfterDeinit.Count}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+        yield return null;
+    }
+
+
+
+    [UnityTest]
+    public IEnumerator LifecycleAbortsAllAndCancelsDeferred()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var allFlags = Act.TickFlags.Tick | Act.TickFlags.PhysicsTick | Act.TickFlags.LateTick;
+        var expectedPerformDeferCount = 0;
+
+
+        // Component disabled
+        {
+            var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+            var act = new WaitInfiniAct();
+            act.Init("Component Act", theater);
+            act.Perform();
+            act.AbortDeferred(allFlags);
+
+            var deferAct = new Act();
+            deferAct.Init("Component Defer Act", theater);
+            deferAct.PerformDeferred(allFlags);
+
+            theater.enabled = false;
+            var performingAfterDisable = act.IsPerforming();
+            theater.enabled = true;
+
+            act.Perform();
+
+            yield return new WaitForFixedUpdate();
+            yield return null;
 
 
             // Assertions
-            Assert.IsTrue(allActs.Contains(actA), "GetAllActs() does not contain Act A!");
-            Assert.IsTrue(allActs.Count == 1, $"GetAllActs() returned incorrect count! Count='{allActs.Count}'");
+            Assert.IsFalse(performingAfterDisable, "Component: Act still performing after component disabled!");
+            Assert.IsTrue(act.IsPerforming(), "Component: Deferred abort fired after component disabled!");
+            Assert.IsTrue(deferAct.GetPerformCount() == expectedPerformDeferCount, $"Component: Deferred perform fired after component disabled! Perform Count={deferAct.GetPerformCount()}");
+
+            UnityEngine.Object.Destroy(theater.gameObject);
         }
 
-        // 2 acts passed
+
+        // Game object deactivated
         {
-            // Setup Theater
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
+            var theater = new GameObject(theaterName).AddComponent<Theater>();
 
-            // Init Acts
-            var actA = new ManualFinishAct();
-            actA.Init("Test Act A", theater);
+            var act = new WaitInfiniAct();
+            act.Init("Object Act", theater);
+            act.Perform();
+            act.AbortDeferred(allFlags);
 
-            var actB = new ManualFinishAct();
-            actB.Init("Test Act B", theater);
+            var deferAct = new Act();
+            deferAct.Init("Object Defer Act", theater);
+            deferAct.PerformDeferred(allFlags);
 
-            // Get All Acts
-            var allActs = theater.GetAllActs();
+            theater.gameObject.SetActive(false);
+            var performingAfterDeactivate = act.IsPerforming();
+            theater.gameObject.SetActive(true);
+
+            act.Perform();
+
+            yield return new WaitForFixedUpdate();
+            yield return null;
 
 
             // Assertions
-            Assert.IsTrue(allActs.Contains(actA), "GetAllActs() does not contain Act A!");
-            Assert.IsTrue(allActs.Contains(actB), "GetAllActs() does not contain Act B!");
-            Assert.IsTrue(allActs.Count == 2, $"GetAllActs() returned incorrect count! Count='{allActs.Count}'");
+            Assert.IsFalse(performingAfterDeactivate, "Object: Act still performing after game object deactivated!");
+            Assert.IsTrue(act.IsPerforming(), "Object: Deferred abort fired after game object deactivated!");
+            Assert.IsTrue(deferAct.GetPerformCount() == expectedPerformDeferCount, $"Object: Deferred perform fired after game object deactivated! Perform Count={deferAct.GetPerformCount()}");
+
+            UnityEngine.Object.Destroy(theater.gameObject);
         }
 
-        // 3 acts passed
+
+        // Theater destroyed
         {
-            // Setup Theater
-            var theaterObj = new GameObject("Test Theater");
-            var theater = theaterObj.AddComponent<Theater>();
+            var theater = new GameObject(theaterName).AddComponent<Theater>();
 
-            // Init Acts
-            var actA = new ManualFinishAct();
-            actA.Init("Test Act A", theater);
+            var act = new WaitInfiniAct();
+            act.Init("Destroy Act", theater);
+            act.Perform();
 
-            var actB = new ManualFinishAct();
-            actB.Init("Test Act B", theater);
+            UnityEngine.Object.Destroy(theater.gameObject);
 
-            var actC = new ManualFinishAct();
-            actC.Init("Test Act C", theater);
-
-            // Get All Acts
-            var allActs = theater.GetAllActs();
+            yield return null;
 
 
             // Assertions
-            Assert.IsTrue(allActs.Contains(actA), "GetAllActs() does not contain Act A!");
-            Assert.IsTrue(allActs.Contains(actB), "GetAllActs() does not contain Act B!");
-            Assert.IsTrue(allActs.Contains(actC), "GetAllActs() does not contain Act C!");
-            Assert.IsTrue(allActs.Count == 3, $"GetAllActs() returned incorrect count! Count='{allActs.Count}'");
+            Assert.IsFalse(act.IsPerforming(), "Destroy: Act still performing after theater destroyed!");
+        }
+    }
+    [UnityTest]
+    public IEnumerator ActsTickOnMatchingUpdates()
+    {
+        // Prerequisites
+        var theaterName = "Test Theater";
+        var waitFrames = 3;
+        var noTickCount = 0;
+
+
+        // Setup theater and acts
+        var theater = new GameObject(theaterName).AddComponent<Theater>();
+
+        var tickAct = new TickAct();
+        tickAct.Init("Tick Act", theater);
+        tickAct.Perform();
+
+        var physicsTickAct = new PhysicsTickAct();
+        physicsTickAct.Init("Physics Tick Act", theater);
+        physicsTickAct.Perform();
+
+        var lateTickAct = new LateTickAct();
+        lateTickAct.Init("Late Tick Act", theater);
+        lateTickAct.Perform();
+
+
+        // Wait for updates
+        for (var i = 0; i < waitFrames; i++)
+        {
+            yield return new WaitForFixedUpdate();
+            yield return null;
         }
 
+
+        // Assertions for matching updates
+        Assert.IsTrue(tickAct.GetTickCount() > noTickCount, "Tick act did not tick on Update!");
+        Assert.IsTrue(tickAct.GetPhysicsTickCount() == noTickCount && tickAct.GetLateTickCount() == noTickCount, "Tick act ticked on non matching updates!");
+        Assert.IsTrue(physicsTickAct.GetPhysicsTickCount() > noTickCount, "Physics tick act did not tick on FixedUpdate!");
+        Assert.IsTrue(physicsTickAct.GetTickCount() == noTickCount && physicsTickAct.GetLateTickCount() == noTickCount, "Physics tick act ticked on non matching updates!");
+        Assert.IsTrue(lateTickAct.GetLateTickCount() > noTickCount, "Late tick act did not tick on LateUpdate!");
+        Assert.IsTrue(lateTickAct.GetTickCount() == noTickCount && lateTickAct.GetPhysicsTickCount() == noTickCount, "Late tick act ticked on non matching updates!");
+
+
+        // Finish acts and store counts
+        tickAct.Abort();
+        physicsTickAct.Abort();
+        lateTickAct.Abort();
+
+        var tickCountAfterFinish = tickAct.GetTickCount();
+        var physicsTickCountAfterFinish = physicsTickAct.GetPhysicsTickCount();
+        var lateTickCountAfterFinish = lateTickAct.GetLateTickCount();
+
+        for (var i = 0; i < waitFrames; i++)
+        {
+            yield return new WaitForFixedUpdate();
+            yield return null;
+        }
+
+
+        // Assertions for finished acts
+        Assert.IsTrue(tickAct.GetTickCount() == tickCountAfterFinish, $"Tick act kept ticking after finish! Count={tickAct.GetTickCount()}");
+        Assert.IsTrue(physicsTickAct.GetPhysicsTickCount() == physicsTickCountAfterFinish, $"Physics tick act kept ticking after finish! Count={physicsTickAct.GetPhysicsTickCount()}");
+        Assert.IsTrue(lateTickAct.GetLateTickCount() == lateTickCountAfterFinish, $"Late tick act kept ticking after finish! Count={lateTickAct.GetLateTickCount()}");
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
         yield return null;
     }
 }

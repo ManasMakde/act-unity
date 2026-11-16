@@ -303,6 +303,12 @@ public class Act
 	}
 	public bool IsBlockedBy(Act byAct)
 	{
+		if (byAct == this)
+		{
+			return false;
+		}
+
+
 		return _blockedByActs.Contains(byAct);
 	}
 	public bool HasInitialized()
@@ -619,7 +625,7 @@ public class Act
 	[NonSerialized] private int _lifetimePhysicsTickCount = 0;
 	[NonSerialized] private int _lifetimeLateTickCount = 0;
 
-	public static Act GetFirst(HashSet<Act> collection)
+	private static Act GetFirst(HashSet<Act> collection)
 	{
 		foreach (var data in collection)
 		{

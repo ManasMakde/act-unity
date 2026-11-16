@@ -6,13 +6,12 @@ using UnityEngine.TestTools;
 
 
 // 1. Does perform deferred work?
-// 1. Does perform deferred fail without theater?
-// 1. Does perform deferred not immediately perform the act?
-// 1. Does act perform once when deferred twice?
-// 1. Does perform deferred combined tick flags fire once only for whichever comes first?
-// 1. Does perform deferred with tick flag as none do nothing?
-// 1. Is perform deferred cleared upon performing immediately?
-// 1. Is perform deferred cleared on aborting?
+// 2. Does perform deferred fail without theater?
+// 3. Does perform deferred not immediately perform the act?
+// 4. Does act perform once when deferred twice?
+// 5. Does perform deferred combined tick flags fire once only for whichever comes first?
+// 6. Does perform deferred with tick flag as none do nothing?
+// 7. Does cancel perform deferred work?
 
 // 1. Does perform deferred succeed from OnPreSetup?
 // 1. Does perform deferred succeed from OnPostSetup?
@@ -40,7 +39,7 @@ using UnityEngine.TestTools;
 public class ActPerformDeferredTests
 {
     [UnityTest]
-    public IEnumerator PerformDeferredWorks()
+    public IEnumerator PerformDeferredWorks()  // 1
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -79,7 +78,7 @@ public class ActPerformDeferredTests
         UnityEngine.Object.Destroy(theater.gameObject);
     }
     [UnityTest]
-    public IEnumerator PerformDeferWithoutTheater()
+    public IEnumerator PerformDeferWithoutTheater()  // 2
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -99,7 +98,7 @@ public class ActPerformDeferredTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformDeferredDoesNotImmediatelyPerform()
+    public IEnumerator PerformDeferredDoesNotImmediatelyPerform()  // 3
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -119,7 +118,7 @@ public class ActPerformDeferredTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformsOnceWhenDeferredTwice()
+    public IEnumerator PerformsOnceWhenDeferredTwice()  // 4
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -176,7 +175,7 @@ public class ActPerformDeferredTests
         UnityEngine.Object.Destroy(theater.gameObject);
     }
     [UnityTest]
-    public IEnumerator PerformDeferredCombinedFlagsFireOnFirstAndClearOther()
+    public IEnumerator PerformDeferredCombinedFlagsFireOnFirstAndClearOther()  // 5
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -269,7 +268,7 @@ public class ActPerformDeferredTests
         UnityEngine.Object.Destroy(theater.gameObject);
     }
     [UnityTest]
-    public IEnumerator PerformDeferredWithNoneFlagDoesNothing()
+    public IEnumerator PerformDeferredWithNoneFlagDoesNothing()  // 6
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -290,6 +289,63 @@ public class ActPerformDeferredTests
         UnityEngine.Object.Destroy(theater.gameObject);
     }
 
+    [UnityTest]
+    public IEnumerator CancelPerformDeferredWorks()  // 7
+    {
+        // Prerequisites
+        var theater = new GameObject().AddComponent<Theater>();
+
+
+        // Physics deferred perform cancelled
+        {
+            var act = new Act();
+            act.Init("Physics Act", theater);
+            act.PerformDeferred(Act.TickFlags.PhysicsTick);
+            act.CancelPerformDeferred();
+
+            yield return new WaitForFixedUpdate();
+            yield return null;
+
+
+            // Assertions
+            Assert.IsTrue(act.GetPerformCount() == 0, $"Physics: Act performed despite deferred perform being cancelled! Perform Count={act.GetPerformCount()}");
+        }
+
+
+        // Tick deferred perform cancelled
+        {
+            var act = new Act();
+            act.Init("Tick Act", theater);
+            act.PerformDeferred(Act.TickFlags.Tick);
+            act.CancelPerformDeferred();
+
+            yield return null;
+            yield return null;
+
+
+            // Assertions
+            Assert.IsTrue(act.GetPerformCount() == 0, $"Tick: Act performed despite deferred perform being cancelled! Perform Count={act.GetPerformCount()}");
+        }
+
+
+        // Late Tick deferred perform cancelled
+        {
+            var act = new Act();
+            act.Init("Late Tick Act", theater);
+            act.PerformDeferred(Act.TickFlags.LateTick);
+            act.CancelPerformDeferred();
+
+            yield return null;
+            yield return null;
+
+
+            // Assertions
+            Assert.IsTrue(act.GetPerformCount() == 0, $"LateTick: Act performed despite deferred perform being cancelled! Perform Count={act.GetPerformCount()}");
+        }
+
+
+        UnityEngine.Object.Destroy(theater.gameObject);
+    }
     [UnityTest]
     public IEnumerator PerformDeferredFromOnPreSetup()
     {
