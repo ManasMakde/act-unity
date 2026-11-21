@@ -138,7 +138,7 @@ public class BiterSpider : MonoBehaviour, IDamageable
 
         damageAct.toFlash = true;
         damageAct.healthSystem = healthSystem;
-        damageAct.AddToBlock(new() { liveAct, lookPerpAct });  // Stop AI behaviour while damaged
+        damageAct.block = (Act a) => new() { { liveAct, Act.BlockType.Persistent }, { lookPerpAct, Act.BlockType.Persistent } };  // Stop AI behaviour while damaged
         damageAct.OnPostExit += (Act act) =>
         {
             if (Mathf.Approximately(healthSystem.currentHealth, 0.0f))

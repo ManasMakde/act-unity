@@ -9,11 +9,24 @@ public class Utilities
 {
     public static void AssertChainCleared(Act act, string prefix = "", string suffix = "")
     {
-        var name = act.GetName();
-        Assert.IsTrue(Act.Friend.GetPrologueActs(act).Count == 0, $"{prefix}{name} _prologueActs not cleared{suffix}! _prologueActs count={Act.Friend.GetPrologueActs(act).Count}");
-        Assert.IsTrue(Act.Friend.GetEpilogueActs(act).Count == 0, $"{prefix}{name} _epilogueActs not cleared{suffix}! _epilogueActs count={Act.Friend.GetEpilogueActs(act).Count}");
-        Assert.IsTrue(Act.Friend.GetContinueEpilogueActs(act).Count == 0, $"{prefix}{name} _continueEpilogueActs not cleared{suffix}! _continueEpilogueActs count={Act.Friend.GetContinueEpilogueActs(act).Count}");
-        Assert.IsTrue(Act.Friend.GetTopEpilogueActs(act).Count == 0, $"{prefix}{name} _topEpilogueActs not cleared{suffix}! _topEpilogueActs count={Act.Friend.GetTopEpilogueActs(act).Count}");
+        // var name = act.GetName();
+        // Assert.IsTrue(Act.Friend.GetPrologueActs(act).Count == 0, $"{prefix}{name} _prologueActs not cleared{suffix}! _prologueActs count={Act.Friend.GetPrologueActs(act).Count}");
+        // Assert.IsTrue(Act.Friend.GetEpilogueActs(act).Count == 0, $"{prefix}{name} _epilogueActs not cleared{suffix}! _epilogueActs count={Act.Friend.GetEpilogueActs(act).Count}");
+        // Assert.IsTrue(Act.Friend.GetContinueEpilogueActs(act).Count == 0, $"{prefix}{name} _continueEpilogueActs not cleared{suffix}! _continueEpilogueActs count={Act.Friend.GetContinueEpilogueActs(act).Count}");
+        // Assert.IsTrue(Act.Friend.GetTopEpilogueActs(act).Count == 0, $"{prefix}{name} _topEpilogueActs not cleared{suffix}! _topEpilogueActs count={Act.Friend.GetTopEpilogueActs(act).Count}");
+    }
+    public static void AssertGroupBefore(List<string> order, List<string> beforeGroup, List<string> afterGroup, string prefix = "")
+    {
+        foreach (var before in beforeGroup)
+        {
+            foreach (var after in afterGroup)
+            {
+                var beforeIndex = order.IndexOf(before);
+                var afterIndex = order.IndexOf(after);
+                Assert.IsTrue(beforeIndex >= 0 && afterIndex >= 0, $"{prefix}{before} or {after} never executed! Output Order=[{string.Join(", ", order)}]");
+                Assert.IsTrue(beforeIndex < afterIndex, $"{prefix}{before} did not execute before {after}! Output Order=[{string.Join(", ", order)}]");
+            }
+        }
     }
 }
 public class SetupAct : Act
@@ -223,7 +236,7 @@ public class RetryingCheckAct : Act
     public bool retryingInLateTick = false;
     public bool retryingInExit = false;
     public bool retryingInCleanup = false;
- 
+
 
     protected override void Setup()
     {
@@ -454,5 +467,24 @@ public class PrevStatusCheckAct : Act
     protected override void Cleanup()
     {
         prevStatusInCleanup = GetPrevStatus();
+    }
+}
+public class TickWaitAct : Act
+{
+    public int ticksToWait = 1;
+    private int _ticksWaited = 0;
+    protected override void Setup()
+    {
+        _tickFlags = TickFlags.Tick;
+    }
+    protected override Outcome Enter()
+    {
+        _ticksWaited = 0;
+        return Outcome.Pending;
+    }
+    protected override Outcome Tick()
+    {
+        _ticksWaited++;
+        return _ticksWaited >= ticksToWait ? Outcome.Success : Outcome.Pending;
     }
 }

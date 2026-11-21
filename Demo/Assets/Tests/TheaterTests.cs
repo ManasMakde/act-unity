@@ -313,7 +313,7 @@ public class TheaterTests
 
         var blockerAct = new WaitInfiniAct();
         blockerAct.Init("Blocker Act");
-        blockerAct.AddToBlock(new List<Act> { blockedAct });
+        blockerAct.block = (Act a) => new() { { blockedAct, Act.BlockType.Persistent } };
         blockerAct.Perform();
 
 

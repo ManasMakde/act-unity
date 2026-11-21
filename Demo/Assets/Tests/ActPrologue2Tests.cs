@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -167,6 +168,8 @@ public class ActPrologue2Tests
         yield return null;
         yield return null;
 
+        Debug.Log($"execution order=>{string.Join(", ", executionOrder)}");
+
         Assert.IsTrue(actA1.GetPerformCount() == 1, $"Timed: ActA1 did not perform exactly once, Perform Count={actA1.GetPerformCount()}");
         Assert.IsTrue(actA2.GetPerformCount() == 1, $"Timed: ActA2 did not perform exactly once, Perform Count={actA2.GetPerformCount()}");
         Assert.IsTrue(actB1.GetPerformCount() == 1, $"Timed: ActB1 did not perform exactly once, Perform Count={actB1.GetPerformCount()}");
@@ -192,6 +195,7 @@ public class ActPrologue2Tests
     [UnityTest]
     public IEnumerator PrologueSeqInstant2x2()
     {
+        var idealOrder = new List<string>() { "ActA1", "ActA2", "ActB1", "ActB2", "MainAct" };
         var executionOrder = new List<string>();
         var actA1 = new Act();
         actA1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
@@ -216,17 +220,15 @@ public class ActPrologue2Tests
 
         mainAct.Perform();
 
+        var isInCorrectOrder = executionOrder.SequenceEqual(idealOrder);
+        Assert.IsTrue(isInCorrectOrder, $"Incorrect execution order\nExpected Order=[{string.Join(", ", idealOrder)}]\nOutput Order=[{string.Join(", ", executionOrder)}]");
+
         Assert.IsTrue(actA1.GetPerformCount() == 1, $"Instant: ActA1 did not perform exactly once in Seq() variation, Perform Count={actA1.GetPerformCount()}");
         Assert.IsTrue(actA2.GetPerformCount() == 1, $"Instant: ActA2 did not perform exactly once in Seq() variation, Perform Count={actA2.GetPerformCount()}");
         Assert.IsTrue(actB1.GetPerformCount() == 1, $"Instant: ActB1 did not perform exactly once in Seq() variation, Perform Count={actB1.GetPerformCount()}");
         Assert.IsTrue(actB2.GetPerformCount() == 1, $"Instant: ActB2 did not perform exactly once in Seq() variation, Perform Count={actB2.GetPerformCount()}");
         Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA1"), "Instant: ActB1 performed before ActA1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA2"), "Instant: ActB1 performed before ActA2 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA1"), "Instant: ActB2 performed before ActA1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA2"), "Instant: ActB2 performed before ActA2 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB1"), "Instant: MainAct performed before ActB1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Instant: MainAct performed before ActB2 in Seq() variation");
+
 
         // Check chain sets cleared after perform
         Utilities.AssertChainCleared(actA1, prefix: "Instant: ", suffix: " in Seq() variation");

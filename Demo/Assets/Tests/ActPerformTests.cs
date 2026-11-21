@@ -190,7 +190,7 @@ public class ActPerformTests
 
             var blockingAct = new WaitInfiniAct();
             blockingAct.Init("Blocking Act");
-            blockingAct.AddToBlock(new() { act });
+            blockingAct.block = (Act a) => new() { { act, Act.BlockType.Persistent } };
             blockingAct.Perform();
 
             isPerforming_PFBL = act.IsPerforming();
@@ -207,7 +207,7 @@ public class ActPerformTests
 
             var blockingAct = new WaitInfiniAct();
             blockingAct.Init("Blocking Act");
-            blockingAct.AddToBlock(new List<Act> { act });
+            blockingAct.block = (Act a) => new() { { act, Act.BlockType.Persistent } };
             blockingAct.Perform();
 
             act.Perform();
@@ -252,7 +252,7 @@ public class ActPerformTests
     {
         // Perform Act
         var act = new WaitInfiniAct();
-        act.performConditions.Add((a) => false);
+        act.condition = (a) => false;
         act.Init("Test Act");
         act.Perform();
 
@@ -344,7 +344,7 @@ public class ActPerformTests
     {
         // Perform Act
         var act = new WaitInfiniAct();
-        act.performConditions.Add((a) => true);
+        act.condition = (a) => true;
         act.Init("Test Act");
         act.Perform();
 
@@ -986,7 +986,7 @@ public class ActPerformTests
 
         var blocker = new ReperformableAct();
         blocker.Init("Blocker Act");
-        blocker.AddToBlock(new List<Act> { act });
+        blocker.block = (Act a) => new() { { act, Act.BlockType.Persistent } };
         blocker.Perform();
         blocker.Abort();
         blocker.Perform();

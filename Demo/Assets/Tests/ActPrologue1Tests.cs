@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -16,6 +17,7 @@ public class ActPrologue1Tests
     [UnityTest]
     public IEnumerator PrologueInstant1()
     {
+        var idealOrder = new List<string>() { "ActA", "MainAct" };
         var executionOrder = new List<string>();
         var actA = new Act();
         actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
@@ -28,9 +30,11 @@ public class ActPrologue1Tests
 
         mainAct.Perform();
 
+        var isInCorrectOrder = executionOrder.SequenceEqual(idealOrder);
         Assert.IsTrue(actA.GetPerformCount() == 1, $"ActA did not perform, Perform Count={actA.GetPerformCount()}");
         Assert.IsTrue(mainAct.GetPerformCount() == 1, $"MainAct did not perform, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.Count == 2 && executionOrder[0] == "ActA" && executionOrder[1] == "MainAct", "Execution order invalid");
+        Assert.IsTrue(isInCorrectOrder, $"Incorrect execution order\nExpected Order=[{string.Join(", ", idealOrder)}]\nOutput Order=[{string.Join(", ", executionOrder)}]");
+
 
         // Check chain sets cleared after perform
         Utilities.AssertChainCleared(actA);

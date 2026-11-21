@@ -210,7 +210,7 @@ public class ShooterSpider : MonoBehaviour, IDamageable
 
         damageAct.healthSystem = healthSystem;
         damageAct.toFlash = true;
-        damageAct.AddToBlock(new() { liveAct });  // Stop AI behaviour while damage animation is being played
+        damageAct.block = (Act a) => new() { { liveAct, Act.BlockType.Persistent } };  // Stop AI behaviour while damage animation is being played
         damageAct.OnPostExit += (Act act) =>
         {
             if (Mathf.Approximately(healthSystem.currentHealth, 0.0f))

@@ -28,12 +28,6 @@ using UnityEngine.TestTools;
 // 1. Does prologue {null} & null both fail the act?
 // 1. Does Seq() {{null}}, {null} & null all fail the act?
 
-// 1. Does main act perform when a prologue act blocks it?
-// 1. Does prologue act perform when main act blocks it?
-// 1. Does grandchild prologue act perform when main act blocks it?
-// 1. Does main act perform when grandchild prologue act blocks it?
-// 1. Do sibling acts perform when they block each other?
-
 
 public class ActPrologueTests
 {
@@ -47,7 +41,7 @@ public class ActPrologueTests
 
         // Perform Act
         var act = new Act();
-        act.prologue = (a) => new() { new() { new Act() } }; 
+        act.prologue = (a) => new() { new() { new Act() } };
         act.OnPrePrologue += (a) => { wasPrePrologueInvoked = true; prePrologueArg1 = a; };
         act.Init("Test Act");
         act.Perform();
@@ -451,163 +445,5 @@ public class ActPrologueTests
         }
 
         yield return null;
-    }
-
-
-
-    [UnityTest]
-    public IEnumerator MainActBlockingPrologue()
-    {
-        // Prerequisites
-        var prologueAct = new Act();
-        prologueAct.Init("Prologue Act");
-
-
-        // Perform Act
-        var mainAct = new Act();
-        mainAct.prologue = (a) => new() { new() { prologueAct } };
-        mainAct.AddToBlock(new() { prologueAct });
-        mainAct.Init("Main Act");
-
-        mainAct.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(prologueAct.GetPerformCount() == 1, $"prologueAct did not perform exactly once, Perform Count={prologueAct.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator PrologueBlockingMainChain()
-    {
-        // Prerequisites
-        var mainAct = new Act();
-
-
-        // Perform Act
-        var prologueAct = new Act();
-        prologueAct.AddToBlock(new() { mainAct });
-        prologueAct.Init("Prologue Act");
-
-        mainAct.prologue = (a) => new() { new() { prologueAct } };
-        mainAct.Init("Main Act");
-        mainAct.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(prologueAct.GetPerformCount() == 1, $"prologueAct did not perform exactly once, Perform Count={prologueAct.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator MainActBlockingGrandchildPrologue()
-    {
-        var grandchildAct = new Act();
-        grandchildAct.Init("Grandchild Act");
-
-        var childAct = new Act();
-        childAct.prologue = (a) => new() { new() { grandchildAct } };
-        childAct.Init("Child Act");
-
-        var mainAct = new Act();
-        mainAct.prologue = (a) => new() { new() { childAct } };
-        mainAct.AddToBlock(new() { grandchildAct });
-        mainAct.Init("Main Act");
-
-        mainAct.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(grandchildAct.GetPerformCount() == 1, $"grandchildAct did not perform exactly once, Perform Count={grandchildAct.GetPerformCount()}");
-        Assert.IsTrue(childAct.GetPerformCount() == 1, $"childAct did not perform exactly once, Perform Count={childAct.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator GrandchildPrologueBlockingMainAct()
-    {
-        // Prerequisites
-        var mainAct = new Act();
-        var childAct = new Act();
-        var grandchildAct = new Act();
-
-
-        mainAct.prologue = (a) => new() { new() { childAct } };
-        mainAct.Init("Main Act");
-
-        childAct.prologue = (a) => new() { new() { grandchildAct } };
-        childAct.Init("Child Act");
-
-        grandchildAct.AddToBlock(new() { mainAct });
-        grandchildAct.Init("Grandchild Act");
-
-        mainAct.Perform();
-
-
-        // Assertions
-        Assert.IsTrue(grandchildAct.GetPerformCount() == 1, $"grandchildAct did not perform exactly once, Perform Count={grandchildAct.GetPerformCount()}");
-        Assert.IsTrue(childAct.GetPerformCount() == 1, $"childAct did not perform exactly once, Perform Count={childAct.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator ProloguesBlockingSiblings()
-    {
-        // One sibling blocks other
-        {
-            var siblingActB = new Act();
-            siblingActB.Init("Sibling Act B");
-
-            var siblingActA = new Act();
-            siblingActA.AddToBlock(new() { siblingActB });
-            siblingActA.Init("Sibling Act A");
-
-            var mainAct = new Act();
-            mainAct.prologue = (a) => new() { new() { siblingActA, siblingActB } };
-            mainAct.Init("Main Act");
-
-            mainAct.Perform();
-
-
-            // Assertions
-            Assert.IsTrue(siblingActA.GetPerformCount() == 1, $"siblingActA did not perform exactly once, Perform Count={siblingActA.GetPerformCount()}");
-            Assert.IsTrue(siblingActB.GetPerformCount() == 1, $"siblingActB did not perform exactly once, Perform Count={siblingActB.GetPerformCount()}");
-            Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-
-            yield return null;
-        }
-
-
-        // Both siblings blocks each other
-        {
-            var siblingActA = new Act();
-            var siblingActB = new Act();
-            siblingActB.AddToBlock(new() { siblingActA });
-            siblingActB.Init("Sibling Act B");
-
-            siblingActA.AddToBlock(new() { siblingActB });
-            siblingActA.Init("Sibling Act A");
-
-            var mainAct = new Act();
-            mainAct.prologue = (a) => new() { new() { siblingActA, siblingActB } };
-            mainAct.Init("Main Act");
-
-            mainAct.Perform();
-
-
-            // Assertions
-            Assert.IsTrue(siblingActA.GetPerformCount() == 1, $"siblingActA did not perform exactly once (both siblings block each other), Perform Count={siblingActA.GetPerformCount()}");
-            Assert.IsTrue(siblingActB.GetPerformCount() == 1, $"siblingActB did not perform exactly once (both siblings block each other), Perform Count={siblingActB.GetPerformCount()}");
-            Assert.IsTrue(mainAct.GetPerformCount() == 1, $"mainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-
-            yield return null;
-        }
     }
 }

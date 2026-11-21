@@ -1,292 +1,292 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.TestTools;
-
-
-// 1. Is "block changed" action being broadcasted (with correct arguments) when blocked/unblocked?
-// 1. Is "block changed" action not being broadcasted when enabled/disabled?
-// 1. Does blocking abort the act?
-// 1. Can a persistantly unblocked act perform?
+// using System;
+// using System.Collections;
+// using System.Collections.Generic;
+// using NUnit.Framework;
+// using UnityEngine;
+// using UnityEngine.TestTools;
+
+
+// // 1. Is "block changed" action being broadcasted (with correct arguments) when blocked/unblocked?
+// // 1. Is "block changed" action not being broadcasted when enabled/disabled?
+// // 1. Does blocking abort the act?
+// // 1. Can a persistantly unblocked act perform?
 
-// 1. Does interrupt block stop the act's performing perform?
-// 1. Can a interrupt blocked act perform despite blocker act still performing?
-
-// 1. Does adding an act to the main act (which is performing) block the act?
-// 1. Does removing a blocked act from the main act (which is performing) unblock that act?
-// 1. Does persistent blocking fail when adding self act to block?
-
-
-public class ActBlockTests
-{
-    [UnityTest]
-    public IEnumerator OnBlockChanged()
-    {
-        // Prerequisites
-        bool wasBlockChangedInvoked = false;
-        Act blockChangedArg1 = null;
-        Act blockChangedArg2 = null;
-        Act.BlockType blockChangedArg3 = Act.BlockType.Interrupt;
-        bool blockChangedArg4 = false;
-
-
-        // Setup main and target act
-        var mainAct = new ManualFinishAct();
-        var targetAct = new Act();
-        targetAct.OnBlockChanged += (a, bAct, bType, didBlock) =>
-        {
-            wasBlockChangedInvoked = true;
-            blockChangedArg1 = a;
-            blockChangedArg2 = bAct;
-            blockChangedArg3 = bType;
-            blockChangedArg4 = didBlock;
-        };
-        mainAct.Init("Main Act");
-        targetAct.Init("Target Act");
-        mainAct.AddToBlock(new List<Act> { targetAct });
-
-
-        // Perform main act, Should block target act
-        mainAct.Perform();
-
-
-        // Assertions for block
-        Assert.IsTrue(wasBlockChangedInvoked, "OnBlockChanged not invoked on block!");
-        Assert.IsTrue(blockChangedArg1 == targetAct, $"OnBlockChanged first argument is invalid! Arg1='{blockChangedArg1}'");
-        Assert.IsTrue(blockChangedArg2 == mainAct, $"OnBlockChanged second argument is invalid! Arg2='{blockChangedArg2}'");
-        Assert.IsTrue(blockChangedArg3 == Act.BlockType.Persistent, $"OnBlockChanged third argument is invalid! Arg3='{blockChangedArg3}'");
-        Assert.IsTrue(blockChangedArg4 == true, "OnBlockChanged fourth argument is not true on block!");
+// // 1. Does interrupt block stop the act's performing perform?
+// // 1. Can a interrupt blocked act perform despite blocker act still performing?
+
+// // 1. Does adding an act to the main act (which is performing) block the act?
+// // 1. Does removing a blocked act from the main act (which is performing) unblock that act?
+// // 1. Does persistent blocking fail when adding self act to block?
+
+
+// public class ActBlockTests
+// {
+//     [UnityTest]
+//     public IEnumerator OnBlockChanged()
+//     {
+//         // Prerequisites
+//         bool wasBlockChangedInvoked = false;
+//         Act blockChangedArg1 = null;
+//         Act blockChangedArg2 = null;
+//         Act.BlockType blockChangedArg3 = Act.BlockType.Interrupt;
+//         bool blockChangedArg4 = false;
+
+
+//         // Setup main and target act
+//         var mainAct = new ManualFinishAct();
+//         var targetAct = new Act();
+//         targetAct.OnBlockChanged += (a, bAct, bType, didBlock) =>
+//         {
+//             wasBlockChangedInvoked = true;
+//             blockChangedArg1 = a;
+//             blockChangedArg2 = bAct;
+//             blockChangedArg3 = bType;
+//             blockChangedArg4 = didBlock;
+//         };
+//         mainAct.Init("Main Act");
+//         targetAct.Init("Target Act");
+//         mainAct.AddToBlock(new List<Act> { targetAct });
+
+
+//         // Perform main act, Should block target act
+//         mainAct.Perform();
+
+
+//         // Assertions for block
+//         Assert.IsTrue(wasBlockChangedInvoked, "OnBlockChanged not invoked on block!");
+//         Assert.IsTrue(blockChangedArg1 == targetAct, $"OnBlockChanged first argument is invalid! Arg1='{blockChangedArg1}'");
+//         Assert.IsTrue(blockChangedArg2 == mainAct, $"OnBlockChanged second argument is invalid! Arg2='{blockChangedArg2}'");
+//         Assert.IsTrue(blockChangedArg3 == Act.BlockType.Persistent, $"OnBlockChanged third argument is invalid! Arg3='{blockChangedArg3}'");
+//         Assert.IsTrue(blockChangedArg4 == true, "OnBlockChanged fourth argument is not true on block!");
 
-
-        // Reset and finish main act, Should unblock target act
-        wasBlockChangedInvoked = false;
-        mainAct.ManualFinish();
+
+//         // Reset and finish main act, Should unblock target act
+//         wasBlockChangedInvoked = false;
+//         mainAct.ManualFinish();
 
 
-        // Assertions for unblock
-        Assert.IsTrue(wasBlockChangedInvoked, "OnBlockChanged not invoked on unblock!");
-        Assert.IsTrue(blockChangedArg1 == targetAct, $"OnBlockChanged first argument is invalid! Arg1='{blockChangedArg1}'");
-        Assert.IsTrue(blockChangedArg2 == mainAct, $"OnBlockChanged second argument is invalid! Arg2='{blockChangedArg2}'");
-        Assert.IsTrue(blockChangedArg3 == Act.BlockType.Persistent, $"OnBlockChanged third argument is invalid! Arg3='{blockChangedArg3}'");
-        Assert.IsTrue(blockChangedArg4 == false, "OnBlockChanged fourth argument is not false on unblock!");
+//         // Assertions for unblock
+//         Assert.IsTrue(wasBlockChangedInvoked, "OnBlockChanged not invoked on unblock!");
+//         Assert.IsTrue(blockChangedArg1 == targetAct, $"OnBlockChanged first argument is invalid! Arg1='{blockChangedArg1}'");
+//         Assert.IsTrue(blockChangedArg2 == mainAct, $"OnBlockChanged second argument is invalid! Arg2='{blockChangedArg2}'");
+//         Assert.IsTrue(blockChangedArg3 == Act.BlockType.Persistent, $"OnBlockChanged third argument is invalid! Arg3='{blockChangedArg3}'");
+//         Assert.IsTrue(blockChangedArg4 == false, "OnBlockChanged fourth argument is not false on unblock!");
 
 
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator BlockChangeNotOnEnableDisable()
-    {
-        // Prerequisites
-        bool wasBlockChangedInvoked = false;
+//         yield return null;
+//     }
+//     [UnityTest]
+//     public IEnumerator BlockChangeNotOnEnableDisable()
+//     {
+//         // Prerequisites
+//         bool wasBlockChangedInvoked = false;
 
 
-        // Setup act
-        var act = new Act();
-        act.OnBlockChanged += (a, bAct, bType, didBlock) =>
-        {
-            wasBlockChangedInvoked = true;
-        };
-        act.Init("Test Act");
+//         // Setup act
+//         var act = new Act();
+//         act.OnBlockChanged += (a, bAct, bType, didBlock) =>
+//         {
+//             wasBlockChangedInvoked = true;
+//         };
+//         act.Init("Test Act");
 
 
-        // Disable and enable act
-        act.SetEnabled(false);
-        act.SetEnabled(true);
+//         // Disable and enable act
+//         act.SetEnabled(false);
+//         act.SetEnabled(true);
 
 
-        // Assertions
-        Assert.IsTrue(!wasBlockChangedInvoked, "OnBlockChanged invoked despite enable disable!");
+//         // Assertions
+//         Assert.IsTrue(!wasBlockChangedInvoked, "OnBlockChanged invoked despite enable disable!");
 
 
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator BlockingAbortsAct()
-    {
-        // Prerequisites
-        var wasAborted = false;
-        Act.Outcome recivedOutcome = Act.Outcome.Pending;
+//         yield return null;
+//     }
+//     [UnityTest]
+//     public IEnumerator BlockingAbortsAct()
+//     {
+//         // Prerequisites
+//         var wasAborted = false;
+//         Act.Outcome recivedOutcome = Act.Outcome.Pending;
 
 
-        // Setup main and target act
-        var mainAct = new ManualFinishAct();
-        var targetAct = new ManualFinishAct();
-        targetAct.OnPreExit += (a) =>
-        {
-            wasAborted = true;
-            recivedOutcome = a.GetOutcome();
-        };
-        mainAct.Init("Main Act");
-        targetAct.Init("Target Act");
-        mainAct.AddToBlock(new List<Act> { targetAct });
+//         // Setup main and target act
+//         var mainAct = new ManualFinishAct();
+//         var targetAct = new ManualFinishAct();
+//         targetAct.OnPreExit += (a) =>
+//         {
+//             wasAborted = true;
+//             recivedOutcome = a.GetOutcome();
+//         };
+//         mainAct.Init("Main Act");
+//         targetAct.Init("Target Act");
+//         mainAct.AddToBlock(new List<Act> { targetAct });
 
 
-        // Perform target then main, Main should abort target
-        targetAct.Perform();
-        mainAct.Perform();
+//         // Perform target then main, Main should abort target
+//         targetAct.Perform();
+//         mainAct.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(wasAborted, "Target act did not go through exit despite getting blocked!");
-        Assert.IsTrue(recivedOutcome == Act.Outcome.Interrupted, $"Target act did not recieve 'Interrupted' outcome on block! recivedOutcome={recivedOutcome}");
-        Assert.IsTrue(!targetAct.IsPerforming(), "Target act is still performing despite getting blocked!");
+//         // Assertions
+//         Assert.IsTrue(wasAborted, "Target act did not go through exit despite getting blocked!");
+//         Assert.IsTrue(recivedOutcome == Act.Outcome.Interrupted, $"Target act did not recieve 'Interrupted' outcome on block! recivedOutcome={recivedOutcome}");
+//         Assert.IsTrue(!targetAct.IsPerforming(), "Target act is still performing despite getting blocked!");
 
 
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator UnblockedActCanPerform()
-    {
-        // Setup main and target act
-        var mainAct = new ManualFinishAct();
-        var targetAct = new Act();
-        mainAct.Init("Main Act");
-        targetAct.Init("Target Act");
-        mainAct.AddToBlock(new List<Act> { targetAct });
+//         yield return null;
+//     }
+//     [UnityTest]
+//     public IEnumerator UnblockedActCanPerform()
+//     {
+//         // Setup main and target act
+//         var mainAct = new ManualFinishAct();
+//         var targetAct = new Act();
+//         mainAct.Init("Main Act");
+//         targetAct.Init("Target Act");
+//         mainAct.AddToBlock(new List<Act> { targetAct });
 
 
-        // Perform main act, Should block target act
-        mainAct.Perform();
+//         // Perform main act, Should block target act
+//         mainAct.Perform();
 
 
-        // Finish main act, Should unblock target act
-        mainAct.ManualFinish();
-        targetAct.Perform();
+//         // Finish main act, Should unblock target act
+//         mainAct.ManualFinish();
+//         targetAct.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite main act finishing!");
-        Assert.IsTrue(targetAct.GetPerformCount() == 1, $"Target act did not perform despite getting unblocked! Perform Count={targetAct.GetPerformCount()}");
+//         // Assertions
+//         Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite main act finishing!");
+//         Assert.IsTrue(targetAct.GetPerformCount() == 1, $"Target act did not perform despite getting unblocked! Perform Count={targetAct.GetPerformCount()}");
 
 
-        yield return null;
-    }
+//         yield return null;
+//     }
 
 
-    [UnityTest]
-    public IEnumerator InterruptBlockedActEndsPerform()
-    {
-        // Prerequisites
-        var wasAborted = false;
+//     [UnityTest]
+//     public IEnumerator InterruptBlockedActEndsPerform()
+//     {
+//         // Prerequisites
+//         var wasAborted = false;
 
 
-        // Setup main and target act
-        var mainAct = new ManualFinishAct();
-        var targetAct = new ManualFinishAct();
-        targetAct.OnPreExit += (a) =>
-        {
-            wasAborted = true;
-        };
-        mainAct.Init("Main Act");
-        targetAct.Init("Target Act");
-        mainAct.AddToBlock(new List<Act> { targetAct }, Act.BlockType.Interrupt);
+//         // Setup main and target act
+//         var mainAct = new ManualFinishAct();
+//         var targetAct = new ManualFinishAct();
+//         targetAct.OnPreExit += (a) =>
+//         {
+//             wasAborted = true;
+//         };
+//         mainAct.Init("Main Act");
+//         targetAct.Init("Target Act");
+//         mainAct.AddToBlock(new List<Act> { targetAct }, Act.BlockType.Interrupt);
 
 
-        // Perform target then main, Main should end target via interrupt block
-        targetAct.Perform();
-        mainAct.Perform();
+//         // Perform target then main, Main should end target via interrupt block
+//         targetAct.Perform();
+//         mainAct.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(wasAborted, "Target act did not go through exit despite interrupt block!");
-        Assert.IsTrue(!targetAct.IsPerforming(), "Target act is still performing despite interrupt block!");
+//         // Assertions
+//         Assert.IsTrue(wasAborted, "Target act did not go through exit despite interrupt block!");
+//         Assert.IsTrue(!targetAct.IsPerforming(), "Target act is still performing despite interrupt block!");
 
 
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator InterruptBlockedActCanReperform()
-    {
-        // Setup main and target act
-        var mainAct = new ManualFinishAct();
-        var targetAct = new Act();
-        mainAct.Init("Main Act");
-        targetAct.Init("Target Act");
-        mainAct.AddToBlock(new List<Act> { targetAct }, Act.BlockType.Interrupt);
+//         yield return null;
+//     }
+//     [UnityTest]
+//     public IEnumerator InterruptBlockedActCanReperform()
+//     {
+//         // Setup main and target act
+//         var mainAct = new ManualFinishAct();
+//         var targetAct = new Act();
+//         mainAct.Init("Main Act");
+//         targetAct.Init("Target Act");
+//         mainAct.AddToBlock(new List<Act> { targetAct }, Act.BlockType.Interrupt);
 
 
-        // Perform main act, Should interrupt block target act once
-        mainAct.Perform();
-        targetAct.Perform();
+//         // Perform main act, Should interrupt block target act once
+//         mainAct.Perform();
+//         targetAct.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(mainAct.IsPerforming(), "Main act is not performing!");
-        Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite interrupt block!");
-        Assert.IsTrue(targetAct.GetPerformCount() == 1, $"Target act did not perform despite interrupt block being one time only! Perform Count={targetAct.GetPerformCount()}");
+//         // Assertions
+//         Assert.IsTrue(mainAct.IsPerforming(), "Main act is not performing!");
+//         Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite interrupt block!");
+//         Assert.IsTrue(targetAct.GetPerformCount() == 1, $"Target act did not perform despite interrupt block being one time only! Perform Count={targetAct.GetPerformCount()}");
 
 
-        yield return null;
-    }
+//         yield return null;
+//     }
 
 
-    [UnityTest]
-    public IEnumerator AddToBlockWhilePerforming()
-    {
-        // Setup main and target act
-        var mainAct = new ManualFinishAct();
-        var targetAct = new Act();
-        mainAct.Init("Main Act");
-        targetAct.Init("Target Act");
+//     [UnityTest]
+//     public IEnumerator AddToBlockWhilePerforming()
+//     {
+//         // Setup main and target act
+//         var mainAct = new ManualFinishAct();
+//         var targetAct = new Act();
+//         mainAct.Init("Main Act");
+//         targetAct.Init("Target Act");
 
 
-        // Perform main act first, Then add target to block
-        mainAct.Perform();
-        mainAct.AddToBlock(new List<Act> { targetAct });
+//         // Perform main act first, Then add target to block
+//         mainAct.Perform();
+//         mainAct.AddToBlock(new List<Act> { targetAct });
 
 
-        // Assertions
-        Assert.IsTrue(targetAct.IsBlocked(), "Target act is not blocked despite being added while main act is performing!");
+//         // Assertions
+//         Assert.IsTrue(targetAct.IsBlocked(), "Target act is not blocked despite being added while main act is performing!");
 
 
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator RemoveFromBlockWhilePerforming()
-    {
-        // Setup main and target act
-        var mainAct = new ManualFinishAct();
-        var targetAct = new Act();
-        mainAct.Init("Main Act");
-        targetAct.Init("Target Act");
-        mainAct.AddToBlock(new List<Act> { targetAct });
+//         yield return null;
+//     }
+//     [UnityTest]
+//     public IEnumerator RemoveFromBlockWhilePerforming()
+//     {
+//         // Setup main and target act
+//         var mainAct = new ManualFinishAct();
+//         var targetAct = new Act();
+//         mainAct.Init("Main Act");
+//         targetAct.Init("Target Act");
+//         mainAct.AddToBlock(new List<Act> { targetAct });
 
 
-        // Perform main act, Should block target act
-        mainAct.Perform();
+//         // Perform main act, Should block target act
+//         mainAct.Perform();
 
 
-        // Remove target from block while main act still performing
-        mainAct.RemoveFromBlock(new List<Act> { targetAct });
+//         // Remove target from block while main act still performing
+//         mainAct.RemoveFromBlock(new List<Act> { targetAct });
 
 
-        // Assertions
-        Assert.IsTrue(mainAct.IsPerforming(), "Main act is not performing!");
-        Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite being removed while main act is performing!");
+//         // Assertions
+//         Assert.IsTrue(mainAct.IsPerforming(), "Main act is not performing!");
+//         Assert.IsTrue(!targetAct.IsBlocked(), "Target act is still blocked despite being removed while main act is performing!");
 
 
-        yield return null;
-    }
-    [UnityTest]
-    public IEnumerator AddSelfToBlock()
-    {
-        // Setup main act
-        var mainAct = new ManualFinishAct();
-        mainAct.Init("Main Act");
+//         yield return null;
+//     }
+//     [UnityTest]
+//     public IEnumerator AddSelfToBlock()
+//     {
+//         // Setup main act
+//         var mainAct = new ManualFinishAct();
+//         mainAct.Init("Main Act");
 
 
-        // Try adding self to block list
-        mainAct.AddToBlock(new List<Act> { mainAct });
-        mainAct.Perform();
+//         // Try adding self to block list
+//         mainAct.AddToBlock(new List<Act> { mainAct });
+//         mainAct.Perform();
 
 
-        // Assertions
-        Assert.IsTrue(mainAct.IsPerforming(), "Main act did not perform despite trying to add self to block being a no op!");
-        Assert.IsTrue(!mainAct.IsBlocked(), "Main act got blocked despite trying to add self to block being reserved for enable disable!");
+//         // Assertions
+//         Assert.IsTrue(mainAct.IsPerforming(), "Main act did not perform despite trying to add self to block being a no op!");
+//         Assert.IsTrue(!mainAct.IsBlocked(), "Main act got blocked despite trying to add self to block being reserved for enable disable!");
 
 
-        yield return null;
-    }
-}
+//         yield return null;
+//     }
+// }

@@ -1098,7 +1098,7 @@ public class ActPerformDeferredTests
 
         var blocker = new ReperformableAct();
         blocker.Init("Blocker Act");
-        blocker.AddToBlock(new List<Act> { act });
+        blocker.block = (Act a) => new() { { act, Act.BlockType.Persistent } };
 
 
         // Toggle with a wait between each, so all deferred performs should happen before next toggle

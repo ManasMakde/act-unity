@@ -409,7 +409,7 @@ public class ActAbortTests
         blockedAct.Perform();
 
         var blockerAct = new WaitInfiniAct();
-        blockerAct.AddToBlock(new List<Act> { blockedAct });
+        blockerAct.block = (Act a) => new() { { blockedAct, Act.BlockType.Persistent } };
         blockerAct.Init("Blocker Act");
 
         blockerAct.Perform();
