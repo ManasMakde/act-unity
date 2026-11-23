@@ -192,28 +192,28 @@ public class Act
 
 		Theater.Friend.CancelAbortDeferred(_theater, this);
 	}
-	public void SetEnabled(bool newEnabled)
+	public void SetEnabled(bool newIsEnabled)
 	{
-		// Return if trying to reassign same value
-		if (newEnabled == IsEnabled())
+		// Return if trying to reassign
+		if (newIsEnabled == _isEnabled)
 		{
 			return;
 		}
 
 
-		// Block unblock self
-		if (!newEnabled)
+		// Assign new value
+		_isEnabled = newIsEnabled;
+
+
+		// Interrupt act if ongoing
+		if (!newIsEnabled)
 		{
-			BlockSelf(this, BlockType.Persistent);
-		}
-		else
-		{
-			UnblockSelf(this);
+			Finish(Outcome.Interrupted);
 		}
 
 
 		// Broadcast enabled disabled
-		OnEnableChanged?.Invoke(this, IsEnabled());
+		OnEnableChanged?.Invoke(this, _isEnabled);
 	}
 	public bool IsPerforming()
 	{
@@ -229,26 +229,14 @@ public class Act
 	}
 	public bool IsEnabled()
 	{
-		return !_blockedByActs.Contains(this);
+		return _isEnabled;
 	}
 	public bool IsBlocked()
 	{
-		// Incase act is disabled
-		if (_blockedByActs.Count == 1 && _blockedByActs.Contains(this))
-		{
-			return false;
-		}
-
 		return _blockedByActs.Count != 0;
 	}
 	public bool IsBlockedBy(Act byAct)
 	{
-		if (byAct == this)
-		{
-			return false;
-		}
-
-
 		return _blockedByActs.Contains(byAct);
 	}
 	public bool HasInitialized()
@@ -392,10 +380,7 @@ public class Act
 
 
 		// Broadcast blocked
-		if (byAct != this)
-		{
-			OnBlockChanged?.Invoke(this, byAct, blockType, true);
-		}
+		OnBlockChanged?.Invoke(this, byAct, blockType, true);
 	}
 	protected virtual void UnblockSelf(Act byAct)
 	{
@@ -419,10 +404,7 @@ public class Act
 
 
 		// Broadcast unblocked
-		if (byAct != this)
-		{
-			OnBlockChanged?.Invoke(this, byAct, BlockType.Persistent, false);
-		}
+		OnBlockChanged?.Invoke(this, byAct, BlockType.Persistent, false);
 	}
 	protected virtual void BlockOthers()
 	{
@@ -522,6 +504,7 @@ public class Act
 	[NonSerialized] private Theater _initTheater;
 
 	[NonSerialized] private bool _hasInitialized = false;
+	[NonSerialized] private bool _isEnabled = true;
 	[NonSerialized] private bool _isRetrying = false;
 
 	[NonSerialized] private int _performCount = 0;
@@ -781,10 +764,18 @@ public class Act
 		}
 
 
-		// Return if disabled or theater is disabled
-		if (!IsEnabled() || (_theater != null && !_theater.IsEnabled()))
+		// Return if disabled
+		if (!_isEnabled)
 		{
-			WriteLog("Cannot perform, act or theater is disabled!");
+			WriteLog("Cannot perform, act is disabled!");
+			return false;
+		}
+
+
+		// Return if theater is disabled
+		if (_theater != null && !_theater.IsEnabled())
+		{
+			WriteLog("Cannot perform, theater is disabled!");
 			return false;
 		}
 
