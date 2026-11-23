@@ -516,7 +516,7 @@ public class Act
 	[NonSerialized] private ActGroup _ownerOfGroup = null;
 	[NonSerialized] private Dictionary<ActGroup, bool /* didPerform */> _belongsToGroups = new();
 	[NonSerialized] private List<ActGroup> _prologueGroups = new();
-	[NonSerialized] private List<ActGroup> _epilogueGroups = new();
+	[NonSerialized] private Dictionary<ActGroup, Outcome> _epilogueGroups = new();
 
 	[NonSerialized] private string _initName;
 	[NonSerialized] private Theater _initTheater;
@@ -534,6 +534,15 @@ public class Act
 	[NonSerialized] private int _lifetimePhysicsTickCount = 0;
 	[NonSerialized] private int _lifetimeLateTickCount = 0;
 
+	static private ActGroup GetFirstKey(Dictionary<ActGroup, Outcome> collection)
+	{
+		foreach (var kvp in collection)
+		{
+			return kvp.Key;
+		}
+
+		return null;
+	}
 	static private bool BuildActGroupChain(Act ofAct)
 	{
 		// Return if no prologues
@@ -1232,15 +1241,15 @@ public class Act
 			var eGroup = kvp.Key.prev;
 			if (eGroup != null)
 			{
-				_epilogueGroups.Add(eGroup);
+				_epilogueGroups.Add(eGroup, _outcome);
 			}
 		}
 
 
 		// Increment group completed
-		foreach (var eGroup in _epilogueGroups)
+		foreach (var kvp in _epilogueGroups)
 		{
-			var group = eGroup.next;
+			var group = kvp.Key.next;
 			if (_belongsToGroups.ContainsKey(group) && _belongsToGroups[group])
 			{
 				group._completed++;
@@ -1295,7 +1304,6 @@ public class Act
 		// Conclude -> None
 		else if (_status == Status.Concluding && newStatus == Status.None)
 		{
-			Outcome eOutcome = _outcome;
 			SetStatus(Status.None);
 			_isRetrying = false;
 
@@ -1307,9 +1315,9 @@ public class Act
 			// Continue all epilogues
 			while (_epilogueGroups.Count != 0)
 			{
-				var lastIndex = _epilogueGroups.Count - 1;
-				var eGroup = _epilogueGroups[lastIndex];
-				_epilogueGroups.RemoveAt(lastIndex);
+				var eGroup = GetFirstKey(_epilogueGroups);
+				var eOutcome = _epilogueGroups[eGroup];
+				_epilogueGroups.Remove(eGroup);
 				ContinueActGroup(this, eGroup, eOutcome);
 			}
 		}
