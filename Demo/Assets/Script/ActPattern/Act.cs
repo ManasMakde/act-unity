@@ -534,7 +534,6 @@ public class Act
 	[NonSerialized] private int _lifetimePhysicsTickCount = 0;
 	[NonSerialized] private int _lifetimeLateTickCount = 0;
 
-
 	static private bool BuildActGroupChain(Act ofAct)
 	{
 		// Return if no prologues
@@ -612,6 +611,7 @@ public class Act
 				// Return if already past prologuing phase
 				if (pAct.IsOngoing() && i != lastGroupIndex)
 				{
+					ClearActGroupChain(selfGroup);
 					return false;
 				}
 
@@ -686,6 +686,7 @@ public class Act
 			// Skip if already performing
 			else if (act.IsPerforming())
 			{
+				act._belongsToGroups[group] = true;
 				act.PerformPrologues();
 			}
 
@@ -1225,17 +1226,27 @@ public class Act
 		}
 
 
-		// Increment completed & Shift to epilogue
+		// Add epilogues
 		foreach (var kvp in _belongsToGroups)
 		{
-			var group = kvp.Key;
-			group._completed++;
-			if (group.prev != null)
+			var eGroup = kvp.Key.prev;
+			if (eGroup != null)
 			{
-				_epilogueGroups.Add(group.prev);
+				_epilogueGroups.Add(eGroup);
 			}
 		}
-		_belongsToGroups.Clear();
+
+
+		// Increment group completed
+		foreach (var eGroup in _epilogueGroups)
+		{
+			var group = eGroup.next;
+			if (_belongsToGroups.ContainsKey(group) && _belongsToGroups[group])
+			{
+				group._completed++;
+				_belongsToGroups.Remove(group);
+			}
+		}
 
 
 		// Redirect to None
@@ -1364,7 +1375,6 @@ public class Act
 			if (_theater != null)
 			{
 				Theater.Friend.RemoveAct(_theater, this);
-				_theater = null;
 			}
 
 
@@ -1373,6 +1383,7 @@ public class Act
 			condition = null;
 			prologue = null;
 			block = null;
+			_theater = null;
 			_outcome = Outcome.None;
 			_actsToBlock = null;
 			_belongsToGroups.Clear();
