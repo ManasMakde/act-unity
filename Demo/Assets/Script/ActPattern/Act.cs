@@ -515,8 +515,8 @@ public class Act
 
 	[NonSerialized] private ActGroup _ownerOfGroup = null;
 	[NonSerialized] private Dictionary<ActGroup, bool /* didPerform */> _belongsToGroups = new();
-	[NonSerialized] private HashSet<ActGroup> _prologueGroups = new();
-	[NonSerialized] private HashSet<ActGroup> _epilogueGroups = new();
+	[NonSerialized] private List<ActGroup> _prologueGroups = new();
+	[NonSerialized] private List<ActGroup> _epilogueGroups = new();
 
 	[NonSerialized] private string _initName;
 	[NonSerialized] private Theater _initTheater;
@@ -534,24 +534,7 @@ public class Act
 	[NonSerialized] private int _lifetimePhysicsTickCount = 0;
 	[NonSerialized] private int _lifetimeLateTickCount = 0;
 
-	static private ActGroup GetFirstKey(Dictionary<ActGroup, bool> collection)
-	{
-		foreach (var kvp in collection)
-		{
-			return kvp.Key;
-		}
 
-		return null;
-	}
-	static private ActGroup GetFirst(HashSet<ActGroup> collection)
-	{
-		foreach (var data in collection)
-		{
-			return data;
-		}
-
-		return null;
-	}
 	static private bool BuildActGroupChain(Act ofAct)
 	{
 		// Return if no prologues
@@ -572,6 +555,7 @@ public class Act
 
 		// Return if any null in prologue
 		bool isEmpty = true;
+		int lastGroupIndex = -1;
 		for (int i = prologueSeq.Count - 1; i >= 0; i--)
 		{
 			// Return if any null
@@ -587,6 +571,7 @@ public class Act
 			if (pArray.Count != 0)
 			{
 				isEmpty = false;
+				lastGroupIndex = i;
 			}
 		}
 
@@ -606,7 +591,6 @@ public class Act
 
 		// Create group chain
 		ActGroup prevGroup = selfGroup;
-		int firstNonEmptyGroup = -1;
 		for (int i = prologueSeq.Count - 1; i >= 0; i--)
 		{
 			// Skip empty lists
@@ -614,10 +598,6 @@ public class Act
 			if (pArray.Count == 0)
 			{
 				continue;
-			}
-			else if (firstNonEmptyGroup == -1)
-			{
-				firstNonEmptyGroup = i;
 			}
 
 
@@ -630,7 +610,7 @@ public class Act
 			foreach (var pAct in pArray)
 			{
 				// Return if already past prologuing phase
-				if (pAct.IsOngoing() && i != firstNonEmptyGroup)
+				if (pAct.IsOngoing() && i != lastGroupIndex)
 				{
 					return false;
 				}
@@ -687,33 +667,33 @@ public class Act
 		int currLifetimePerformCount = ofAct._lifetimePerformCount;
 
 
-		// Perform all prologues
+		// Perform all acts
 		while (group._itr < group.acts.Count)
 		{
 			// Get prologue act
-			var pAct = group.acts[group._itr];
+			var act = group.acts[group._itr];
 			group._itr++;
 
 
-			// Try entering if already completed
+			// Try entering if already performed
 			var didFailPerform = false;
-			if (!pAct._belongsToGroups.ContainsKey(group) || pAct._belongsToGroups[group])
+			if (!act._belongsToGroups.ContainsKey(group) || act._belongsToGroups[group])  // Incase duplicate acts in prologue
 			{
 				group._completed++;
-				ofAct.ContinuePrologue(pAct, Outcome.Success, true);
+				ofAct.ContinuePrologue(ofAct, Outcome.Success);
 			}
 
 			// Skip if already performing
-			else if (pAct.IsPerforming())
+			else if (act.IsPerforming())
 			{
-				pAct.PerformPrologues();
+				act.PerformPrologues();
 			}
 
 			// Perform prologue
 			else
 			{
-				pAct._belongsToGroups[group] = true;
-				didFailPerform = !pAct.PerformImpl();
+				act._belongsToGroups[group] = true;
+				didFailPerform = !act.PerformImpl();
 			}
 
 
@@ -914,45 +894,38 @@ public class Act
 		}
 
 
-		// Perform prologues
-		int currLifetimePerformCount = _lifetimePerformCount;
-		while (_belongsToGroups.Count != 0)
+		// Get all prologue groups
+		foreach (var kvp in _belongsToGroups)
 		{
-			// Get self group
-			var group = GetFirstKey(_belongsToGroups);
-
-
-			// Get prologue group
-			var pGroup = group?.next;
+			var pGroup = kvp.Key.next;
 			if (pGroup != null)
 			{
 				_prologueGroups.Add(pGroup);
 			}
+		}
 
 
-			// Get epilogue group
-			var eGroup = group?.prev;
-			if (eGroup != null)
-			{
-				_epilogueGroups.Add(eGroup);
-			}
+		// Perform all prologue groups
+		int currLifetimePerformCount = _lifetimePerformCount;
+		while (_prologueGroups.Count != 0)
+		{
+			// Get prologue group
+			var lastIndex = _prologueGroups.Count - 1;
+			var pGroup = _prologueGroups[lastIndex];
+			_prologueGroups.RemoveAt(lastIndex);
 
 
 			// Perform all in prologue group
 			PerformActGroup(this, pGroup);
 			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
-
-
-			// Remove from self group
-			_belongsToGroups.Remove(group);  // Intentionally done later for clearing chain incase of failure
 		}
 
 
 		// Try entering
-		ContinuePrologue(null, Outcome.Success, true);
+		ContinuePrologue(this, Outcome.Success);
 		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
 	}
-	private void ContinuePrologue(Act pAct, Outcome pOutcome, bool toCheckOnly = false)
+	private void ContinuePrologue(Act pAct, Outcome pOutcome)
 	{
 		// Guard
 		if (_status != Status.Prologuing)
@@ -965,34 +938,27 @@ public class Act
 		int currLifetimePerformCount = _lifetimePerformCount;
 
 
-		// Skip if only to try entering
-		if (!toCheckOnly)
+		// Broadcast prologue completed
+		if (pAct != this)
 		{
-			// Broadcast prologue completed
 			OnPrologueComplete?.Invoke(this, pAct, pOutcome);
 			if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }  // Guard
-
-
-			// Conclude if prologue act did not succeed
-			if (pOutcome != Outcome.Success)
-			{
-				Redirect(Status.Concluding, pOutcome);
-				return;
-			}
 		}
 
 
-		// Wait to exhaust all belonging groups
-		if (_belongsToGroups.Count != 0)
+		// Conclude if prologue act did not succeed
+		if (pOutcome != Outcome.Success)
 		{
+			Redirect(Status.Concluding, pOutcome);
 			return;
 		}
 
 
 		// Wait for all prologue groups to complete
-		foreach (var pGroup in _prologueGroups)
+		foreach (var kvp in _belongsToGroups)
 		{
-			if (!ActGroup.HaveAllPerformed(pGroup))
+			var pGroup = kvp.Key.next;
+			if (pGroup != null && !ActGroup.HaveAllPerformed(pGroup))
 			{
 				return;
 			}
@@ -1201,28 +1167,38 @@ public class Act
 	}
 	private void ConcludingImpl()
 	{
-		// Finish all prologues
+		// Clear prologue groups
+		_prologueGroups.Clear();
+
+
+		// Finish prologues
 		Outcome pOutcome = _outcome == Outcome.Retry ? Outcome.Interrupted : _outcome;
-		foreach (var pGroup in _prologueGroups)
+		if (_outcome == Outcome.Retry)
 		{
-			FinishActGroup(pGroup, pOutcome);
-		}
-
-
-		// Shift remaining into epilogues
-		foreach (var kvp in _belongsToGroups)
-		{
-			var eGroup = kvp.Key.prev;
-			if (eGroup != null)
+			if (_ownerOfGroup != null)
 			{
-				_epilogueGroups.Add(eGroup);
+				FinishActGroup(_ownerOfGroup.next, pOutcome);
 			}
 		}
-		_belongsToGroups.Clear();
+		else
+		{
+			// Reuse prologue groups
+			foreach (var kvp in _belongsToGroups)
+			{
+				_prologueGroups.Add(kvp.Key.next);
+			}
 
 
-		// Clear prologue chain
-		_prologueGroups.Clear();
+			// Finish all prologues
+			foreach (var pGroup in _prologueGroups)
+			{
+				FinishActGroup(pGroup, pOutcome);
+			}
+
+
+			// Reclear
+			_prologueGroups.Clear();
+		}
 
 
 		// Clear chain this act created
@@ -1247,6 +1223,19 @@ public class Act
 			// Change outcome to failure
 			_outcome = Outcome.Failure;
 		}
+
+
+		// Increment completed & Shift to epilogue
+		foreach (var kvp in _belongsToGroups)
+		{
+			var group = kvp.Key;
+			group._completed++;
+			if (group.prev != null)
+			{
+				_epilogueGroups.Add(group.prev);
+			}
+		}
+		_belongsToGroups.Clear();
 
 
 		// Redirect to None
@@ -1307,9 +1296,9 @@ public class Act
 			// Continue all epilogues
 			while (_epilogueGroups.Count != 0)
 			{
-				var eGroup = GetFirst(_epilogueGroups);
-				_epilogueGroups.Remove(eGroup);
-				eGroup.next._completed++;
+				var lastIndex = _epilogueGroups.Count - 1;
+				var eGroup = _epilogueGroups[lastIndex];
+				_epilogueGroups.RemoveAt(lastIndex);
 				ContinueActGroup(this, eGroup, eOutcome);
 			}
 		}
