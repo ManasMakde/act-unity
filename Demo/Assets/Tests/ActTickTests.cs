@@ -7,15 +7,15 @@ using UnityEngine.TestTools;
 
 
 // 1. Are all "pre tick" & "post tick" actions being broadcasted with correct arguments?
-// 1. Are all Tick() methods being invoked?
-// 1. Is ticking not being invoked when tick flag is set to none?
-// 1. Does ticking fail if not theater is assigned?
+// 2. Are all Tick() methods being invoked?
+// 3. Is ticking not being invoked when tick flag is set to none?
+// 4. Does ticking fail if not theater is assigned?
 
 
 public class ActTickTests
 {
     [UnityTest]
-    public IEnumerator OnPreAndPostTick()
+    public IEnumerator OnPreAndPostTick()  // 1
     {
         // Tick
         {
@@ -90,7 +90,7 @@ public class ActTickTests
         }
     }
     [UnityTest]
-    public IEnumerator Tick()
+    public IEnumerator Tick()  // 2
     {
         // Tick
         {
@@ -135,7 +135,7 @@ public class ActTickTests
         }
     }
     [UnityTest]
-    public IEnumerator TickWithFlagNone()
+    public IEnumerator TickWithFlagNone()  // 3
     {
         // Prerequisites
         bool wasPreTickInvoked = false;
@@ -162,7 +162,7 @@ public class ActTickTests
         Assert.IsFalse(wasPreLateTickInvoked, "OnPreLateTick invoked despite TickFlags.None!");
     }
     [UnityTest]
-    public IEnumerator TickWithoutTheater()
+    public IEnumerator TickWithoutTheater()  // 4
     {
         // Tick type
         {

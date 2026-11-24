@@ -7,16 +7,16 @@ using UnityEngine.TestTools;
 
 
 // 1. Are pre exit and post exit actions being broadcasted with correct arguments?
-// 1. Is Exit() being invoked?
-// 1. Does invoking Abort() while exiting not exit the act again?
-// 1. Is the status reset to None after exiting?
-// 1. Is perform end action being invoked after exiting?
+// 2. Is Exit() being invoked?
+// 3. Does invoking Abort() while exiting not exit the act again?
+// 4. Is the status reset to None after exiting?
+// 5. Is perform end action being invoked after exiting?
 
 
 public class ActExitTests
 {
     [UnityTest]
-    public IEnumerator OnPreAndPostExit()
+    public IEnumerator OnPreAndPostExit()  // 1
     {
         // Prerequisites
         bool wasPreExitInvoked = false;
@@ -44,7 +44,7 @@ public class ActExitTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator Exit()
+    public IEnumerator Exit()  // 2
     {
         // Perform Act
         var act = new ExitAct();
@@ -59,7 +59,7 @@ public class ActExitTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhileExitingReperformable()
+    public IEnumerator PerformWhileExitingReperformable()  // 3
     {
         // Perform Act
         var act = new ManualFinishAct();
@@ -80,7 +80,7 @@ public class ActExitTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortWhileExiting()
+    public IEnumerator AbortWhileExiting()  // 4
     {
         // Perform Act
         var preExitCallCount = 0;
@@ -102,7 +102,7 @@ public class ActExitTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator StatusResetAfterExit()
+    public IEnumerator StatusResetAfterExit()  // 5
     {
         // Perform Act
         var act = new ManualFinishAct();
@@ -120,7 +120,7 @@ public class ActExitTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPerformEndAfterExit()
+    public IEnumerator OnPerformEndAfterExit()  // 6
     {
         // Prerequisites
         bool wasPerformEndInvoked = false;

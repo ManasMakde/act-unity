@@ -8,53 +8,53 @@ using UnityEngine.TestTools;
 
 
 // 1. Is IsRetrying() valid everywhere?
-// 1. Is IsPerforming() valid everywhere?
-// 1. Is IsOngoing() valid everywhere?
-// 1. Is IsEnabled() valid in every combination?
-// 1. Is IsBlocked() valid in every combination?
+// 2. Is IsPerforming() valid everywhere?
+// 3. Is IsOngoing() valid everywhere?
+// 4. Is IsEnabled() valid in every combination?
+// 5. Is IsBlocked() valid in every combination?
 
-// 1. Is CanTick() valid in every combination?
-// 1. Is CanTick() false when no tick flags?
+// 6. Is CanTick() valid in every combination?
+// 7. Is CanTick() false when no tick flags?
 
-// 1. Is GetTheater() return accurate theater?
-// 1. Is GetTheater() return null when no theater is assigned?
+// 8. Is GetTheater() return accurate theater?
+// 9. Is GetTheater() return null when no theater is assigned?
 
-// 1. Is GetBlockedByActs() return accurate acts?
-// 1. Is GetActsToBlock() return accurate acts?
+// 10. Is GetBlockedByActs() return accurate acts?
+// 11. Is GetActsToBlock() return accurate acts?
 
-// 1. Is GetStatus() valid everywhere?
-// 1. Is GetStatus() return None before & after perform?
+// 12. Is GetStatus() valid everywhere?
+// 13. Is GetStatus() return None before & after perform?
 
-// 1. Is GetOutcome() return accurate outcome after exiting? (Check for all outcomes)
+// 14. Is GetOutcome() return accurate outcome after exiting? (Check for all outcomes)
 
-// 1. Is GetPerformCount() give accurate perform counts?
-// 1. Is GetTickCount() give accurate tick counts?
-// 1. Is GetPhysicsTickCount() give accurate tick counts?
-// 1. Is GetLateTickCount() give accurate tick counts?
+// 15. Is GetPerformCount() give accurate perform counts?
+// 16. Is GetTickCount() give accurate tick counts?
+// 17. Is GetPhysicsTickCount() give accurate tick counts?
+// 18. Is GetLateTickCount() give accurate tick counts?
 
-// 1. GetName() return accurate value?
+// 19. GetName() return accurate value?
 
-// 1. Is IsBlockedBy() true only for the acts actually blocking?
-// 1. Is IsBlockedBy() false after unblock?
-// 1. Is IsBlockedBy(self) false when act is disabled?
+// 20. Is IsBlockedBy() true only for the acts actually blocking?
+// 21. Is IsBlockedBy() false after unblock?
+// 22. Is IsBlockedBy(self) false when act is disabled?
 
-// 1. Is HasInitialized() false before Init(), true after Init(), false after Deinit()?
+// 23. Is HasInitialized() false before Init(), true after Init(), false after Deinit()?
 
-// 1. Is GetPrevStatus() valid everywhere?
+// 24. Is GetPrevStatus() valid everywhere?
 
-// 1. Is GetTickFlags() accurate for every flag combination?
+// 25. Is GetTickFlags() accurate for every flag combination?
 
-// 1. Is GetLifetimePerformCount() accurate?
-// 1. Is GetLifetimeTickCount() accurate?
-// 1. Is GetLifetimePhysicsTickCount() accurate?
-// 1. Is GetLifetimeLateTickCount() accurate?
-// 1. Do lifetime counts persist after Deinit() while normal counts reset?
+// 26. Is GetLifetimePerformCount() accurate?
+// 27. Is GetLifetimeTickCount() accurate?
+// 28. Is GetLifetimePhysicsTickCount() accurate?
+// 29. Is GetLifetimeLateTickCount() accurate?
+// 30. Do lifetime counts persist after Deinit() while normal counts reset?
 
 
 public class ActMiscTests
 {
     [UnityTest]
-    public IEnumerator IsRetryingValid()
+    public IEnumerator IsRetryingValid()  // 1
     {
         // Prerequisites
         var theaterGO = new GameObject("Misc Retrying Theater");
@@ -183,7 +183,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator IsPerformingValid()
+    public IEnumerator IsPerformingValid()  // 2
     {
         // Prerequisites
         var theaterGO = new GameObject("Misc Performing Theater");
@@ -299,7 +299,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator IsOngoingValid()
+    public IEnumerator IsOngoingValid()  // 3
     {
         // Prerequisites
         var theaterGO = new GameObject("Misc Theater");
@@ -415,7 +415,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator IsEnabledValid()
+    public IEnumerator IsEnabledValid()  // 4
     {
 
         // Enabled by default
@@ -461,7 +461,7 @@ public class ActMiscTests
         }
     }
     [UnityTest]
-    public IEnumerator IsBlockedValid()
+    public IEnumerator IsBlockedValid()  // 5
     {
         var blockedAct = new Act();
         blockedAct.Init("Misc Target Act");
@@ -487,7 +487,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator CanTickFlagCombos()
+    public IEnumerator CanTickFlagCombos()  // 6
     {
         // Prerequisites
         var allCombos = new Act.TickFlags[]
@@ -522,7 +522,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator CanTickNoFlags()
+    public IEnumerator CanTickNoFlags()  // 7
     {
         // Perform Act
         var act = new ReperformableInfiAct();
@@ -541,7 +541,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator GetTheaterAccurate()
+    public IEnumerator GetTheaterAccurate()  // 8
     {
         // Prerequisites
         var theaterGO = new GameObject("Misc Theater Get Theater");
@@ -558,7 +558,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetTheaterNullWhenNotAssigned()
+    public IEnumerator GetTheaterNullWhenNotAssigned()  // 9
     {
         // Perform Act
         var act = new Act();
@@ -573,7 +573,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator GetBlockedByActsValid()
+    public IEnumerator GetBlockedByActsValid()  // 10
     {
         // Prerequisites
         var blockedAct = new Act();
@@ -601,7 +601,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetActsToBlockValid()
+    public IEnumerator GetActsToBlockValid()  // 11
     {
         // Prerequisites
         var targetAct1 = new Act();
@@ -632,7 +632,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator GetStatus()
+    public IEnumerator GetStatus()  // 12, 13
     {
         // Prerequisites
         var theaterGO = new GameObject("Misc Status Theater");
@@ -728,7 +728,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetOutcomeAccurateForAllOutcomes()
+    public IEnumerator GetOutcomeAccurateForAllOutcomes()  // 14
     {
         // Interrupted outcome
         {
@@ -778,7 +778,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator GetPerformCountAccurate()
+    public IEnumerator GetPerformCountAccurate()  // 15
     {
         // Perform Act
         var act = new Act();
@@ -795,7 +795,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetTickCountAccurate()
+    public IEnumerator GetTickCountAccurate()  // 16
     {
         var theaterGO = new GameObject("Misc Tick Count Theater");
         var theater = theaterGO.AddComponent<Theater>();
@@ -820,7 +820,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetPhysicsTickCountAccurate()
+    public IEnumerator GetPhysicsTickCountAccurate()  // 17
     {
         var theaterGO = new GameObject("Misc Tick Count Theater");
         var theater = theaterGO.AddComponent<Theater>();
@@ -845,7 +845,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetLateTickCountAccurate()
+    public IEnumerator GetLateTickCountAccurate()  // 18
     {
         var theaterGO = new GameObject("Misc Tick Count Theater");
         var theater = theaterGO.AddComponent<Theater>();
@@ -873,7 +873,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator GetNameAccurate()
+    public IEnumerator GetNameAccurate()  // 19
     {
         // Perform Act
         var actName = "Misc Name Act";
@@ -889,7 +889,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator IsBlockedByOnlyActualBlockers()
+    public IEnumerator IsBlockedByOnlyActualBlockers()  // 20
     {
         // Prerequisites
         var targetName = "Misc Target Act";
@@ -932,7 +932,7 @@ public class ActMiscTests
         yield return null;
     }
     // [UnityTest]
-    // public IEnumerator IsBlockedByFalseAfterUnblock()
+    // public IEnumerator IsBlockedByFalseAfterUnblock()  // 21
     // {
     //     // Prerequisites
     //     var targetName = "Misc Target Act";
@@ -981,7 +981,7 @@ public class ActMiscTests
     //     yield return null;
     // }
     [UnityTest]
-    public IEnumerator IsBlockedBySelfFalseWhenDisabled()
+    public IEnumerator IsBlockedBySelfFalseWhenDisabled()  // 22
     {
         // Prerequisites
         var actName = "Misc Disabled Act";
@@ -1024,7 +1024,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator HasInitializedValid()
+    public IEnumerator HasInitializedValid()  // 23
     {
         // Prerequisites
         var actName = "Misc Initialized Act";
@@ -1050,7 +1050,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator GetPrevStatus()
+    public IEnumerator GetPrevStatus()  // 24
     {
         // Prerequisites
         var theaterName = "Misc Prev Status Theater";
@@ -1179,7 +1179,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator GetTickFlagsAccurate()
+    public IEnumerator GetTickFlagsAccurate()  // 25
     {
         // Prerequisites
         var actName = "Misc Tick Flags Act";
@@ -1214,7 +1214,7 @@ public class ActMiscTests
 
 
     [UnityTest]
-    public IEnumerator GetLifetimePerformCountAccurate()
+    public IEnumerator GetLifetimePerformCountAccurate()  // 26
     {
         // Prerequisites
         var actName = "Misc Lifetime Perform Act";
@@ -1265,7 +1265,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetLifetimeTickCountAccurate()
+    public IEnumerator GetLifetimeTickCountAccurate()  // 27
     {
         // Prerequisites
         var theaterName = "Misc Lifetime Tick Theater";
@@ -1300,7 +1300,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetLifetimePhysicsTickCountAccurate()
+    public IEnumerator GetLifetimePhysicsTickCountAccurate()  // 28
     {
         // Prerequisites
         var theaterName = "Misc Lifetime Physics Tick Theater";
@@ -1335,7 +1335,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetLifetimeLateTickCountAccurate()
+    public IEnumerator GetLifetimeLateTickCountAccurate()  // 29
     {
         // Prerequisites
         var theaterName = "Misc Lifetime Late Tick Theater";
@@ -1370,7 +1370,7 @@ public class ActMiscTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator LifetimeCountsPersistAfterDeinit()
+    public IEnumerator LifetimeCountsPersistAfterDeinit()  // 30
     {
         // Prerequisites
         var theaterName = "Misc Lifetime Deinit Theater";

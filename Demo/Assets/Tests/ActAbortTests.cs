@@ -7,33 +7,33 @@ using UnityEngine.TestTools;
 
 
 // 1. Does a performing act stop when Abort() is invoked?
-// 1. Does abort fail from OnPreSetup?
-// 1. Does abort fail from OnPostSetup?
-// 1. Does abort succeed from OnPerformStart?
-// 1. Does abort succeed from OnPrePrologue?
-// 1. Does abort succeed from OnPrologueComplete?
-// 1. Does abort succeed from OnPostPrologue?
-// 1. Does abort succeed from OnPreEnter?
-// 1. Does abort succeed from OnPostEnter?
-// 1. Does abort succeed from OnPreTick?
-// 1. Does abort succeed from OnPostTick?
-// 1. Does abort succeed from OnPrePhysicsTick?
-// 1. Does abort succeed from OnPostPhysicsTick?
-// 1. Does abort succeed from OnPreLateTick?
-// 1. Does abort succeed from OnPostLateTick?
-// 1. Does abort fail from OnPreExit?
-// 1. Does abort fail from OnPostExit?
-// 1. Does abort succeed from OnPerformEnd?
-// 1. Does abort fail from OnPreCleanup?
-// 1. Does abort fail from OnPostCleanup?
-// 1. Does abort succeed from OnEnableChanged?
-// 1. Does abort succeed from OnBlockChanged?
+// 2. Does abort fail from OnPreSetup?
+// 3. Does abort fail from OnPostSetup?
+// 4. Does abort succeed from OnPerformStart?
+// 5. Does abort succeed from OnPrePrologue?
+// 6. Does abort succeed from OnPrologueComplete?
+// 7. Does abort succeed from OnPostPrologue?
+// 8. Does abort succeed from OnPreEnter?
+// 9. Does abort succeed from OnPostEnter?
+// 10. Does abort succeed from OnPreTick?
+// 11. Does abort succeed from OnPostTick?
+// 12. Does abort succeed from OnPrePhysicsTick?
+// 13. Does abort succeed from OnPostPhysicsTick?
+// 14. Does abort succeed from OnPreLateTick?
+// 15. Does abort succeed from OnPostLateTick?
+// 16. Does abort fail from OnPreExit?
+// 17. Does abort fail from OnPostExit?
+// 18. Does abort succeed from OnPerformEnd?
+// 19. Does abort fail from OnPreCleanup?
+// 20. Does abort fail from OnPostCleanup?
+// 21. Does abort succeed from OnEnableChanged?
+// 22. Does abort succeed from OnBlockChanged?
 
 
 public class ActAbortTests
 {
     [UnityTest]
-    public IEnumerator AbortStopsPerformingAct()
+    public IEnumerator AbortStopsPerformingAct()  // 1
     {
         // Perform Act
         var act = new ManualFinishAct();
@@ -52,7 +52,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortFailsFromOnPreSetup()
+    public IEnumerator AbortFailsFromOnPreSetup()  // 2
     {
         // Perform Act
         var act = new ExitAct();
@@ -66,7 +66,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortFailsFromOnPostSetup()
+    public IEnumerator AbortFailsFromOnPostSetup()  // 3
     {
         // Perform Act
         var act = new ExitAct();
@@ -80,7 +80,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPerformStart()
+    public IEnumerator AbortSucceedsFromOnPerformStart()  // 4
     {
         // Perform Act
         var act = new EnterAct();
@@ -95,7 +95,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPrePrologue()
+    public IEnumerator AbortSucceedsFromOnPrePrologue()  // 5
     {
         // Perform Act
         var prologueAct = new Act();
@@ -115,7 +115,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPrologueComplete()
+    public IEnumerator AbortSucceedsFromOnPrologueComplete()  // 6
     {
         // Perform Act
         var prologueAct = new Act();
@@ -135,7 +135,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPostPrologue()
+    public IEnumerator AbortSucceedsFromOnPostPrologue()  // 7
     {
         // Perform Act
         var prologueAct = new Act();
@@ -155,7 +155,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPreEnter()
+    public IEnumerator AbortSucceedsFromOnPreEnter()  // 8
     {
         // Perform Act
         var act = new EnterAct();
@@ -170,7 +170,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPostEnter()
+    public IEnumerator AbortSucceedsFromOnPostEnter()  // 9
     {
         // Perform Act
         var act = new EnterAct();
@@ -185,7 +185,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPreTick()
+    public IEnumerator AbortSucceedsFromOnPreTick()  // 10
     {
         // Perform Act
         var theater = new GameObject("Test Theater").AddComponent<Theater>();
@@ -205,7 +205,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPostTick()
+    public IEnumerator AbortSucceedsFromOnPostTick()  // 11
     {
         // Perform Act
         var theater = new GameObject("Test Theater").AddComponent<Theater>();
@@ -224,7 +224,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPrePhysicsTick()
+    public IEnumerator AbortSucceedsFromOnPrePhysicsTick()  // 12
     {
         // Perform Act
         var theater = new GameObject("Test Theater").AddComponent<Theater>();
@@ -243,7 +243,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPostPhysicsTick()
+    public IEnumerator AbortSucceedsFromOnPostPhysicsTick()  // 13
     {
         // Perform Act
         var theater = new GameObject("Test Theater").AddComponent<Theater>();
@@ -262,7 +262,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPreLateTick()
+    public IEnumerator AbortSucceedsFromOnPreLateTick()  // 14
     {
         // Perform Act
         var theater = new GameObject("Test Theater").AddComponent<Theater>();
@@ -281,7 +281,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPostLateTick()
+    public IEnumerator AbortSucceedsFromOnPostLateTick()  // 15
     {
         // Perform Act
         var theater = new GameObject("Test Theater").AddComponent<Theater>();
@@ -300,7 +300,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortFailsFromOnPreExit()
+    public IEnumerator AbortFailsFromOnPreExit()  // 16
     {
         // Perform Act
         var act = new ManualFinishAct();
@@ -317,7 +317,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortFailsFromOnPostExit()
+    public IEnumerator AbortFailsFromOnPostExit()  // 17
     {
         // Perform Act
         var act = new ManualFinishAct();
@@ -334,7 +334,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnPerformEnd()
+    public IEnumerator AbortSucceedsFromOnPerformEnd()  // 18
     {
         // Perform Act
         var mainAct = new Act();
@@ -350,7 +350,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortFailsFromOnPreCleanup()
+    public IEnumerator AbortFailsFromOnPreCleanup()  // 19
     {
         // Perform Act
         var act = new Act();
@@ -365,7 +365,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortFailsFromOnPostCleanup()
+    public IEnumerator AbortFailsFromOnPostCleanup()  // 20
     {
         // Perform Act
         var act = new Act();
@@ -380,7 +380,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnEnableChanged()
+    public IEnumerator AbortSucceedsFromOnEnableChanged()  // 21
     {
         // Perform Act
         var act = new Act();
@@ -401,7 +401,7 @@ public class ActAbortTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortSucceedsFromOnBlockChanged()
+    public IEnumerator AbortSucceedsFromOnBlockChanged()  // 22
     {
         var blockedAct = new WaitInfiniAct();
         blockedAct.OnBlockChanged += (a, byAct, blockType, didBlock) => { blockedAct.Abort(); };

@@ -7,14 +7,13 @@ using UnityEngine.TestTools;
 
 
 // 1. Is enable changed action broadcasted with correct arguments when enabled disabled?
-// 1. Is enable changed action not called when blocked unblocked?
-// 1. Does disabling abort the act?
+// 2. Does disabling abort the act?
 
 
 public class ActEnableTests
 {
     [UnityTest]
-    public IEnumerator OnEnableChanged()
+    public IEnumerator OnEnableChanged()  // 1
     {
         // Prerequisites
         bool wasEnableChangedInvoked = false;
@@ -52,47 +51,8 @@ public class ActEnableTests
 
         yield return null;
     }
-    // [UnityTest]
-    // public IEnumerator EnableChangedNotCalledOnBlock()
-    // {
-    //     // Prerequisites
-    //     bool wasEnableChangedInvoked = false;
-
-
-    //     // Perform Act
-    //     var act = new Act();
-    //     var blockerAct = new WaitInfiniAct();
-    //     act.OnEnableChanged += (a, newIsEnabled) =>
-    //     {
-    //         wasEnableChangedInvoked = true;
-    //     };
-    //     act.Init("Test Act");
-    //     blockerAct.Init("Blocker Act");
-    //     blockerAct.Perform();
-
-
-    //     // Block act using performing blocker
-    //     blockerAct.block = (Act a) => new() { { act, Act.BlockType.Persistent } };
-
-
-    //     // Assertions blocked
-    //     Assert.IsTrue(act.IsBlocked(), "Act was not blocked!");
-    //     Assert.IsFalse(wasEnableChangedInvoked, "OnEnableChanged invoked on block!");
-
-
-    //     // Unblock act
-    //     blockerAct.RemoveFromBlock(new List<Act> { act });
-
-
-    //     // Assertions unblocked
-    //     Assert.IsFalse(act.IsBlocked(), "Act was not unblocked!");
-    //     Assert.IsFalse(wasEnableChangedInvoked, "OnEnableChanged invoked on unblock!");
-
-
-    //     yield return null;
-    // }
     [UnityTest]
-    public IEnumerator DisablingAbortsAct()
+    public IEnumerator DisablingAbortsAct()  // 2
     {
         // Perform Act
         var act = new WaitInfiniAct();

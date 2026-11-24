@@ -7,17 +7,17 @@ using UnityEngine.TestTools;
 
 
 // 1. Does retry outcome make the act retry perform?
-// 1. Does Retry() work externally?
-// 1. Does retry cancel prologues?
-// 1. Does retry not cancel epilogues?
-// 1. Does Retry() perform the act even if not performing?
-// 1. Does failing to retry change the outcome to failure?
+// 2. Does Retry() work externally?
+// 3. Does retry cancel prologues?
+// 4. Does retry not cancel epilogues?
+// 5. Does Retry() perform the act even if not performing?
+// 6. Does failing to retry change the outcome to failure?
 
 
 public class ActRetryTests
 {
     [UnityTest]
-    public IEnumerator RetryOutcome()
+    public IEnumerator RetryOutcome()  // 1
     {
         // Perform Act
         var act = new RetryAct();
@@ -35,7 +35,7 @@ public class ActRetryTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RetryExternal()
+    public IEnumerator RetryExternal()  // 2
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -51,7 +51,7 @@ public class ActRetryTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RetryCancelsPrologues()
+    public IEnumerator RetryCancelsPrologues()  // 3
     {
         // Perform Act
         var didPrologue = false;
@@ -81,7 +81,7 @@ public class ActRetryTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RetryDoesNotCancelEpilogues()
+    public IEnumerator RetryDoesNotCancelEpilogues()  // 4
     {
         // Perform Act
         var prologueAct = new WaitInfiniAct();
@@ -104,7 +104,7 @@ public class ActRetryTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RetryPerformsWhenNotPerforming()
+    public IEnumerator RetryPerformsWhenNotPerforming()  // 5
     {
         // Perform Act
         var act = new EnterAct();
@@ -119,7 +119,7 @@ public class ActRetryTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RetryFailureChangesOutcome()
+    public IEnumerator RetryFailureChangesOutcome()  // 6
     {
         // Perform Act
         var act = new RetryOnceThenFailAct();

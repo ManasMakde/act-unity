@@ -7,15 +7,15 @@ using UnityEngine.TestTools;
 
 
 // 1. Are pre enter and post enter actions being broadcasted with correct arguments?
-// 1. Is Enter() being invoked?
-// 1. Does returning outcome pending make the act wait until Finish() is invoked?
-// 1. Does using Finish() pass accurate outcomes to Exit()?
+// 2. Is Enter() being invoked?
+// 3. Does returning outcome pending make the act wait until Finish() is invoked?
+// 4. Does using Finish() pass accurate outcomes to Exit()?
 
 
 public class ActEnterTests
 {
     [UnityTest]
-    public IEnumerator OnPreAndPostEnter()
+    public IEnumerator OnPreAndPostEnter()  // 1
     {
         // Prerequisites
         bool wasPreEnterInvoked = false;
@@ -42,7 +42,7 @@ public class ActEnterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator Enter()
+    public IEnumerator Enter()  // 2
     {
         // Perform Act
         var act = new EnterAct();
@@ -57,7 +57,7 @@ public class ActEnterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator EnterFinish()
+    public IEnumerator EnterFinish()  // 3
     {
         // Perform Act
         var wentThroughExit = false;
@@ -86,7 +86,7 @@ public class ActEnterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator FinishPassesAccurateOutcome()
+    public IEnumerator FinishPassesAccurateOutcome()  // 4
     {
         // Interrupted outcome
         {

@@ -6,51 +6,51 @@ using UnityEngine.TestTools;
 
 
 // 1. Are "pre perform request" & "post perform request" actions being broadcasted (with correct arguments)?
-// 1. Are "perform start" & "perform end" actions being broadcasted (with correct arguments)?
+// 2. Are "perform start" & "perform end" actions being broadcasted (with correct arguments)?
 
-// 1. Does perform fail when act disabled?
-// 1. Does perform fail when theater disabled?
-// 1. Does perform fail when act blocked?
-// 1. Does perform fail when already performing and cannot reperform?
-// 1. Does perform fail when external condition is false?
-// 1. Does perform fail when overriden CanPerform() is false?
-// 1. Does perform fail when called while exiting?
+// 3. Does perform fail when act disabled?
+// 4. Does perform fail when theater disabled?
+// 5. Does perform fail when act blocked?
+// 6. Does perform fail when already performing and cannot reperform?
+// 7. Does perform fail when external condition is false?
+// 8. Does perform fail when overriden CanPerform() is false?
+// 9. Does perform fail when called while exiting?
 
-// 1. Does perform succeed when act enabled?
-// 1. Does perform succeed when theater enabled?
-// 1. Does perform succeed when already performing and can reperform?
-// 1. Does perform succeed when external condition is true?
-// 1. Does perform succeed when overriden CanPerform() is true?
+// 10. Does perform succeed when act enabled?
+// 11. Does perform succeed when theater enabled?
+// 12. Does perform succeed when already performing and can reperform?
+// 13. Does perform succeed when external condition is true?
+// 14. Does perform succeed when overriden CanPerform() is true?
 
-// 1. Does _canReperform work correctly?
+// 15. Does _canReperform work correctly?
 
-// 1. Does perform fail from OnPreSetup?
-// 1. Does perform succeed from OnPostSetup?
-// 1. Does reperform succeed from OnPerformStart?
-// 1. Does reperform succeed from OnPrePrologue?
-// 1. Does reperform succeed from OnPrologueComplete?
-// 1. Does reperform succeed from OnPostPrologue?
-// 1. Does reperform succeed from OnPreEnter?
-// 1. Does reperform succeed from OnPostEnter?
-// 1. Does reperform succeed from OnPreTick?
-// 1. Does reperform succeed from OnPostTick?
-// 1. Does reperform succeed from OnPrePhysicsTick?
-// 1. Does reperform succeed from OnPostPhysicsTick?
-// 1. Does reperform succeed from OnPreLateTick?
-// 1. Does reperform succeed from OnPostLateTick?
-// 1. Does reperform fail from OnPreExit?
-// 1. Does reperform fail from OnPostExit?
-// 1. Does perform succeed from OnPerformEnd?
-// 1. Does reperform fail from OnPreCleanup?
-// 1. Does reperform succeed from OnPostCleanup?
-// 1. Does perform succeed from OnEnableChanged?
-// 1. Does perform succeed from OnBlockChanged?
+// 16. Does perform fail from OnPreSetup?
+// 17. Does perform succeed from OnPostSetup?
+// 18. Does reperform succeed from OnPerformStart?
+// 19. Does reperform succeed from OnPrePrologue?
+// 20. Does reperform succeed from OnPrologueComplete?
+// 21. Does reperform succeed from OnPostPrologue?
+// 22. Does reperform succeed from OnPreEnter?
+// 23. Does reperform succeed from OnPostEnter?
+// 24. Does reperform succeed from OnPreTick?
+// 25. Does reperform succeed from OnPostTick?
+// 26. Does reperform succeed from OnPrePhysicsTick?
+// 27. Does reperform succeed from OnPostPhysicsTick?
+// 28. Does reperform succeed from OnPreLateTick?
+// 29. Does reperform succeed from OnPostLateTick?
+// 30. Does reperform fail from OnPreExit?
+// 31. Does reperform fail from OnPostExit?
+// 32. Does perform succeed from OnPerformEnd?
+// 33. Does reperform fail from OnPreCleanup?
+// 34. Does reperform succeed from OnPostCleanup?
+// 35. Does perform succeed from OnEnableChanged?
+// 36. Does perform succeed from OnBlockChanged?
 
 
 public class ActPerformTests
 {
     [UnityTest]
-    public IEnumerator OnPerformPreAndPostReq()
+    public IEnumerator OnPerformPreAndPostReq()  // 1
     {
         // Prerequisites
         var preReqTag = "PreReq";
@@ -105,7 +105,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator OnPerformStartAndEnd()
+    public IEnumerator OnPerformStartAndEnd()  // 2
     {
         // Prerequisites
         bool wasStartInvoked = false;
@@ -135,7 +135,7 @@ public class ActPerformTests
 
 
     [UnityTest]
-    public IEnumerator PerformWhenDisabled()
+    public IEnumerator PerformWhenDisabled()  // 3
     {
         // Perform Act
         var act = new Act();
@@ -157,7 +157,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenTheaterDisabled()
+    public IEnumerator PerformWhenTheaterDisabled()  // 4
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -178,7 +178,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenBlocked()
+    public IEnumerator PerformWhenBlocked()  // 5
     {
         // Perform First Block Later
         bool isPerforming_PFBL = false;
@@ -227,7 +227,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenCannotReperform()
+    public IEnumerator PerformWhenCannotReperform()  // 6
     {
         // Perform Act
         var act = new NonReperformableInfiAct();
@@ -248,7 +248,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenExternalConditionFalse()
+    public IEnumerator PerformWhenExternalConditionFalse()  // 7
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -264,7 +264,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenCanPerformFalse()
+    public IEnumerator PerformWhenCanPerformFalse()  // 8
     {
         // Perform Act
         var act = new FalseCanPerformAct();
@@ -278,11 +278,40 @@ public class ActPerformTests
 
         yield return null;
     }
+    [UnityTest]
+    public IEnumerator PerformWhenExiting()  // 9
+    {
+        // Prerequisites
+        var preExitResult = true;
+        var postExitResult = true;
+        var statusInPreExit = Act.Status.None;
+        var statusInPostExit = Act.Status.None;
 
+
+        // Perform Act
+        var act = new ManualFinishAct();
+        act.canReperformOverride = true;
+        act.OnPreExit += (a) => { statusInPreExit = a.GetStatus(); preExitResult = a.Perform(); };
+        act.OnPostExit += (a) => { statusInPostExit = a.GetStatus(); postExitResult = a.Perform(); };
+        act.Init("Test Act");
+        act.Perform();
+        act.ManualFinish();
+
+
+        // Assertions
+        Assert.IsTrue(statusInPreExit == Act.Status.Exiting, $"Act not exiting in OnPreExit! Status='{statusInPreExit}'");
+        Assert.IsTrue(statusInPostExit == Act.Status.Exiting, $"Act not exiting in OnPostExit! Status='{statusInPostExit}'");
+        Assert.IsFalse(preExitResult, "Perform() succeeded from OnPreExit while exiting!");
+        Assert.IsFalse(postExitResult, "Perform() succeeded from OnPostExit while exiting!");
+        Assert.IsTrue(act.GetPerformCount() == 1, $"Act reperformed while exiting! Perform Count={act.GetPerformCount()}");
+
+
+        yield return null;
+    }
 
 
     [UnityTest]
-    public IEnumerator PerformWhenEnabled()
+    public IEnumerator PerformWhenEnabled()  // 10
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -298,7 +327,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenTheaterEnabled()
+    public IEnumerator PerformWhenTheaterEnabled()  // 11
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -319,7 +348,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenCanReperform()
+    public IEnumerator PerformWhenCanReperform()  // 12
     {
         // Perform Act
         var act = new ReperformableInfiAct();
@@ -340,7 +369,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenExternalConditionTrue()
+    public IEnumerator PerformWhenExternalConditionTrue()  // 13
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -356,7 +385,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformWhenCanPerformTrue()
+    public IEnumerator PerformWhenCanPerformTrue()  // 14
     {
         // Perform Act
         var act = new CanPerformAct();
@@ -375,7 +404,7 @@ public class ActPerformTests
 
 
     [UnityTest]
-    public IEnumerator CanReperformWorksCorrectly()
+    public IEnumerator CanReperformWorksCorrectly()  // 15
     {
         // Perform Act
         var cannotReperformAct = new NonReperformableInfiAct();
@@ -400,7 +429,7 @@ public class ActPerformTests
 
 
     [UnityTest]
-    public IEnumerator PerformFromOnPreSetup()
+    public IEnumerator PerformFromOnPreSetup()  // 16
     {
         // Perform Act
         var act = new Act();
@@ -418,7 +447,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPostSetup()
+    public IEnumerator PerformFromOnPostSetup()  // 17
     {
         // Perform Act
         var act = new Act();
@@ -436,7 +465,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPerformStart()
+    public IEnumerator PerformFromOnPerformStart()  // 18
     {
 
         // Perform Act
@@ -458,7 +487,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPrePrologue()
+    public IEnumerator PerformFromOnPrePrologue()  // 19
     {
         // Prologue act so the prologue signal actually fires
         var prologueAct = new ReperformableAct();
@@ -486,7 +515,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPrologueComplete()
+    public IEnumerator PerformFromOnPrologueComplete()  // 20
     {
         // Prerequisites
         var theater = new GameObject().AddComponent<Theater>();
@@ -536,7 +565,7 @@ public class ActPerformTests
         UnityEngine.Object.Destroy(theater.gameObject);
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPostPrologue()
+    public IEnumerator PerformFromOnPostPrologue()  // 21
     {
         // Prologue act so the prologue signal actually fires
         var prologueAct = new ReperformableAct();
@@ -564,7 +593,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPreEnter()
+    public IEnumerator PerformFromOnPreEnter()  // 22
     {
         // Perform Act
         var act = new ReperformableAct();
@@ -586,7 +615,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPostEnter()
+    public IEnumerator PerformFromOnPostEnter()  // 23
     {
         // Perform Act
         var act = new ReperformableAct();
@@ -609,7 +638,7 @@ public class ActPerformTests
 
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPreTick()
+    public IEnumerator PerformFromOnPreTick()  // 24
     {
         // Real theater needed to drive ticks
         var theaterGO = new GameObject("TestTheater");
@@ -648,7 +677,7 @@ public class ActPerformTests
 
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPostTick()
+    public IEnumerator PerformFromOnPostTick()  // 25
     {
         // Real theater needed to drive ticks
         var theaterGO = new GameObject("TestTheater");
@@ -686,7 +715,7 @@ public class ActPerformTests
         Object.Destroy(theaterGO);
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPrePhysicsTick()
+    public IEnumerator PerformFromOnPrePhysicsTick()  // 26
     {
         // Real theater needed to drive ticks
         var theaterGO = new GameObject("TestTheater");
@@ -724,7 +753,7 @@ public class ActPerformTests
         Object.Destroy(theaterGO);
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPostPhysicsTick()
+    public IEnumerator PerformFromOnPostPhysicsTick()  // 27
     {
         // Real theater needed to drive ticks
         var theaterGO = new GameObject("TestTheater");
@@ -762,7 +791,7 @@ public class ActPerformTests
         Object.Destroy(theaterGO);
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPreLateTick()
+    public IEnumerator PerformFromOnPreLateTick()  // 28
     {
         // Real theater needed to drive ticks
         var theaterGO = new GameObject("TestTheater");
@@ -800,7 +829,7 @@ public class ActPerformTests
         Object.Destroy(theaterGO);
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPostLateTick()
+    public IEnumerator PerformFromOnPostLateTick()  // 29
     {
         // Real theater needed to drive ticks
         var theaterGO = new GameObject("TestTheater");
@@ -839,7 +868,7 @@ public class ActPerformTests
 
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPreExit()
+    public IEnumerator PerformFromOnPreExit()  // 30
     {
         // Perform Act
         var act = new ReperformableAct();
@@ -861,7 +890,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPostExit()
+    public IEnumerator PerformFromOnPostExit()  // 31
     {
         // Perform Act
         var act = new ReperformableAct();
@@ -883,7 +912,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPerformEnd()
+    public IEnumerator PerformFromOnPerformEnd()  // 32
     {
         // Perform Act
         var act = new ReperformableAct();
@@ -905,7 +934,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPreCleanup()
+    public IEnumerator PerformFromOnPreCleanup()  // 33
     {
         // Perform Act
         var act = new ReperformableAct();
@@ -924,7 +953,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnPostCleanup()
+    public IEnumerator PerformFromOnPostCleanup()  // 34
     {
         // Perform Act
         var act = new Act();
@@ -943,7 +972,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnEnableChanged()
+    public IEnumerator PerformFromOnEnableChanged()  // 35
     {
         // Perform Act
         var act = new Act();
@@ -970,7 +999,7 @@ public class ActPerformTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformFromOnBlockChanged()
+    public IEnumerator PerformFromOnBlockChanged()  // 36
     {
         // Perform Act
         var act = new Act();

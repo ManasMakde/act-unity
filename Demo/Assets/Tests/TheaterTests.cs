@@ -8,44 +8,44 @@ using UnityEngine.TestTools;
 
 
 // 1. Is "enable changed" action broadcasted with correct arguments when enabled/disabled?
-// 1. Is "enable changed" action not broadcasted when reassigning same value?
-// 1. Is "enable changed" action broadcasted when component or game object is disabled/enabled?
+// 2. Is "enable changed" action not broadcasted when reassigning same value?
+// 3. Is "enable changed" action broadcasted when component or game object is disabled/enabled?
 
-// 1. Is "act status change" action broadcasted with correct arguments on every status change?
-// 1. Is "act status change" action not broadcasted for acts without theater?
+// 4. Is "act status change" action broadcasted with correct arguments on every status change?
+// 5. Is "act status change" action not broadcasted for acts without theater?
 
-// 1. Does PerformAll() perform all acts exactly once?
-// 1. Does PerformAll() not perform all when theater is disabled?
-// 1. Does PerformAll() not perform acts that are disabled, blocked or when theater is disabled?
+// 6. Does PerformAll() perform all acts exactly once?
+// 7. Does PerformAll() not perform all when theater is disabled?
+// 8. Does PerformAll() not perform acts that are disabled, blocked or when theater is disabled?
 
-// 1. Does RetryAll() retry performing acts and perform non performing acts?
-// 1. Does RetryAll() not retry acts when theater is disabled?
+// 9. Does RetryAll() retry performing acts and perform non performing acts?
+// 10. Does RetryAll() not retry acts when theater is disabled?
 
-// 1. Does AbortAll() abort all performing acts with "Interrupted" outcome?
-// 1. Does AbortAll() not affect acts of another theater?
-// 1. Can all acts perform again after AbortAll()?
+// 11. Does AbortAll() abort all performing acts with "Interrupted" outcome?
+// 12. Does AbortAll() not affect acts of another theater?
+// 13. Can all acts perform again after AbortAll()?
 
-// 1. Does SetEnabled() change IsEnabled()?
-// 1. Does SetEnabled(false) abort all performing acts?
-// 1. Does SetEnabled(false) cancel all deferred performs, retries and aborts?
-// 1. Can acts perform again after SetEnabled(true)?
+// 14. Does SetEnabled() change IsEnabled()?
+// 15. Does SetEnabled(false) abort all performing acts?
+// 16. Does SetEnabled(false) cancel all deferred performs, retries and aborts?
+// 17. Can acts perform again after SetEnabled(true)?
 
-// 1. Does HasAct() return true only for acts added to the theater (false after Deinit(), other theater, null)?
+// 18. Does HasAct() return true only for acts added to the theater (false after Deinit(), other theater, null)?
 
-// 1. Does IsEnabled() return false when SetEnabled(false), component disabled or game object inactive?
+// 19. Does IsEnabled() return false when SetEnabled(false), component disabled or game object inactive?
 
-// 1. Does AreAnyPerforming() return correct state (none, some, all, after finish)?
-// 1. Does GetAllPerformingActs() return only performing acts?
-// 1. Does GetAllActs() return all acts assigned to theater and drop them after Deinit()?
+// 20. Does AreAnyPerforming() return correct state (none, some, all, after finish)?
+// 21. Does GetAllPerformingActs() return only performing acts?
+// 22. Does GetAllActs() return all acts assigned to theater and drop them after Deinit()?
 
-// 1. Does disabling component, deactivating game object or destroying theater abort all acts and cancel deferred operations?
-// 1. Do acts tick on matching updates (Update, FixedUpdate, LateUpdate) and stop after finish?
+// 23. Does disabling component, deactivating game object or destroying theater abort all acts and cancel deferred operations?
+// 24. Do acts tick on matching updates (Update, FixedUpdate, LateUpdate) and stop after finish?
 
 
 public class TheaterTests
 {
     [UnityTest]
-    public IEnumerator EnabledChanged()
+    public IEnumerator EnabledChanged()  // 1
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -79,7 +79,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator EnabledChangedNotOnSameValue()
+    public IEnumerator EnabledChangedNotOnSameValue()  // 2
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -111,7 +111,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator EnabledChangedOnComponentOrGameObject()
+    public IEnumerator EnabledChangedOnComponentOrGameObject()  // 3
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -142,7 +142,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator ActStatusChange()
+    public IEnumerator ActStatusChange()  // 4
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -187,7 +187,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator ActStatusChangeNotForActsWithoutTheater()
+    public IEnumerator ActStatusChangeNotForActsWithoutTheater()  // 5
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -219,7 +219,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator PerformAllPerformsAllOnce()
+    public IEnumerator PerformAllPerformsAllOnce()  // 6
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -254,7 +254,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformAllNotWhenTheaterDisabled()
+    public IEnumerator PerformAllNotWhenTheaterDisabled()  // 7
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -290,7 +290,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformAllSkipsDisabledAndBlockedActs()
+    public IEnumerator PerformAllSkipsDisabledAndBlockedActs()  // 8
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -335,7 +335,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator RetryAllRetriesAndPerforms()
+    public IEnumerator RetryAllRetriesAndPerforms()  // 9
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -368,7 +368,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RetryAllNotWhenTheaterDisabled()
+    public IEnumerator RetryAllNotWhenTheaterDisabled()  // 10
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -405,7 +405,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator AbortAllInterruptsAllActs()
+    public IEnumerator AbortAllInterruptsAllActs()  // 11
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -441,7 +441,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortAllNotAffectOtherTheater()
+    public IEnumerator AbortAllNotAffectOtherTheater()  // 12
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -475,7 +475,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformAfterAbortAll()
+    public IEnumerator PerformAfterAbortAll()  // 13
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -517,7 +517,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator SetEnabledChangesIsEnabled()
+    public IEnumerator SetEnabledChangesIsEnabled()  // 14
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -543,7 +543,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator SetEnabledFalseAbortsAllActs()
+    public IEnumerator SetEnabledFalseAbortsAllActs()  // 15
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -579,7 +579,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator SetEnabledFalseCancelsDeferred()
+    public IEnumerator SetEnabledFalseCancelsDeferred()  // 16
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -629,7 +629,7 @@ public class TheaterTests
         UnityEngine.Object.Destroy(theater.gameObject);
     }
     [UnityTest]
-    public IEnumerator PerformAfterSetEnabledTrue()
+    public IEnumerator PerformAfterSetEnabledTrue()  // 17
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -662,7 +662,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator HasActValid()
+    public IEnumerator HasActValid()  // 18
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -705,7 +705,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator IsEnabledFalseCases()
+    public IEnumerator IsEnabledFalseCases()  // 19
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -746,7 +746,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator AreAnyPerformingValid()
+    public IEnumerator AreAnyPerformingValid()  // 20
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -787,7 +787,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetAllPerformingActsValid()
+    public IEnumerator GetAllPerformingActsValid()  // 21
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -828,7 +828,7 @@ public class TheaterTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator GetAllActsValid()
+    public IEnumerator GetAllActsValid()  // 22
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -871,7 +871,7 @@ public class TheaterTests
 
 
     [UnityTest]
-    public IEnumerator LifecycleAbortsAllAndCancelsDeferred()
+    public IEnumerator LifecycleAbortsAllAndCancelsDeferred()  // 23
     {
         // Prerequisites
         var theaterName = "Test Theater";
@@ -961,7 +961,7 @@ public class TheaterTests
         }
     }
     [UnityTest]
-    public IEnumerator ActsTickOnMatchingUpdates()
+    public IEnumerator ActsTickOnMatchingUpdates()  // 24
     {
         // Prerequisites
         var theaterName = "Test Theater";

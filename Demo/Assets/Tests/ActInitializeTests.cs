@@ -7,17 +7,16 @@ using UnityEngine.TestTools;
 
 
 // 1. Are "pre setup" & "post setup" actions being broadcasted (with correct arguments)?
-// 1. Is Setup() being invoked?
-// 1. Does calling Init() twice fail?
-// 1. Is theater assigned after initialization?
-// 1. Is name assigned after initialization?
-// 1. Is initially enabled/disabled working?
+// 2. Is Setup() being invoked?
+// 3. Does calling Init() twice fail?
+// 4. Is theater assigned after initialization?
+// 5. Is name assigned after initialization?
 
 
 public class ActInitializeTests
 {
     [UnityTest]
-    public IEnumerator OnPreAndPostSetup()
+    public IEnumerator OnPreAndPostSetup()  // 1
     {
         // Prerequisites
         bool wasPreSetupInvoked = false;
@@ -43,7 +42,7 @@ public class ActInitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator Setup()
+    public IEnumerator Setup()  // 2
     {
         // Perform Act
         var act = new SetupAct();
@@ -57,7 +56,7 @@ public class ActInitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator InitCalledTwice()
+    public IEnumerator InitCalledTwice()  // 3
     {
         // Prerequisites
         var preSetupCount = 0;
@@ -78,7 +77,7 @@ public class ActInitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator TheaterAfterInit()
+    public IEnumerator TheaterAfterInit()  // 4
     {
         // Check if theater is invalid if not assigned in init
         var act1 = new Act();
@@ -102,7 +101,7 @@ public class ActInitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator NameAfterInit()
+    public IEnumerator NameAfterInit()  // 5
     {
         // Perform Act
         var actName = "My Named Act";
@@ -116,23 +115,4 @@ public class ActInitializeTests
 
         yield return null;
     }
-    // [UnityTest]
-    // public IEnumerator InitiallyEnabledOrDisabled()
-    // {
-    //     // Perform Act
-    //     var enabledAct = new Act();
-    //     enabledAct.Init("Enabled Act", null, true);
-
-    //     var disabledAct = new Act();
-    //     disabledAct.Init("Disabled Act", null, false);
-
-
-    //     // Assertions
-    //     Assert.IsTrue(enabledAct.IsEnabled(), "Act is not enabled despite initiallyEnabled being true!");
-    //     Assert.IsTrue(!disabledAct.IsEnabled(), "Act is enabled despite initiallyEnabled being false!");
-    //     Assert.IsTrue(!disabledAct.IsBlocked(), "Initially disabled act is blocked!");
-
-
-    //     yield return null;
-    // }
 }

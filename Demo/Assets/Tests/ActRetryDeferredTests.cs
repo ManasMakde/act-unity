@@ -20,9 +20,9 @@ public class ActRetryDeferredTests
     {
         // var epilogueActs = Act.Friend.GetEpilogueActs(pAct);
         // Assert.IsTrue(epilogueActs.ContainsKey(eAct), $"{prefix}Prologue act lost its epilogue after retry! Epilogue count={epilogueActs.Count}");
-        // Assert.IsTrue(eAct.IsPerforming(), $"{prefix}Epilogue act stopped performing after prologue retried!");
-        // Assert.IsTrue(eAct.GetStatus() == Act.Status.Prologuing, $"{prefix}Epilogue act did not stay 'Prologuing' after prologue retried! Status={eAct.GetStatus()}");
-        // Assert.IsTrue(eAct.GetPerformCount() == 1, $"{prefix}Epilogue act performed again after prologue retried! Perform Count={eAct.GetPerformCount()}");
+        Assert.IsTrue(eAct.IsPerforming(), $"{prefix}Epilogue act stopped performing after prologue retried!");
+        Assert.IsTrue(eAct.GetStatus() == Act.Status.Prologuing, $"{prefix}Epilogue act did not stay 'Prologuing' after prologue retried! Status={eAct.GetStatus()}");
+        Assert.IsTrue(eAct.GetPerformCount() == 1, $"{prefix}Epilogue act performed again after prologue retried! Perform Count={eAct.GetPerformCount()}");
     }
 
 

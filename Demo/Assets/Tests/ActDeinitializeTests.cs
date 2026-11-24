@@ -7,19 +7,19 @@ using UnityEngine.TestTools;
 
 
 // 1. Are "pre cleanup" & "post cleanup" actions being broadcasted (with correct arguments)?
-// 1. Is Cleanup() being invoked?
-// 1. Does calling Deinit() twice fail?
-// 1. Is theater set to null after deinitialization?
-// 1. Does act abort on deinitialization?
-// 1. Does prologue act abort on deinitialization?
-// 1. Does PerformCount() reset to 0 after deinitialization?
-// 1. After Deinit() is the act removed from the theater's allActs & performing acts?
+// 2. Is Cleanup() being invoked?
+// 3. Does calling Deinit() twice fail?
+// 4. Is theater set to null after deinitialization?
+// 5. Does act abort on deinitialization?
+// 6. Does prologue act abort on deinitialization?
+// 7. Does PerformCount() reset to 0 after deinitialization?
+// 8. After Deinit() is the act removed from the theater's allActs & performing acts?
 
 
 public class ActDeinitializeTests
 {
     [UnityTest]
-    public IEnumerator OnPreAndPostCleanup()
+    public IEnumerator OnPreAndPostCleanup()  // 1
     {
         // Prerequisites
         bool wasPreCleanupInvoked = false;
@@ -46,7 +46,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator Cleanup()
+    public IEnumerator Cleanup()  // 2
     {
         // Perform Act
         var act = new CleanupAct();
@@ -61,7 +61,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator DeinitCalledTwiceFails()
+    public IEnumerator DeinitCalledTwiceFails()  // 3
     {
         // Prerequisites
         var preCleanupCount = 0;
@@ -83,7 +83,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator TheaterNullAfterDeinit()
+    public IEnumerator TheaterNullAfterDeinit()  // 4
     {
         // Perform Act
         var theater = new GameObject().AddComponent<Theater>();
@@ -99,7 +99,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortOnDeinit()
+    public IEnumerator AbortOnDeinit()  // 5
     {
         // Perform Act
         var act = new WaitInfiniAct();
@@ -115,7 +115,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator AbortPrologueOnDeinit()
+    public IEnumerator AbortPrologueOnDeinit()  // 6
     {
         // Prerequisites
         var prologueAct = new WaitInfiniAct();
@@ -138,7 +138,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator PerformCountResetAfterDeinit()
+    public IEnumerator PerformCountResetAfterDeinit()  // 7
     {
         // Perform Act
         var act = new Act();
@@ -157,7 +157,7 @@ public class ActDeinitializeTests
         yield return null;
     }
     [UnityTest]
-    public IEnumerator RemovedFromTheaterAfterDeinit()
+    public IEnumerator RemovedFromTheaterAfterDeinit()  // 8
     {
         // Prerequisites
         var theaterObj = new GameObject().AddComponent<Theater>();
