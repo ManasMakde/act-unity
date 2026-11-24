@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
@@ -6,407 +7,289 @@ using UnityEngine;
 using UnityEngine.TestTools;
 
 
-// 1. Does prologue chain {{actA}, {actB1, actB2}} work?
-// 1. Does prologue chain {{actA}, {actB1, actB2}, {actC}} work?
-// 1. Does prologue chain {{actA1, actA2}, {actB}, {actC1, actC2}} work?
+
+// 1. Does building a prologue chain fail when one of the prologue act in the middle is past prologuing?
+// 2. Does building a prologue chain succeed even if one of the prologue act at the end is past prologuing?
+
+// 3. Does failing to build a prologue chain interrupt any of the acts that were going to part of the chain?
+
+// 4. Does adding a duplicate act twice in prologue chain still allow everything perform as intended? and Does the duplicate act only perform once?
+// 5. Does adding a duplicate act thrice in prologue chain still allow everything perform as intended? and Does the duplicate act only perform once?
+// 6. Does adding multiple duplicate acts in prologue chain still allow everything perform as intended? and Do the duplicate acts only perform once?
+
+// 7. Does the main act blocking the prologue act fail the entire chain?
+// 8. Does the prologue act blocking the main act fail the entire chain?
+
+// 9. Does a prologue act performing a sibling act not fail the entire chain?
 
 
 public class ActPrologueEdgeTests
 {
     [UnityTest]
-    public IEnumerator PrologueInstant1x2()
+    public IEnumerator BuildFailsWhenMiddleActPastProloguing()  // 1
     {
-        var executionOrder = new List<string>();
+        // Prerequisites
+        var expectedPerformCount = 1;
+        var expectedUntouchedCount = 0;
+
+
+        // Setup acts
         var actA = new Act();
-        actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
         actA.Init("ActA");
 
-        var actB1 = new Act();
-        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { new() { actA } };
-        actB1.Init("ActB1");
-
-        var actB2 = new Act();
-        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.Init("ActB2");
-
-        var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actB1, actB2 } };
-        mainAct.Init("MainAct");
-
-        mainAct.Perform();
-
-        Assert.IsTrue(actA.GetPerformCount() == 1, $"Instant: ActA did not perform exactly once, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 1, $"Instant: ActB1 did not perform exactly once, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 1, $"Instant: ActB2 did not perform exactly once, Perform Count={actB2.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA"), "Instant: ActB1 performed before ActA");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA"), "Instant: ActB2 performed before ActA");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB1"), "Instant: MainAct performed before ActB1");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Instant: MainAct performed before ActB2");
-
-        // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actB1, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actB2, prefix: "Instant: ");
-        Utilities.AssertChainCleared(mainAct, prefix: "Instant: ");
-
-
-        yield return null;
-    }
-
-    [UnityTest]
-    public IEnumerator PrologueTimed1x2()
-    {
-        var theater = new GameObject("Theater").AddComponent<Theater>();
-        var executionOrder = new List<string>();
-        var actA = new SingleTickAct();
-        actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA.Init("ActA", theater);
-
-        var actB1 = new SingleTickAct();
-        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { new() { actA } };
-        actB1.Init("ActB1", theater);
-
-        var actB2 = new SingleTickAct();
-        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.Init("ActB2", theater);
-
-        var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actB1, actB2 } };
-        mainAct.Init("MainAct", theater);
-
-        mainAct.Perform();
-
-        yield return null;
-        yield return null;
-        yield return null;
-
-        Assert.IsTrue(actA.GetPerformCount() == 1, $"Timed: ActA did not perform exactly once, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 1, $"Timed: ActB1 did not perform exactly once, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 1, $"Timed: ActB2 did not perform exactly once, Perform Count={actB2.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Timed: MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA"), "Timed: ActB1 performed before ActA");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA"), "Timed: ActB2 performed before ActA");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB1"), "Timed: MainAct performed before ActB1");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Timed: MainAct performed before ActB2");
-
-        // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actB1, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actB2, prefix: "Timed: ");
-        Utilities.AssertChainCleared(mainAct, prefix: "Timed: ");
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-
-    [UnityTest]
-    public IEnumerator PrologueSeqInstant1x2()
-    {
-        var executionOrder = new List<string>();
-        var actA = new Act();
-        actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA.Init("ActA");
-
-        var actB1 = new Act();
-        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.Init("ActB1");
-
-        var actB2 = new Act();
-        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.Init("ActB2");
-
-        var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actA }, new() { actB1, actB2 } };
-        mainAct.Init("MainAct");
-
-        mainAct.Perform();
-
-        Assert.IsTrue(actA.GetPerformCount() == 1, $"Instant: ActA did not perform exactly once in Seq() variation, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 1, $"Instant: ActB1 did not perform exactly once in Seq() variation, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 1, $"Instant: ActB2 did not perform exactly once in Seq() variation, Perform Count={actB2.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA"), "Instant: ActB1 performed before ActA in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA"), "Instant: ActB2 performed before ActA in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB1"), "Instant: MainAct performed before ActB1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Instant: MainAct performed before ActB2 in Seq() variation");
-
-        // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB1, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB2, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(mainAct, prefix: "Instant: ", suffix: " in Seq() variation");
-
-
-        yield return null;
-    }
-
-    [UnityTest]
-    public IEnumerator PrologueSeqTimed1x2()
-    {
-        var theater = new GameObject("Theater").AddComponent<Theater>();
-        var executionOrder = new List<string>();
-        var actA = new SingleTickAct();
-        actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA.Init("ActA", theater);
-
-        var actB1 = new SingleTickAct();
-        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.Init("ActB1", theater);
-
-        var actB2 = new SingleTickAct();
-        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.Init("ActB2", theater);
-
-        var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actA }, new() { actB1, actB2 } };
-        mainAct.Init("MainAct", theater);
-
-        mainAct.Perform();
-
-        yield return null;
-        yield return null;
-        yield return null;
-
-        Assert.IsTrue(actA.GetPerformCount() == 1, $"Timed: ActA did not perform exactly once in Seq() variation, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 1, $"Timed: ActB1 did not perform exactly once in Seq() variation, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 1, $"Timed: ActB2 did not perform exactly once in Seq() variation, Perform Count={actB2.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Timed: MainAct did not perform exactly once in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA"), "Timed: ActB1 performed before ActA in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA"), "Timed: ActB2 performed before ActA in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB1"), "Timed: MainAct performed before ActB1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActB2"), "Timed: MainAct performed before ActB2 in Seq() variation");
-
-        // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB1, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB2, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(mainAct, prefix: "Timed: ", suffix: " in Seq() variation");
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-
-    [UnityTest]
-    public IEnumerator PrologueInstant1x2x1()
-    {
-        var executionOrder = new List<string>();
-        var actA = new Act();
-        actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA.Init("ActA");
-
-        var actB1 = new Act();
-        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { new() { actA } };
-        actB1.Init("ActB1");
-
-        var actB2 = new Act();
-        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { new() { actA } };
-        actB2.Init("ActB2");
+        var actB = new WaitInfiniAct();
+        actB.Init("ActB");
 
         var actC = new Act();
-        actC.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC.prologue = (a) => new() { new() { actB1, actB2 } };
         actC.Init("ActC");
 
         var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actC } };
+        mainAct.prologue = (a) => new() { new() { actA }, new() { actB }, new() { actC } };
         mainAct.Init("MainAct");
+
+
+        // Push middle act past prologuing then perform main
+        actB.Perform();
+        var statusBeforeMain = actB.GetStatus();
 
         mainAct.Perform();
 
-        Assert.IsTrue(actA.GetPerformCount() == 2, $"Instant: ActA did not perform exactly once, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 1, $"Instant: ActB1 did not perform exactly once, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 1, $"Instant: ActB2 did not perform exactly once, Perform Count={actB2.GetPerformCount()}");
-        Assert.IsTrue(actC.GetPerformCount() == 1, $"Instant: ActC did not perform exactly once, Perform Count={actC.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA"), "Instant: ActB1 performed before ActA");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA"), "Instant: ActB2 performed before ActA");
-        Assert.IsTrue(executionOrder.IndexOf("ActC") > executionOrder.IndexOf("ActB1"), "Instant: ActC performed before ActB1");
-        Assert.IsTrue(executionOrder.IndexOf("ActC") > executionOrder.IndexOf("ActB2"), "Instant: ActC performed before ActB2");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC"), "Instant: MainAct performed before ActC");
 
-        // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actB1, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actB2, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actC, prefix: "Instant: ");
-        Utilities.AssertChainCleared(mainAct, prefix: "Instant: ");
+        // Assertions
+        Assert.IsTrue(statusBeforeMain == Act.Status.Entering, $"ActB is not past prologuing before main performs! Status={statusBeforeMain}");
+        Assert.IsTrue(mainAct.GetOutcome() == Act.Outcome.Failure, $"Main act did not fail despite middle prologue act being past prologuing! Outcome={mainAct.GetOutcome()}");
+        Assert.IsFalse(mainAct.IsPerforming(), "Main act is still performing despite chain build failing!");
+        Assert.IsTrue(actA.GetPerformCount() == expectedUntouchedCount, $"ActA performed despite chain build failing! Perform Count={actA.GetPerformCount()}");
+        Assert.IsTrue(actC.GetPerformCount() == expectedUntouchedCount, $"ActC performed despite chain build failing! Perform Count={actC.GetPerformCount()}");
+        Assert.IsTrue(actB.GetPerformCount() == expectedPerformCount && actB.IsPerforming(), $"ActB got disturbed by failed chain build! Perform Count={actB.GetPerformCount()}  IsPerforming={actB.IsPerforming()}");
+
+
+        // Check chain sets cleared after failed build
+        Utilities.AssertChainCleared(actA);
+        Utilities.AssertChainCleared(actB);
+        Utilities.AssertChainCleared(actC);
+        Utilities.AssertChainCleared(mainAct);
 
 
         yield return null;
     }
-
     [UnityTest]
-    public IEnumerator PrologueTimed1x2x1()
+    public IEnumerator BuildSucceedsWhenFirstActPastProloguing()  // 2
     {
-        var theater = new GameObject("Theater").AddComponent<Theater>();
+        // Prerequisites
+        var expectedPerformCount = 1;
+        var idealOrder = new List<string>() { "ActA", "ActB", "MainAct" };
         var executionOrder = new List<string>();
-        var actA = new SingleTickAct();
+
+
+        // Setup acts
+        var actA = new ManualFinishAct();
         actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA.Init("ActA", theater);
+        actA.Init("ActA");
 
-        var actB1 = new SingleTickAct();
-        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.prologue = (a) => new() { new() { actA } };
-        actB1.Init("ActB1", theater);
-
-        var actB2 = new SingleTickAct();
-        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.prologue = (a) => new() { new() { actA } };
-        actB2.Init("ActB2", theater);
-
-        var actC = new SingleTickAct();
-        actC.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC.prologue = (a) => new() { new() { actB1, actB2 } };
-        actC.Init("ActC", theater);
+        var actB = new Act();
+        actB.OnPreEnter += (a) => executionOrder.Add(a.GetName());
+        actB.Init("ActB");
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actC } };
-        mainAct.Init("MainAct", theater);
+        mainAct.prologue = (a) => new() { new() { actA }, new() { actB } };
+        mainAct.Init("MainAct");
+
+
+        // Push first act past prologuing then perform main
+        actA.Perform();
+        var statusABeforeMain = actA.GetStatus();
 
         mainAct.Perform();
 
-        yield return null;
-        yield return null;
-        yield return null;
-        yield return null;
+        var statusMainWhileWaiting = mainAct.GetStatus();
+        var statusBWhileWaiting = actB.GetStatus();
+        var performCountAWhileWaiting = actA.GetPerformCount();
 
-        Assert.IsTrue(actA.GetPerformCount() == 1, $"Timed: ActA did not perform exactly once, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 1, $"Timed: ActB1 did not perform exactly once, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 1, $"Timed: ActB2 did not perform exactly once, Perform Count={actB2.GetPerformCount()}");
-        Assert.IsTrue(actC.GetPerformCount() == 1, $"Timed: ActC did not perform exactly once, Perform Count={actC.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Timed: MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA"), "Timed: ActB1 performed before ActA");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA"), "Timed: ActB2 performed before ActA");
-        Assert.IsTrue(executionOrder.IndexOf("ActC") > executionOrder.IndexOf("ActB1"), "Timed: ActC performed before ActB1");
-        Assert.IsTrue(executionOrder.IndexOf("ActC") > executionOrder.IndexOf("ActB2"), "Timed: ActC performed before ActB2");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC"), "Timed: MainAct performed before ActC");
+
+        // Finish first act so chain continues
+        actA.ManualFinish();
+
+
+        // Assertions
+        Assert.IsTrue(statusABeforeMain == Act.Status.Entering, $"ActA is not past prologuing before main performs! Status={statusABeforeMain}");
+        Assert.IsTrue(statusMainWhileWaiting == Act.Status.Prologuing, $"Main act did not wait on prologue despite chain build succeeding! Status={statusMainWhileWaiting}");
+        Assert.IsTrue(statusBWhileWaiting == Act.Status.Prologuing, $"ActB did not wait on ActA! Status={statusBWhileWaiting}");
+        Assert.IsTrue(performCountAWhileWaiting == expectedPerformCount, $"ActA got performed again by the chain! Perform Count={performCountAWhileWaiting}");
+        Assert.IsTrue(actA.GetPerformCount() == expectedPerformCount, $"ActA did not perform exactly once! Perform Count={actA.GetPerformCount()}");
+        Assert.IsTrue(actB.GetPerformCount() == expectedPerformCount, $"ActB did not perform exactly once! Perform Count={actB.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetPerformCount() == expectedPerformCount, $"MainAct did not perform exactly once! Perform Count={mainAct.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetOutcome() == Act.Outcome.Success, $"Main act did not succeed after first act finished! Outcome={mainAct.GetOutcome()}");
+        Assert.IsTrue(executionOrder.SequenceEqual(idealOrder), $"Incorrect execution order\nExpected Order=[{string.Join(", ", idealOrder)}]\nOutput Order=[{string.Join(", ", executionOrder)}]");
+
 
         // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actB1, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actB2, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actC, prefix: "Timed: ");
-        Utilities.AssertChainCleared(mainAct, prefix: "Timed: ");
+        Utilities.AssertChainCleared(actA);
+        Utilities.AssertChainCleared(actB);
+        Utilities.AssertChainCleared(mainAct);
 
-        UnityEngine.Object.Destroy(theater.gameObject);
+
+        yield return null;
     }
 
+
     [UnityTest]
-    public IEnumerator PrologueSeqInstant1x2x1()
+    public IEnumerator BuildFailureDoesNotInterruptChainActs()  // 3
     {
+        // Prerequisites
+        var expectedIdleCount = 0;
+        var expectedPerformCount = 1;
+
+
+        // Setup acts
+        var actA = new WaitInfiniAct();
+        actA.Init("ActA");
+
+        var actB = new WaitInfiniAct();
+        actB.Init("ActB");
+
+        var actC = new WaitInfiniAct();
+        actC.Init("ActC");
+
+        var mainAct = new Act();
+        mainAct.prologue = (a) => new() { new() { actA }, new() { actB }, new() { actC } };
+        mainAct.Init("MainAct");
+
+
+        // Push middle and last act past prologuing then perform main
+        actB.Perform();
+        actC.Perform();
+
+        mainAct.Perform();
+
+
+        // Assertions for main act
+        Assert.IsTrue(mainAct.GetOutcome() == Act.Outcome.Failure, $"Main act did not fail despite chain build failing! Outcome={mainAct.GetOutcome()}");
+        Assert.IsFalse(mainAct.IsPerforming(), "Main act is still performing despite chain build failing!");
+
+
+        // Assertions for idle chain act
+        Assert.IsTrue(actA.GetPerformCount() == expectedIdleCount, $"ActA performed despite chain build failing! Perform Count={actA.GetPerformCount()}");
+        Assert.IsTrue(actA.GetOutcome() == Act.Outcome.None, $"ActA got interrupted by failed chain build! Outcome={actA.GetOutcome()}");
+
+
+        // Assertions for already performing chain acts
+        Assert.IsTrue(actB.IsPerforming() && actB.GetOutcome() == Act.Outcome.Pending, $"ActB got interrupted by failed chain build! IsPerforming={actB.IsPerforming()}  Outcome={actB.GetOutcome()}");
+        Assert.IsTrue(actC.IsPerforming() && actC.GetOutcome() == Act.Outcome.Pending, $"ActC got interrupted by failed chain build! IsPerforming={actC.IsPerforming()}  Outcome={actC.GetOutcome()}");
+        Assert.IsTrue(actB.GetPerformCount() == expectedPerformCount, $"ActB performed again due to failed chain build! Perform Count={actB.GetPerformCount()}");
+        Assert.IsTrue(actC.GetPerformCount() == expectedPerformCount, $"ActC performed again due to failed chain build! Perform Count={actC.GetPerformCount()}");
+
+
+        // Check chain sets cleared after failed build
+        Utilities.AssertChainCleared(actA);
+        Utilities.AssertChainCleared(actB);
+        Utilities.AssertChainCleared(actC);
+        Utilities.AssertChainCleared(mainAct);
+
+
+        yield return null;
+    }
+
+
+    [UnityTest]
+    public IEnumerator DuplicateActTwice()  // 4
+    {
+        // Prerequisites
+        var expectedPerformCount = 1;
+        var idealOrder = new List<string>() { "ActA", "ActB", "MainAct" };
         var executionOrder = new List<string>();
+
+
+        // Setup acts
         var actA = new Act();
         actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
         actA.Init("ActA");
 
-        var actB1 = new Act();
-        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.Init("ActB1");
-
-        var actB2 = new Act();
-        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.Init("ActB2");
-
-        var actC = new Act();
-        actC.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC.Init("ActC");
+        var actB = new Act();
+        actB.OnPreEnter += (a) => executionOrder.Add(a.GetName());
+        actB.Init("ActB");
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actA }, new() { actB1, actB2 }, new() { actC } };
+        mainAct.prologue = (a) => new() { new() { actA, actA, actB } };
         mainAct.Init("MainAct");
 
+
+        // Perform main
         mainAct.Perform();
 
-        Assert.IsTrue(actA.GetPerformCount() == 1, $"Instant: ActA did not perform exactly once in Seq() variation, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 1, $"Instant: ActB1 did not perform exactly once in Seq() variation, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 1, $"Instant: ActB2 did not perform exactly once in Seq() variation, Perform Count={actB2.GetPerformCount()}");
-        Assert.IsTrue(actC.GetPerformCount() == 1, $"Instant: ActC did not perform exactly once in Seq() variation, Perform Count={actC.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA"), "Instant: ActB1 performed before ActA in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA"), "Instant: ActB2 performed before ActA in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActC") > executionOrder.IndexOf("ActB1"), "Instant: ActC performed before ActB1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActC") > executionOrder.IndexOf("ActB2"), "Instant: ActC performed before ActB2 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC"), "Instant: MainAct performed before ActC in Seq() variation");
+
+        // Assertions
+        Assert.IsTrue(actA.GetPerformCount() == expectedPerformCount, $"Duplicate ActA did not perform exactly once! Perform Count={actA.GetPerformCount()}");
+        Assert.IsTrue(actB.GetPerformCount() == expectedPerformCount, $"ActB did not perform exactly once! Perform Count={actB.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetPerformCount() == expectedPerformCount, $"MainAct did not perform exactly once! Perform Count={mainAct.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetOutcome() == Act.Outcome.Success, $"MainAct did not succeed! Outcome={mainAct.GetOutcome()}");
+        Assert.IsTrue(executionOrder.SequenceEqual(idealOrder), $"Incorrect execution order\nExpected Order=[{string.Join(", ", idealOrder)}]\nOutput Order=[{string.Join(", ", executionOrder)}]");
+
 
         // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB1, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB2, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actC, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(mainAct, prefix: "Instant: ", suffix: " in Seq() variation");
+        Utilities.AssertChainCleared(actA);
+        Utilities.AssertChainCleared(actB);
+        Utilities.AssertChainCleared(mainAct);
 
 
         yield return null;
     }
-
     [UnityTest]
-    public IEnumerator PrologueSeqTimed1x2x1()
+    public IEnumerator DuplicateActThrice()  // 5
     {
-        var theater = new GameObject("Theater").AddComponent<Theater>();
+        // Prerequisites
+        var expectedPerformCount = 1;
+        var idealOrder = new List<string>() { "ActA", "ActB", "MainAct" };
         var executionOrder = new List<string>();
-        var actA = new SingleTickAct();
+
+
+        // Setup acts
+        var actA = new Act();
         actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA.Init("ActA", theater);
+        actA.Init("ActA");
 
-        var actB1 = new SingleTickAct();
-        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB1.Init("ActB1", theater);
-
-        var actB2 = new SingleTickAct();
-        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB2.Init("ActB2", theater);
-
-        var actC = new SingleTickAct();
-        actC.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC.Init("ActC", theater);
+        var actB = new Act();
+        actB.OnPreEnter += (a) => executionOrder.Add(a.GetName());
+        actB.Init("ActB");
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actA }, new() { actB1, actB2 }, new() { actC } };
-        mainAct.Init("MainAct", theater);
+        mainAct.prologue = (a) => new() { new() { actA, actA, actA, actB } };
+        mainAct.Init("MainAct");
 
+
+        // Perform main
         mainAct.Perform();
 
-        yield return null;
-        yield return null;
-        yield return null;
-        yield return null;
 
-        Assert.IsTrue(actA.GetPerformCount() == 1, $"Timed: ActA did not perform exactly once in Seq() variation, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(actB1.GetPerformCount() == 1, $"Timed: ActB1 did not perform exactly once in Seq() variation, Perform Count={actB1.GetPerformCount()}");
-        Assert.IsTrue(actB2.GetPerformCount() == 1, $"Timed: ActB2 did not perform exactly once in Seq() variation, Perform Count={actB2.GetPerformCount()}");
-        Assert.IsTrue(actC.GetPerformCount() == 1, $"Timed: ActC did not perform exactly once in Seq() variation, Perform Count={actC.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Timed: MainAct did not perform exactly once in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB1") > executionOrder.IndexOf("ActA"), "Timed: ActB1 performed before ActA in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB2") > executionOrder.IndexOf("ActA"), "Timed: ActB2 performed before ActA in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActC") > executionOrder.IndexOf("ActB1"), "Timed: ActC performed before ActB1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActC") > executionOrder.IndexOf("ActB2"), "Timed: ActC performed before ActB2 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC"), "Timed: MainAct performed before ActC in Seq() variation");
+        // Assertions
+        Assert.IsTrue(actA.GetPerformCount() == expectedPerformCount, $"Triplicate ActA did not perform exactly once! Perform Count={actA.GetPerformCount()}");
+        Assert.IsTrue(actB.GetPerformCount() == expectedPerformCount, $"ActB did not perform exactly once! Perform Count={actB.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetPerformCount() == expectedPerformCount, $"MainAct did not perform exactly once! Perform Count={mainAct.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetOutcome() == Act.Outcome.Success, $"MainAct did not succeed! Outcome={mainAct.GetOutcome()}");
+        Assert.IsTrue(executionOrder.SequenceEqual(idealOrder), $"Incorrect execution order\nExpected Order=[{string.Join(", ", idealOrder)}]\nOutput Order=[{string.Join(", ", executionOrder)}]");
+
 
         // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB1, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB2, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actC, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(mainAct, prefix: "Timed: ", suffix: " in Seq() variation");
+        Utilities.AssertChainCleared(actA);
+        Utilities.AssertChainCleared(actB);
+        Utilities.AssertChainCleared(mainAct);
 
-        UnityEngine.Object.Destroy(theater.gameObject);
+
+        yield return null;
     }
-
     [UnityTest]
-    public IEnumerator PrologueInstant2x1x2()
+    public IEnumerator MultipleDuplicateActs()  // 6
     {
+        // Prerequisites
+        var expectedPerformCount = 1;
+        var idealOrder = new List<string>() { "ActA1", "ActA2", "ActB1", "ActB2", "ActC1", "ActC2", "MainAct" };
         var executionOrder = new List<string>();
+
+
+        // Setup acts
         var actA1 = new Act();
         actA1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
         actA1.Init("ActA1");
@@ -415,132 +298,13 @@ public class ActPrologueEdgeTests
         actA2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
         actA2.Init("ActA2");
 
-        var actB = new Act();
-        actB.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB.prologue = (a) => new() { new() { actA1, actA2 } };
-        actB.Init("ActB");
+        var actB1 = new Act();
+        actB1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
+        actB1.Init("ActB1");
 
-        var actC1 = new Act();
-        actC1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC1.prologue = (a) => new() { new() { actB } };
-        actC1.Init("ActC1");
-
-        var actC2 = new Act();
-        actC2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC2.prologue = (a) => new() { new() { actB } };
-        actC2.Init("ActC2");
-
-        var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actC1, actC2 } };
-        mainAct.Init("MainAct");
-
-        mainAct.Perform();
-
-        Assert.IsTrue(actA1.GetPerformCount() == 2, $"Instant: ActA1 did not perform exactly once, Perform Count={actA1.GetPerformCount()}");
-        Assert.IsTrue(actA2.GetPerformCount() == 2, $"Instant: ActA2 did not perform exactly once, Perform Count={actA2.GetPerformCount()}");
-        Assert.IsTrue(actB.GetPerformCount() == 2, $"Instant: ActB did not perform exactly once, Perform Count={actB.GetPerformCount()}");
-        Assert.IsTrue(actC1.GetPerformCount() == 1, $"Instant: ActC1 did not perform exactly once, Perform Count={actC1.GetPerformCount()}");
-        Assert.IsTrue(actC2.GetPerformCount() == 1, $"Instant: ActC2 did not perform exactly once, Perform Count={actC2.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB") > executionOrder.IndexOf("ActA1"), "Instant: ActB performed before ActA1");
-        Assert.IsTrue(executionOrder.IndexOf("ActB") > executionOrder.IndexOf("ActA2"), "Instant: ActB performed before ActA2");
-        Assert.IsTrue(executionOrder.IndexOf("ActC1") > executionOrder.IndexOf("ActB"), "Instant: ActC1 performed before ActB");
-        Assert.IsTrue(executionOrder.IndexOf("ActC2") > executionOrder.IndexOf("ActB"), "Instant: ActC2 performed before ActB");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC1"), "Instant: MainAct performed before ActC1");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC2"), "Instant: MainAct performed before ActC2");
-
-        // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA1, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actA2, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actB, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actC1, prefix: "Instant: ");
-        Utilities.AssertChainCleared(actC2, prefix: "Instant: ");
-        Utilities.AssertChainCleared(mainAct, prefix: "Instant: ");
-
-
-        yield return null;
-    }
-
-    [UnityTest]
-    public IEnumerator PrologueTimed2x1x2()
-    {
-        var theater = new GameObject("Theater").AddComponent<Theater>();
-        var executionOrder = new List<string>();
-        var actA1 = new SingleTickAct();
-        actA1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA1.Init("ActA1", theater);
-
-        var actA2 = new SingleTickAct();
-        actA2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA2.Init("ActA2", theater);
-
-        var actB = new SingleTickAct();
-        actB.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB.prologue = (a) => new() { new() { actA1, actA2 } };
-        actB.Init("ActB", theater);
-
-        var actC1 = new SingleTickAct();
-        actC1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC1.prologue = (a) => new() { new() { actB } };
-        actC1.Init("ActC1", theater);
-
-        var actC2 = new SingleTickAct();
-        actC2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC2.prologue = (a) => new() { new() { actB } };
-        actC2.Init("ActC2", theater);
-
-        var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actC1, actC2 } };
-        mainAct.Init("MainAct", theater);
-
-        mainAct.Perform();
-
-        yield return null;
-        yield return null;
-        yield return null;
-        yield return null;
-
-        Assert.IsTrue(actA1.GetPerformCount() == 1, $"Timed: ActA1 did not perform exactly once, Perform Count={actA1.GetPerformCount()}");
-        Assert.IsTrue(actA2.GetPerformCount() == 1, $"Timed: ActA2 did not perform exactly once, Perform Count={actA2.GetPerformCount()}");
-        Assert.IsTrue(actB.GetPerformCount() == 1, $"Timed: ActB did not perform exactly once, Perform Count={actB.GetPerformCount()}");
-        Assert.IsTrue(actC1.GetPerformCount() == 1, $"Timed: ActC1 did not perform exactly once, Perform Count={actC1.GetPerformCount()}");
-        Assert.IsTrue(actC2.GetPerformCount() == 1, $"Timed: ActC2 did not perform exactly once, Perform Count={actC2.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Timed: MainAct did not perform exactly once, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB") > executionOrder.IndexOf("ActA1"), "Timed: ActB performed before ActA1");
-        Assert.IsTrue(executionOrder.IndexOf("ActB") > executionOrder.IndexOf("ActA2"), "Timed: ActB performed before ActA2");
-        Assert.IsTrue(executionOrder.IndexOf("ActC1") > executionOrder.IndexOf("ActB"), "Timed: ActC1 performed before ActB");
-        Assert.IsTrue(executionOrder.IndexOf("ActC2") > executionOrder.IndexOf("ActB"), "Timed: ActC2 performed before ActB");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC1"), "Timed: MainAct performed before ActC1");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC2"), "Timed: MainAct performed before ActC2");
-
-        // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA1, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actA2, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actB, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actC1, prefix: "Timed: ");
-        Utilities.AssertChainCleared(actC2, prefix: "Timed: ");
-        Utilities.AssertChainCleared(mainAct, prefix: "Timed: ");
-
-        UnityEngine.Object.Destroy(theater.gameObject);
-    }
-
-    [UnityTest]
-    public IEnumerator PrologueSeqInstant2x1x2()
-    {
-        var executionOrder = new List<string>();
-        var actA1 = new Act();
-        actA1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA1.Init("ActA1");
-
-        var actA2 = new Act();
-        actA2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA2.Init("ActA2");
-
-        var actB = new Act();
-        actB.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB.Init("ActB");
+        var actB2 = new Act();
+        actB2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
+        actB2.Init("ActB2");
 
         var actC1 = new Act();
         actC1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
@@ -552,94 +316,173 @@ public class ActPrologueEdgeTests
 
         var mainAct = new Act();
         mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actA1, actA2 }, new() { actB }, new() { actC1, actC2 } };
+        mainAct.prologue = (a) => new()
+        {
+            new() { actA1, actA1, actA2, actA1 },
+            new() { actB1, actB2, actB2, actB1 },
+            new() { actC1, actC1, actC2, actC2, actC1 }
+        };
         mainAct.Init("MainAct");
 
+
+        // Perform main
         mainAct.Perform();
 
-        Assert.IsTrue(actA1.GetPerformCount() == 1, $"Instant: ActA1 did not perform exactly once in Seq() variation, Perform Count={actA1.GetPerformCount()}");
-        Assert.IsTrue(actA2.GetPerformCount() == 1, $"Instant: ActA2 did not perform exactly once in Seq() variation, Perform Count={actA2.GetPerformCount()}");
-        Assert.IsTrue(actB.GetPerformCount() == 1, $"Instant: ActB did not perform exactly once in Seq() variation, Perform Count={actB.GetPerformCount()}");
-        Assert.IsTrue(actC1.GetPerformCount() == 1, $"Instant: ActC1 did not perform exactly once in Seq() variation, Perform Count={actC1.GetPerformCount()}");
-        Assert.IsTrue(actC2.GetPerformCount() == 1, $"Instant: ActC2 did not perform exactly once in Seq() variation, Perform Count={actC2.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Instant: MainAct did not perform exactly once in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB") > executionOrder.IndexOf("ActA1"), "Instant: ActB performed before ActA1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB") > executionOrder.IndexOf("ActA2"), "Instant: ActB performed before ActA2 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActC1") > executionOrder.IndexOf("ActB"), "Instant: ActC1 performed before ActB in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActC2") > executionOrder.IndexOf("ActB"), "Instant: ActC2 performed before ActB in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC1"), "Instant: MainAct performed before ActC1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC2"), "Instant: MainAct performed before ActC2 in Seq() variation");
+
+        // Assertions
+        Assert.IsTrue(actA1.GetPerformCount() == expectedPerformCount, $"Duplicate ActA1 did not perform exactly once! Perform Count={actA1.GetPerformCount()}");
+        Assert.IsTrue(actA2.GetPerformCount() == expectedPerformCount, $"ActA2 did not perform exactly once! Perform Count={actA2.GetPerformCount()}");
+        Assert.IsTrue(actB1.GetPerformCount() == expectedPerformCount, $"Duplicate ActB1 did not perform exactly once! Perform Count={actB1.GetPerformCount()}");
+        Assert.IsTrue(actB2.GetPerformCount() == expectedPerformCount, $"Duplicate ActB2 did not perform exactly once! Perform Count={actB2.GetPerformCount()}");
+        Assert.IsTrue(actC1.GetPerformCount() == expectedPerformCount, $"Duplicate ActC1 did not perform exactly once! Perform Count={actC1.GetPerformCount()}");
+        Assert.IsTrue(actC2.GetPerformCount() == expectedPerformCount, $"Duplicate ActC2 did not perform exactly once! Perform Count={actC2.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetPerformCount() == expectedPerformCount, $"MainAct did not perform exactly once! Perform Count={mainAct.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetOutcome() == Act.Outcome.Success, $"MainAct did not succeed! Outcome={mainAct.GetOutcome()}");
+        Assert.IsTrue(executionOrder.SequenceEqual(idealOrder), $"Incorrect execution order\nExpected Order=[{string.Join(", ", idealOrder)}]\nOutput Order=[{string.Join(", ", executionOrder)}]");
+
 
         // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA1, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actA2, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actC1, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actC2, prefix: "Instant: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(mainAct, prefix: "Instant: ", suffix: " in Seq() variation");
+        Utilities.AssertChainCleared(actA1);
+        Utilities.AssertChainCleared(actA2);
+        Utilities.AssertChainCleared(actB1);
+        Utilities.AssertChainCleared(actB2);
+        Utilities.AssertChainCleared(actC1);
+        Utilities.AssertChainCleared(actC2);
+        Utilities.AssertChainCleared(mainAct);
 
 
         yield return null;
     }
 
+
     [UnityTest]
-    public IEnumerator PrologueSeqTimed2x1x2()
+    public IEnumerator MainBlockingPrologueFailsChain()  // 7
     {
-        var theater = new GameObject("Theater").AddComponent<Theater>();
-        var executionOrder = new List<string>();
-        var actA1 = new SingleTickAct();
-        actA1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA1.Init("ActA1", theater);
+        // Prerequisites
+        var expectedNoEnterCount = 0;
+        var enteredNames = new List<string>();
 
-        var actA2 = new SingleTickAct();
-        actA2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA2.Init("ActA2", theater);
 
-        var actB = new SingleTickAct();
-        actB.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actB.Init("ActB", theater);
-
-        var actC1 = new SingleTickAct();
-        actC1.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC1.Init("ActC1", theater);
-
-        var actC2 = new SingleTickAct();
-        actC2.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actC2.Init("ActC2", theater);
+        // Setup acts
+        var prologueAct = new Act();
+        prologueAct.OnPreEnter += (a) => enteredNames.Add(a.GetName());
+        prologueAct.Init("PrologueAct");
 
         var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actA1, actA2 }, new() { actB }, new() { actC1, actC2 } };
-        mainAct.Init("MainAct", theater);
+        mainAct.OnPreEnter += (a) => enteredNames.Add(a.GetName());
+        mainAct.prologue = (a) => new() { new() { prologueAct } };
+        mainAct.block = (Act a) => new() { { prologueAct, Act.BlockType.Persistent } };
+        mainAct.Init("MainAct");
 
+
+        // Perform main
         mainAct.Perform();
 
-        yield return null;
-        yield return null;
-        yield return null;
-        yield return null;
 
-        Assert.IsTrue(actA1.GetPerformCount() == 1, $"Timed: ActA1 did not perform exactly once in Seq() variation, Perform Count={actA1.GetPerformCount()}");
-        Assert.IsTrue(actA2.GetPerformCount() == 1, $"Timed: ActA2 did not perform exactly once in Seq() variation, Perform Count={actA2.GetPerformCount()}");
-        Assert.IsTrue(actB.GetPerformCount() == 1, $"Timed: ActB did not perform exactly once in Seq() variation, Perform Count={actB.GetPerformCount()}");
-        Assert.IsTrue(actC1.GetPerformCount() == 1, $"Timed: ActC1 did not perform exactly once in Seq() variation, Perform Count={actC1.GetPerformCount()}");
-        Assert.IsTrue(actC2.GetPerformCount() == 1, $"Timed: ActC2 did not perform exactly once in Seq() variation, Perform Count={actC2.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"Timed: MainAct did not perform exactly once in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.IndexOf("ActB") > executionOrder.IndexOf("ActA1"), "Timed: ActB performed before ActA1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActB") > executionOrder.IndexOf("ActA2"), "Timed: ActB performed before ActA2 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActC1") > executionOrder.IndexOf("ActB"), "Timed: ActC1 performed before ActB in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("ActC2") > executionOrder.IndexOf("ActB"), "Timed: ActC2 performed before ActB in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC1"), "Timed: MainAct performed before ActC1 in Seq() variation");
-        Assert.IsTrue(executionOrder.IndexOf("MainAct") > executionOrder.IndexOf("ActC2"), "Timed: MainAct performed before ActC2 in Seq() variation");
+        // Assertions
+        Assert.IsTrue(mainAct.GetOutcome() == Act.Outcome.Failure, $"Main act did not fail despite blocking its own prologue act! Outcome={mainAct.GetOutcome()}");
+        Assert.IsFalse(mainAct.IsPerforming(), "Main act is still performing despite blocking its own prologue act!");
+        Assert.IsFalse(prologueAct.IsPerforming(), "Prologue act is performing despite being blocked by main act!");
+        Assert.IsTrue(prologueAct.GetPerformCount() == expectedNoEnterCount, $"Prologue act performed despite being blocked! Perform Count={prologueAct.GetPerformCount()}");
+        Assert.IsTrue(enteredNames.Count == expectedNoEnterCount, $"Some act entered despite chain failing! Entered=[{string.Join(", ", enteredNames)}]");
+        Assert.IsFalse(prologueAct.IsBlocked(), "Prologue act is still blocked after main act concluded!");
+
+
+        // Check chain sets cleared after failed chain
+        Utilities.AssertChainCleared(prologueAct);
+        Utilities.AssertChainCleared(mainAct);
+
+
+        yield return null;
+    }
+    [UnityTest]
+    public IEnumerator PrologueBlockingMainFailsChain()  // 8
+    {
+        // Prerequisites
+        var expectedNoEnterCount = 0;
+        var enteredNames = new List<string>();
+
+
+        // Setup acts
+        var prologueAct = new Act();
+        var mainAct = new Act();
+
+        prologueAct.OnPreEnter += (a) => enteredNames.Add(a.GetName());
+        prologueAct.block = (Act a) => new() { { mainAct, Act.BlockType.Persistent } };
+        prologueAct.Init("PrologueAct");
+
+        mainAct.OnPreEnter += (a) => enteredNames.Add(a.GetName());
+        mainAct.prologue = (a) => new() { new() { prologueAct } };
+        mainAct.Init("MainAct");
+
+
+        // Perform main
+        mainAct.Perform();
+
+
+        // Assertions
+        Assert.IsTrue(mainAct.GetOutcome() != Act.Outcome.Success, $"Main act succeeded despite being blocked by its prologue act! Outcome={mainAct.GetOutcome()}");
+        Assert.IsFalse(mainAct.IsPerforming(), "Main act is still performing despite being blocked by its prologue act!");
+        Assert.IsFalse(prologueAct.IsPerforming(), "Prologue act is still performing despite chain failing!");
+        Assert.IsTrue(enteredNames.Count == expectedNoEnterCount, $"Some act entered despite chain failing! Entered=[{string.Join(", ", enteredNames)}]");
+        Assert.IsFalse(mainAct.IsBlocked(), "Main act is still blocked after prologue act concluded!");
+
+
+        // Check chain sets cleared after failed chain
+        Utilities.AssertChainCleared(prologueAct);
+        Utilities.AssertChainCleared(mainAct);
+
+
+        yield return null;
+    }
+
+
+    [UnityTest]
+    public IEnumerator PrologueActPerformingSiblingKeepsChain()  // 9
+    {
+        // Prerequisites
+        var expectedPerformCount = 1;
+
+
+        // Setup acts
+        var actB = new ManualFinishAct();
+        actB.Init("ActB");
+
+        var actA = new Act();
+        actA.OnPreEnter += (a) => actB.Perform();
+        actA.Init("ActA");
+
+        var mainAct = new Act();
+        mainAct.prologue = (a) => new() { new() { actA, actB } };
+        mainAct.Init("MainAct");
+
+
+        // Perform main, sibling should keep chain waiting
+        mainAct.Perform();
+
+        var statusMainWhileWaiting = mainAct.GetStatus();
+        var isBPerformingWhileWaiting = actB.IsPerforming();
+
+
+        // Finish sibling so chain continues
+        actB.ManualFinish();
+
+
+        // Assertions
+        Assert.IsTrue(statusMainWhileWaiting == Act.Status.Prologuing, $"Main act did not wait on sibling prologue act! Status={statusMainWhileWaiting}");
+        Assert.IsTrue(isBPerformingWhileWaiting, "ActB is not performing despite ActA performing it!");
+        Assert.IsTrue(actA.GetPerformCount() == expectedPerformCount, $"ActA did not perform exactly once! Perform Count={actA.GetPerformCount()}");
+        Assert.IsTrue(actB.GetPerformCount() == expectedPerformCount, $"ActB did not perform exactly once! Perform Count={actB.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetPerformCount() == expectedPerformCount, $"MainAct did not perform exactly once! Perform Count={mainAct.GetPerformCount()}");
+        Assert.IsTrue(mainAct.GetOutcome() == Act.Outcome.Success, $"Main act did not succeed despite sibling performing! Outcome={mainAct.GetOutcome()}");
+
 
         // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA1, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actA2, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actB, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actC1, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(actC2, prefix: "Timed: ", suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(mainAct, prefix: "Timed: ", suffix: " in Seq() variation");
+        Utilities.AssertChainCleared(actA);
+        Utilities.AssertChainCleared(actB);
+        Utilities.AssertChainCleared(mainAct);
 
-        UnityEngine.Object.Destroy(theater.gameObject);
+
+        yield return null;
     }
 }

@@ -931,55 +931,6 @@ public class ActMiscTests
 
         yield return null;
     }
-    // [UnityTest]
-    // public IEnumerator IsBlockedByFalseAfterUnblock()  // 21
-    // {
-    //     // Prerequisites
-    //     var targetName = "Misc Target Act";
-    //     var blockerName = "Misc Blocker Act";
-
-
-    //     // Unblock by blocker finishing
-    //     {
-    //         var target = new Act();
-    //         var blocker = new ManualFinishAct();
-    //         target.Init(targetName);
-    //         blocker.Init(blockerName);
-    //         blocker.block = (Act a) => new() { target, Act.BlockType.Persistent };
-
-    //         blocker.Perform();
-    //         var wasBlockedBy = target.IsBlockedBy(blocker);
-    //         blocker.ManualFinish();
-    //         var isBlockedByAfterFinish = target.IsBlockedBy(blocker);
-
-
-    //         // Assertions
-    //         Assert.IsTrue(wasBlockedBy, "IsBlockedBy() false while blocker is performing!");
-    //         Assert.IsFalse(isBlockedByAfterFinish, "IsBlockedBy() true after blocker finished!");
-    //     }
-
-
-    //     // Unblock by removing from block list
-    //     {
-    //         var target = new Act();
-    //         var blocker = new ManualFinishAct();
-    //         target.Init(targetName);
-    //         blocker.Init(blockerName);
-    //         blocker.block = (Act a) => new() { target, Act.BlockType.Persistent };
-
-    //         blocker.Perform();
-    //         var wasBlockedBy = target.IsBlockedBy(blocker);
-    //         blocker.RemoveFromBlock(new List<Act> { target });
-    //         var isBlockedByAfterRemove = target.IsBlockedBy(blocker);
-
-
-    //         // Assertions
-    //         Assert.IsTrue(wasBlockedBy, "IsBlockedBy() false while blocker is performing! Remove variation");
-    //         Assert.IsFalse(isBlockedByAfterRemove, "IsBlockedBy() true after removed from block list!");
-    //     }
-
-    //     yield return null;
-    // }
     [UnityTest]
     public IEnumerator IsBlockedBySelfFalseWhenDisabled()  // 22
     {

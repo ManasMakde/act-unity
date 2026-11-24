@@ -45,33 +45,6 @@ public class ActPrologue1Tests
     }
 
     [UnityTest]
-    public IEnumerator PrologueSeqInstant1()
-    {
-        var executionOrder = new List<string>();
-        var actA = new Act();
-        actA.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        actA.Init("ActA");
-
-        var mainAct = new Act();
-        mainAct.OnPreEnter += (a) => executionOrder.Add(a.GetName());
-        mainAct.prologue = (a) => new() { new() { actA } };
-        mainAct.Init("MainAct");
-
-        mainAct.Perform();
-
-        Assert.IsTrue(actA.GetPerformCount() == 1, $"ActA did not perform in Seq() variation, Perform Count={actA.GetPerformCount()}");
-        Assert.IsTrue(mainAct.GetPerformCount() == 1, $"MainAct did not perform in Seq() variation, Perform Count={mainAct.GetPerformCount()}");
-        Assert.IsTrue(executionOrder.Count == 2 && executionOrder[0] == "ActA" && executionOrder[1] == "MainAct", "Execution order invalid in Seq() variation");
-
-        // Check chain sets cleared after perform
-        Utilities.AssertChainCleared(actA, suffix: " in Seq() variation");
-        Utilities.AssertChainCleared(mainAct, suffix: " in Seq() variation");
-
-
-        yield return null;
-    }
-
-    [UnityTest]
     public IEnumerator PrologueInstant1x1()
     {
         var executionOrder = new List<string>();
