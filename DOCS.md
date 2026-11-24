@@ -6,7 +6,7 @@
 |---------|----------|
 | [TickFlags](#tickflags) | `None`, `Tick`, `PhysicsTick`, `LateTick` |
 | [Status](#status) | `None`, `Initializing`, `Prologuing`, `Entering`, `Ticking`, `Exiting`, `Concluding`, `Deinitializing` |
-| [Outcome](#outcome) | `Interrupted`, `Failure`, `Pending`, `Success`, `Retry` |
+| [Outcome](#outcome) | `None`, `Interrupted`, `Failure`, `Pending`, `Success`, `Retry` |
 | [BlockType](#blocktype) | `Interrupt`, `Persistent` |
 
 
@@ -39,8 +39,9 @@
 
 | Access | Type | Properties |
 |--------|------|--------------|
+| public | Func\<Act, bool\> | [condition](#condition) |
 | public | Func\<Act, List\<List\<Act\>\>\> | [prologue](#prologue) |
-| public | List\<Func\<Act, bool\>\> | [performConditions](#performconditions) |
+| public | Func\<Act, Dictionary\<Act, [BlockType](#blocktype)\>\> | [block](#block) |
 | public | bool | [isVerbose](#isverbose) |
 | protected | string | [_name](#_name) |
 | protected | bool | [_canReperform](#_canreperform) |
@@ -61,8 +62,6 @@
 | public | void | [CancelRetryDeferred](#cancelretrydeferred)() |
 | public | void | [CancelAbortDeferred](#cancelabortdeferred)() |
 | public | void | [SetEnabled](#setenabled)(bool newEnabled) |
-| public | void | [AddToBlock](#addtoblock)(List\<Act\> acts, [BlockType](#blocktype) blockType = BlockType.Persistent) |
-| public | void | [RemoveFromBlock](#removefromblock)(List\<Act\> acts) |
 | public | bool | [IsPerforming](#isperforming)() |
 | public | bool | [IsOngoing](#isongoing)() |
 | public | bool | [IsRetrying](#isretrying)() |
@@ -157,6 +156,7 @@
 
 
 ### <a id="outcome"></a> public enum Outcome
+- `None`: Indicates the act has not performed yet.  
 - `Interrupted`: Indicates the act was interrupted externally while performing.  
 - `Failure`: Indicates the act failed to complete its core behaviour.  
 - `Pending`: Indicates the act is still pending for its core behaviour to complete.  
@@ -393,10 +393,29 @@ In this case `main` will directly continue to enter.
 ---
 
 
-### <a id="performconditions"></a> public List\<Func\<Act, bool\>\> performConditions
-`Default: new List<Func<Act, bool>>()`  
+### <a id="block"></a> public Func\<Act, Dictionary\<Act, [BlockType](#blocktype)\>\> block
+`Default: null`
 
-Used when overriding [`CanPerform()`](#canperform) isn't sufficient and additional external conditions are required.  
+If assigned, Then all acts returned by this function will be blocked by this act when it starts performing.  
+```csharp
+void Awake()
+{
+    theater = GetComponent<Theater>();
+    damagedAct.block = (Act act) => {
+        return new() { { walkAct, Act.BlockType.Persistent } };  // Walking is blocked while player is taking damage
+    };
+    damagedAct.Init("Damaged Act", theater);
+}
+```
+
+
+---
+
+
+### <a id="condition"></a> public Func\<Act, bool\> condition
+`Default: null`  
+
+Used when overriding [`CanPerform()`](#canperform) isn't sufficient and an additional external condition is required.  
 ```csharp
 void FixedUpdate()
 {
@@ -404,9 +423,9 @@ void FixedUpdate()
 }
 void Awake()
 {
-    jumpAct.performConditions.Add((Act act)=> {
+    jumpAct.condition = (Act act) => {
         return Input.GetKeyDown(KeyCode.Space);  // Only jump when spacebar is pressed
-    });
+    };
     jumpAct.Init("Jump Act", theater);
 }
 ```
@@ -474,7 +493,7 @@ void Awake()
     myAct.Init("My Act", theater);
 }
 ```
-i.e. You should ideally set all Events, Prologues, Onetime Properties, etc before you call `Init()`.  
+i.e. You should ideally set all Events, Prologues, Blocks, Conditions, Onetime Properties, etc before you call `Init()`.  
 Calling `Init()` will internally call your overridden `Setup()` method.
 
 
@@ -490,7 +509,8 @@ void OnDestroy()
     myAct.Deinit();
 }
 ```
-Calling `Deinit()` will internally call your overridden `Cleanup()` method.
+Calling `Deinit()` will abort the act if it was performing, then internally call your overridden `Cleanup()` method.  
+It also resets [`condition`](#condition), [`prologue`](#prologue) & [`block`](#block) to `null` however events remain unaffected.
 
 
 ---
@@ -587,30 +607,6 @@ Disables/Enables the act i.e. If an act is disabled then it can no longer [`Perf
 myAct.SetEnabled(false);  // Disable act
 myAct.SetEnabled(true);  // Enable act
 ```
-
-
----
-
-
-### <a id="addtoblock"></a> public void AddToBlock(List\<Act\> acts, [BlockType](#blocktype) blockType = BlockType.Persistent)
-Stores which other acts to block while performing.  
-```csharp
-void Awake()
-{
-    theater = GetComponent<Theater>();
-    damagedAct.AddToBlock(new() { walkAct });  // Walking is blocked while player is taking damage
-    damagedAct.Init("Damaged Act", theater);
-}
-```
-
-Also look into [BlockType](#blocktype).
-
-
----
-
-
-### <a id="removefromblock"></a> public void RemoveFromBlock(List\<Act\> acts)
-Removes given acts from being blocked.
 
 
 ---
@@ -716,7 +712,7 @@ Returns all the acts currently blocking this act.
 
 
 ### <a id="getactstoblock"></a> public IReadOnlyDictionary\<Act, [BlockType](#blocktype)\> GetActsToBlock()
-Returns all the acts this act will block along with their [BlockType](#blocktype), As assigned via [AddToBlock](#addtoblock).
+Returns all the acts this act is currently blocking along with their [BlockType](#blocktype).  
 
 
 ---
@@ -1082,7 +1078,8 @@ Used internally to log warning messages when [isVerbose](#isverbose) is `true`. 
 ## 📖 Theater Descriptions
 
 ### <a id="onenablechangedtheater"></a> public event Action\<Theater theater, bool newEnabled\> OnEnableChanged
-Invoked whenever theater has been enabled/disabled.
+Invoked whenever theater has been enabled/disabled.  
+Also invoked when the `Theater` component or its `GameObject` is enabled/disabled.
 
 
 ---
@@ -1117,7 +1114,7 @@ Aborts all acts associated with the theater.
 
 
 ### <a id="setenabledtheater"></a> public void SetEnabled(bool newEnabled)
-Disables/Enables theater i.e. If a theater is disabled then all acts assigned to it can no longer [`Perform()`](#perform) and any act that was ongoing will be interrupted.
+Disables/Enables theater i.e. If a theater is disabled then all acts assigned to it can no longer [`Perform()`](#perform), any act that was ongoing will be interrupted and any pending deferred calls will be cancelled.
 ```csharp
 theater.SetEnabled(false);  // Disable theater
 theater.SetEnabled(true);  // Enable theater
