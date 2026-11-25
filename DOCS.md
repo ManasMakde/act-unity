@@ -549,7 +549,7 @@ Won't do anything if the act was not performing.
 ### <a id="performdeferred"></a> public void PerformDeferred([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
 > **Note:** Requires a `Theater` to be assigned.
 
-This will delay off the [`Perform()`](#perform) until the next designated tick. Useful to avoid infinite recursion when trying to reperform an act.
+This will delay off the [`Perform()`](#perform) until the next tick. Useful to avoid infinite recursion when trying to reperform an act.
 
 
 ---
@@ -558,7 +558,7 @@ This will delay off the [`Perform()`](#perform) until the next designated tick. 
 ### <a id="retrydeferred"></a> public void RetryDeferred([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
 > **Note:** Requires a `Theater` to be assigned.
 
-This will delay off the [`Retry()`](#retry) until the next designated tick.
+This will delay off the [`Retry()`](#retry) until the next tick.
 
 
 ---
@@ -567,7 +567,7 @@ This will delay off the [`Retry()`](#retry) until the next designated tick.
 ### <a id="abortdeferred"></a> public void AbortDeferred([TickFlags](#tickflags) tickFlag = TickFlags.PhysicsTick)
 > **Note:** Requires a `Theater` to be assigned.
 
-This will delay off the [`Abort()`](#abort) until the next designated tick.
+This will delay off the [`Abort()`](#abort) until the next tick.
 
 
 
