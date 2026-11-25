@@ -343,19 +343,13 @@ public class Theater : MonoBehaviour
 
         return null;
     }
-    private static void TickActs(ref HashSet<Act> acts, ref HashSet<Act> tickingActs, Act.TickFlags flag)
+    private static void TickStagedActs(HashSet<Act> acts, HashSet<Act> tickingActs, Act.TickFlags flag)
     {
         // Return if no acts to tick
-        if (acts.Count == 0)
+        if (tickingActs.Count == 0)
         {
             return;
         }
-
-
-        // Reference swap so no act can be readded
-        var temp = acts;
-        acts = tickingActs;
-        tickingActs = temp;
 
 
         // Iterate and invoke operations
@@ -389,19 +383,13 @@ public class Theater : MonoBehaviour
             }
         }
     }
-    private static void InvokeOnActs(ref Dictionary<Act, Act.TickFlags> acts, ref Dictionary<Act, Act.TickFlags> invokingActs, Operation operation, Act.TickFlags flag)
+    private static void InvokeOnActs(Dictionary<Act, Act.TickFlags> acts, Dictionary<Act, Act.TickFlags> invokingActs, Operation operation, Act.TickFlags flag)
     {
         // Return if no acts to operate
-        if (acts.Count == 0)
+        if (invokingActs.Count == 0)
         {
             return;
         }
-
-
-        // Reference swap so no act can be readded
-        var temp = acts;
-        acts = invokingActs;
-        invokingActs = temp;
 
 
         // Iterate and invoke operations
@@ -441,24 +429,90 @@ public class Theater : MonoBehaviour
     // Private Override Methods
     private void Update()
     {
-        TickActs(ref _tickActs, ref _tickingActs, Act.TickFlags.Tick);
-        InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.Tick);
-        InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.Tick);
-        InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.Tick);
+        // Tick all acts
+        var tickTemp = _tickActs;  // Reference swap so no act can be readded
+        _tickActs = _tickingActs;
+        _tickingActs = tickTemp;
+        TickStagedActs(_tickActs, _tickingActs, Act.TickFlags.Tick);
+
+
+        // Perform deferred
+        var performTemp = _performDeferActs;  // Reference swap so no act can be readded
+        _performDeferActs = _performingDeferActs;
+        _performingDeferActs = performTemp;
+        InvokeOnActs(_performDeferActs, _performingDeferActs, Operation.Perform, Act.TickFlags.Tick);
+
+
+        // Retry deferred
+        var retryTemp = _retryDeferActs;  // Reference swap so no act can be readded
+        _retryDeferActs = _retryingDeferActs;
+        _retryingDeferActs = retryTemp;
+        InvokeOnActs(_retryDeferActs, _retryingDeferActs, Operation.Retry, Act.TickFlags.Tick);
+
+
+        // Abort deferred
+        var abortTemp = _abortDeferActs;  // Reference swap so no act can be readded
+        _abortDeferActs = _abortingDeferActs;
+        _abortingDeferActs = abortTemp;
+        InvokeOnActs(_abortDeferActs, _abortingDeferActs, Operation.Abort, Act.TickFlags.Tick);
     }
     private void FixedUpdate()
     {
-        TickActs(ref _tickActs, ref _tickingActs, Act.TickFlags.PhysicsTick);
-        InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.PhysicsTick);
-        InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.PhysicsTick);
-        InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.PhysicsTick);
+        // Physics tick all acts
+        var tickTemp = _tickActs;  // Reference swap so no act can be readded
+        _tickActs = _tickingActs;
+        _tickingActs = tickTemp;
+        TickStagedActs(_tickActs, _tickingActs, Act.TickFlags.PhysicsTick);
+
+
+        // Perform deferred
+        var performTemp = _performDeferActs;  // Reference swap so no act can be readded
+        _performDeferActs = _performingDeferActs;
+        _performingDeferActs = performTemp;
+        InvokeOnActs(_performDeferActs, _performingDeferActs, Operation.Perform, Act.TickFlags.PhysicsTick);
+
+
+        // Retry deferred
+        var retryTemp = _retryDeferActs;  // Reference swap so no act can be readded
+        _retryDeferActs = _retryingDeferActs;
+        _retryingDeferActs = retryTemp;
+        InvokeOnActs(_retryDeferActs, _retryingDeferActs, Operation.Retry, Act.TickFlags.PhysicsTick);
+
+
+        // Abort deferred
+        var abortTemp = _abortDeferActs;  // Reference swap so no act can be readded
+        _abortDeferActs = _abortingDeferActs;
+        _abortingDeferActs = abortTemp;
+        InvokeOnActs(_abortDeferActs, _abortingDeferActs, Operation.Abort, Act.TickFlags.PhysicsTick);
     }
     private void LateUpdate()
     {
-        TickActs(ref _tickActs, ref _tickingActs, Act.TickFlags.LateTick);
-        InvokeOnActs(ref _performDeferActs, ref _performingDeferActs, Operation.Perform, Act.TickFlags.LateTick);
-        InvokeOnActs(ref _retryDeferActs, ref _retryingDeferActs, Operation.Retry, Act.TickFlags.LateTick);
-        InvokeOnActs(ref _abortDeferActs, ref _abortingDeferActs, Operation.Abort, Act.TickFlags.LateTick);
+        // Late tick all acts
+        var tickTemp = _tickActs;  // Reference swap so no act can be readded
+        _tickActs = _tickingActs;
+        _tickingActs = tickTemp;
+        TickStagedActs(_tickActs, _tickingActs, Act.TickFlags.LateTick);
+
+
+        // Perform deferred
+        var performTemp = _performDeferActs;  // Reference swap so no act can be readded
+        _performDeferActs = _performingDeferActs;
+        _performingDeferActs = performTemp;
+        InvokeOnActs(_performDeferActs, _performingDeferActs, Operation.Perform, Act.TickFlags.LateTick);
+
+
+        // Retry deferred
+        var retryTemp = _retryDeferActs;  // Reference swap so no act can be readded
+        _retryDeferActs = _retryingDeferActs;
+        _retryingDeferActs = retryTemp;
+        InvokeOnActs(_retryDeferActs, _retryingDeferActs, Operation.Retry, Act.TickFlags.LateTick);
+
+
+        // Abort deferred
+        var abortTemp = _abortDeferActs;  // Reference swap so no act can be readded
+        _abortDeferActs = _abortingDeferActs;
+        _abortingDeferActs = abortTemp;
+        InvokeOnActs(_abortDeferActs, _abortingDeferActs, Operation.Abort, Act.TickFlags.LateTick);
     }
     private void OnEnable()
     {
