@@ -707,9 +707,20 @@ public class Act
 	}
 	static private void FinishActGroup(ActGroup group, Outcome outcome)
 	{
-		for (int i = 0; group != null && i < group.acts.Count; i++)
+		// Return if invalid group
+		if (group == null)
 		{
-			group.acts[i]?.Finish(outcome);
+			return;
+		}
+
+
+		// Finish all acts in group
+		foreach (var act in group.acts)
+		{
+			if (act != null)
+			{
+				act.Finish(outcome);
+			}
 		}
 	}
 	static private void ContinueActGroup(Act ofAct, ActGroup group, Outcome outcome)
