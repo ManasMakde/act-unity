@@ -643,7 +643,10 @@ public class Act
 
 
 			// Move to next group
-			group = group.next;
+			var nextGroup = group.next;
+			group.next = null;
+			group.prev = null;
+			group = nextGroup;
 		}
 	}
 	static private void PerformActGroup(Act ofAct, ActGroup group)
