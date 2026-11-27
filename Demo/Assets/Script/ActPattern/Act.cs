@@ -496,9 +496,11 @@ public class Act
 	[NonSerialized] private HashSet<Act> _blockedByActs = new();
 
 	[NonSerialized] private ActGroup _ownerOfGroup = null;
-	[NonSerialized] private Dictionary<ActGroup, bool /* didPerform */> _belongsToGroups = new();
+	[NonSerialized] private HashSet<ActGroup> _belongsToGroups = new();
+	[NonSerialized] private HashSet<ActGroup> _requestedByGroups = new();
 	[NonSerialized] private List<ActGroup> _prologueGroups = new();
-	[NonSerialized] private Dictionary<ActGroup, Outcome> _epilogueGroups = new();
+	[NonSerialized] private List<ActGroup> _epilogueGroups = new();
+	[NonSerialized] private Dictionary<ActGroup, Outcome> _epilogueOutcomes = new();
 
 	[NonSerialized] private string _initName;
 	[NonSerialized] private Theater _initTheater;
@@ -517,15 +519,7 @@ public class Act
 	[NonSerialized] private int _lifetimePhysicsTickCount = 0;
 	[NonSerialized] private int _lifetimeLateTickCount = 0;
 
-	static private ActGroup GetFirstKey(Dictionary<ActGroup, Outcome> collection)
-	{
-		foreach (var kvp in collection)
-		{
-			return kvp.Key;
-		}
 
-		return null;
-	}
 	static private bool BuildActGroupChain(Act ofAct)
 	{
 		// Return if no prologues
@@ -577,7 +571,7 @@ public class Act
 		// Create self group
 		var selfGroup = new ActGroup { ownerAct = ofAct };
 		ofAct._ownerOfGroup = selfGroup;
-		ofAct._belongsToGroups.Add(selfGroup, false);
+		ofAct._belongsToGroups.Add(selfGroup);
 
 
 		// Create group chain
@@ -609,9 +603,9 @@ public class Act
 
 
 				// Add to group if not already added
-				if (!pAct._belongsToGroups.ContainsKey(group))
+				if (!pAct._belongsToGroups.Contains(group))
 				{
-					pAct._belongsToGroups.Add(group, false);
+					pAct._belongsToGroups.Add(group);
 				}
 			}
 
@@ -672,7 +666,7 @@ public class Act
 
 			// Try entering if already performed
 			var didFailPerform = false;
-			if (!act._belongsToGroups.ContainsKey(group) || act._belongsToGroups[group])  // Incase duplicate acts in prologue
+			if (!act._belongsToGroups.Contains(group) || act._requestedByGroups.Contains(group))  // Incase duplicate acts in prologue
 			{
 				group._completed++;
 				ofAct.ContinuePrologue(ofAct, Outcome.Success);
@@ -681,14 +675,14 @@ public class Act
 			// Skip if already performing
 			else if (act.IsPerforming())
 			{
-				act._belongsToGroups[group] = true;
+				act._requestedByGroups.Add(group);
 				act.PerformPrologues();
 			}
 
 			// Perform prologue
 			else
 			{
-				act._belongsToGroups[group] = true;
+				act._requestedByGroups.Add(group);
 				didFailPerform = !act.PerformImpl();
 			}
 
@@ -910,9 +904,9 @@ public class Act
 
 
 		// Get all prologue groups
-		foreach (var kvp in _belongsToGroups)
+		foreach (var group in _belongsToGroups)
 		{
-			var pGroup = kvp.Key.next;
+			var pGroup = group.next;
 			if (pGroup != null)
 			{
 				_prologueGroups.Add(pGroup);
@@ -970,9 +964,9 @@ public class Act
 
 
 		// Wait for all prologue groups to complete
-		foreach (var kvp in _belongsToGroups)
+		foreach (var group in _belongsToGroups)
 		{
-			var pGroup = kvp.Key.next;
+			var pGroup = group.next;
 			if (pGroup != null && !ActGroup.HaveAllPerformed(pGroup))
 			{
 				return;
@@ -1198,9 +1192,9 @@ public class Act
 		else
 		{
 			// Reuse prologue groups
-			foreach (var kvp in _belongsToGroups)
+			foreach (var group in _belongsToGroups)
 			{
-				_prologueGroups.Add(kvp.Key.next);
+				_prologueGroups.Add(group.next);
 			}
 
 
@@ -1241,24 +1235,26 @@ public class Act
 
 
 		// Add epilogues
-		foreach (var kvp in _belongsToGroups)
+		foreach (var group in _belongsToGroups)
 		{
-			var eGroup = kvp.Key.prev;
+			var eGroup = group.prev;
 			if (eGroup != null)
 			{
-				_epilogueGroups.Add(eGroup, _outcome);
+				_epilogueGroups.Add(eGroup);
+				_epilogueOutcomes.Add(eGroup, _outcome);
 			}
 		}
 
 
 		// Increment group completed
-		foreach (var kvp in _epilogueGroups)
+		foreach (var eGroup in _epilogueGroups)
 		{
-			var group = kvp.Key.next;
-			if (_belongsToGroups.ContainsKey(group) && _belongsToGroups[group])
+			var group = eGroup.next;
+			if (_belongsToGroups.Contains(group) && _requestedByGroups.Contains(group))
 			{
 				group._completed++;
 				_belongsToGroups.Remove(group);
+				_requestedByGroups.Remove(group);
 			}
 		}
 
@@ -1320,9 +1316,11 @@ public class Act
 			// Continue all epilogues
 			while (_epilogueGroups.Count != 0)
 			{
-				var eGroup = GetFirstKey(_epilogueGroups);
-				var eOutcome = _epilogueGroups[eGroup];
-				_epilogueGroups.Remove(eGroup);
+				var lastIndex = _epilogueGroups.Count - 1;
+				var eGroup = _epilogueGroups[lastIndex];
+				var eOutcome = _epilogueOutcomes[eGroup];
+				_epilogueGroups.RemoveAt(lastIndex);
+				_epilogueOutcomes.Remove(eGroup);
 				ContinueActGroup(this, eGroup, eOutcome);
 			}
 		}
@@ -1400,8 +1398,10 @@ public class Act
 			_outcome = Outcome.None;
 			_actsToBlock = null;
 			_belongsToGroups.Clear();
+			_requestedByGroups.Clear();
 			_prologueGroups.Clear();
 			_epilogueGroups.Clear();
+			_epilogueOutcomes.Clear();
 			_hasInitialized = false;
 			_isRetrying = false;
 			_performCount = 0;
