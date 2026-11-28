@@ -1472,12 +1472,6 @@ public class Act
 
 			_actsToBlock = null;
 
-			_prologueGroups.Clear();
-			_epilogueGroups.Clear();
-			_requestedBy.Clear();
-			_continueEpilogues.Clear();
-			_epilogueOutcomes.Clear();
-
 			_hasModRequest = false;
 			_hasModPrologues = false;
 
