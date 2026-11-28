@@ -1000,9 +1000,9 @@ public class Act
 				}
 				else if (pAct.IsPerforming())  // Cascade if already performing
 				{
-					pAct._hasModRequest = true;
 					pAct._requestedBy.Add(headAct, false);
 					pAct.PerformPrologues();
+					pAct._hasModRequest = true;
 				}
 				else  // Perform
 				{
