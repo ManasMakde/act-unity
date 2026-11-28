@@ -504,10 +504,10 @@ public class Act
 	[NonSerialized] private Dictionary<Act, BlockType> _actsToBlock = null;
 	[NonSerialized] private HashSet<Act> _blockedByActs = new();
 
-	[NonSerialized] private List<List<Act>> _prologueSeq = null;
+	[NonSerialized] private Dictionary<Act /* headAct */, bool /* didComplete */> _requestedBy = new();
 	[NonSerialized] private Dictionary<Act /* headAct */, List<Act>> _prologueGroups = new();
 	[NonSerialized] private Dictionary<Act /* headAct */, List<Act>> _epilogueGroups = new();
-	[NonSerialized] private Dictionary<Act /* headAct */, bool /* didComplete */> _requestedBy = new();
+	[NonSerialized] private List<List<Act>> _finishPrologues = new();
 	[NonSerialized] private List<Act> _continueEpilogues = new();
 	[NonSerialized] private Dictionary<Act, Outcome> _epilogueOutcomes = new();
 
@@ -539,8 +539,8 @@ public class Act
 
 
 		// Return if null
-		var pSeq = ofAct.prologue.Invoke(ofAct);
-		if (pSeq == null)
+		var prologueOut = ofAct.prologue.Invoke(ofAct);
+		if (prologueOut == null)
 		{
 			ofAct.WriteLog("Cannot build prologue chain, prologue returned null!");
 			return false;
@@ -550,10 +550,10 @@ public class Act
 		// Return if any null in prologue
 		bool isEmpty = true;
 		int lastGroupIndex = -1;
-		for (int i = pSeq.Count - 1; i >= 0; i--)
+		for (int i = prologueOut.Count - 1; i >= 0; i--)
 		{
 			// Return if any null
-			var pArray = pSeq[i];
+			var pArray = prologueOut[i];
 			if (pArray == null || pArray.Contains(null))
 			{
 				ofAct.WriteLog($"Failed to build prologue chain, List of index {i} contains a null!");
@@ -577,16 +577,12 @@ public class Act
 		}
 
 
-		// Assign prologue sequence
-		ofAct._prologueSeq = pSeq;
-
-
 		// Create chain
 		List<Act> prevArray = null;
-		for (int i = pSeq.Count - 1; i >= 0; i--)
+		for (int i = prologueOut.Count - 1; i >= 0; i--)
 		{
 			// Skip empty lists
-			var pArray = pSeq[i];
+			var pArray = prologueOut[i];
 			if (pArray.Count == 0)
 			{
 				continue;
@@ -648,8 +644,8 @@ public class Act
 	}
 	static private void ClearPrologueChain(Act ofAct)
 	{
-		// Return if invalid prologue sequence
-		if (ofAct._prologueSeq == null)
+		// Return if no self prologues
+		if (!ofAct._prologueGroups.ContainsKey(ofAct))
 		{
 			return;
 		}
@@ -659,24 +655,35 @@ public class Act
 		ofAct._requestedBy.Remove(ofAct);
 
 
-		// Unlink self
+		// Store and unlink self
+		var pArray = ofAct._prologueGroups[ofAct];
 		ofAct._prologueGroups.Remove(ofAct);
 
 
-		// Iterate and unlink all
-		foreach (var pArray in ofAct._prologueSeq)
+		// Iterate through groups
+		while (pArray != null)
 		{
+			// Iterate through prologues of groups
+			List<Act> nextArray = null;
 			foreach (var pAct in pArray)
 			{
+				// Get next group
+				if (nextArray == null && pAct._prologueGroups.ContainsKey(ofAct))
+				{
+					nextArray = pAct._prologueGroups[ofAct];
+				}
+
+
+				// Unlink prologue, epilogue & request
 				pAct._prologueGroups.Remove(ofAct);
 				pAct._epilogueGroups.Remove(ofAct);
 				pAct._requestedBy.Remove(ofAct);
 			}
+
+
+			// Move onto next
+			pArray = nextArray;
 		}
-
-
-		// Clear prologue sequence
-		ofAct._prologueSeq = null;
 	}
 	static private bool AreProloguesCompleted(Act ofAct)
 	{
@@ -705,24 +712,43 @@ public class Act
 
 		return true;
 	}
-	static private void FinishPrologues(Act ofAct)
+	static private void FinishPrologues(Act ofAct, bool selfOnly = false)
 	{
-		Outcome pOutcome = ofAct._outcome == Outcome.Retry ? Outcome.Interrupted : ofAct._outcome;
-		foreach (var kvp in ofAct._prologueGroups)
+		// Return if no self prologues
+		if (selfOnly && !ofAct._prologueGroups.ContainsKey(ofAct))
 		{
-			var headAct = kvp.Key;
-			var pArray = kvp.Value;
-			if (pArray == null)
-			{
-				headAct.Finish(pOutcome);
-				continue;
-			}
+			return;
+		}
 
+
+		// Store all prologues to avoid mutation
+		if (selfOnly)
+		{
+			var pArray = ofAct._prologueGroups[ofAct];
+			ofAct._finishPrologues.Add(pArray);
+		}
+		else
+		{
+			foreach (var kvp in ofAct._prologueGroups)
+			{
+				ofAct._finishPrologues.Add(kvp.Value);
+			}
+		}
+
+
+		// Finish all prologues
+		var pOutcome = ofAct._outcome == Outcome.Retry ? Outcome.Interrupted : ofAct._outcome;
+		foreach (var pArray in ofAct._finishPrologues)
+		{
 			foreach (var pAct in pArray)
 			{
 				pAct.Finish(pOutcome);
 			}
 		}
+
+
+		// Clear store
+		ofAct._finishPrologues.Clear();
 	}
 	static private void ShiftEpilogues(Act ofAct)
 	{
@@ -912,7 +938,7 @@ public class Act
 
 
 		// Skip if no prologues
-		if (_prologueSeq == null && _prologueGroups.Count == 0)
+		if (_prologueGroups.Count == 0)
 		{
 			Redirect(Status.Entering);  // Intentionally before pre prologue signal
 			return;
@@ -1237,8 +1263,8 @@ public class Act
 	}
 	private void ConcludingImpl()
 	{
-		// Finish prologues
-		FinishPrologues(this);
+		// Finish self prologues
+		FinishPrologues(this, true);
 
 
 		// Clear chain this act created
@@ -1262,6 +1288,10 @@ public class Act
 			// Change outcome to failure
 			_outcome = Outcome.Failure;
 		}
+
+
+		// Finish all other prologues
+		FinishPrologues(this);
 
 
 		// Shift all epilogues
@@ -1415,7 +1445,6 @@ public class Act
 			_outcome = Outcome.None;
 			_actsToBlock = null;
 
-			_prologueSeq = null;
 			_prologueGroups.Clear();
 			_epilogueGroups.Clear();
 			_requestedBy.Clear();
