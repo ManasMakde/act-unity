@@ -937,8 +937,8 @@ public class Act
 		if (_status != Status.Prologuing || currLifetimePerformCount != _lifetimePerformCount) { return; }
 
 
-		// Skip if no prologues
-		if (_prologueGroups.Count == 0)
+		// Skip if no act requested prologues
+		if (_requestedBy.Count == 0)
 		{
 			Redirect(Status.Entering);  // Intentionally before pre prologue signal
 			return;
