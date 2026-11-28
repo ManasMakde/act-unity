@@ -38,15 +38,16 @@ public class Theater : MonoBehaviour
     // Public Methods
     public void PerformAll()
     {
-        // Copy over all acts
-        _performActs.UnionWith(_allActs);
+        // Copy all acts
+        CopyHashSetToList(_allActs, _performActs);
 
 
         // Perform all acts
         while (_performActs.Count != 0)
         {
-            var act = GetFirst(_performActs);
-            _performActs.Remove(act);
+            int lastIndex = _performActs.Count - 1;
+            var act = _performActs[lastIndex];
+            _performActs.RemoveAt(lastIndex);
             act.Perform();
         }
 
@@ -56,15 +57,16 @@ public class Theater : MonoBehaviour
     }
     public void RetryAll()
     {
-        // Copy over all acts
-        _retryActs.UnionWith(_allActs);
+        // Copy all acts
+        CopyHashSetToList(_allActs, _retryActs);
 
 
         // Retry all acts
         while (_retryActs.Count != 0)
         {
-            var act = GetFirst(_retryActs);
-            _retryActs.Remove(act);
+            int lastIndex = _retryActs.Count - 1;
+            var act = _retryActs[lastIndex];
+            _retryActs.RemoveAt(lastIndex);
             act.Retry();
         }
 
@@ -74,15 +76,16 @@ public class Theater : MonoBehaviour
     }
     public void AbortAll()
     {
-        // Copy over all acts
-        _abortActs.UnionWith(_allActs);
+        // Copy all acts
+        CopyHashSetToList(_allActs, _abortActs);
 
 
         // Abort all acts
         while (_abortActs.Count != 0)
         {
-            var act = GetFirst(_abortActs);
-            _abortActs.Remove(act);
+            int lastIndex = _abortActs.Count - 1;
+            var act = _abortActs[lastIndex];
+            _abortActs.RemoveAt(lastIndex);
             act.Abort();
         }
 
@@ -160,19 +163,19 @@ public class Theater : MonoBehaviour
     private HashSet<Act> _allActs = new();
     private HashSet<Act> _performingActs = new();
 
-    private HashSet<Act> _performActs = new();
-    private HashSet<Act> _retryActs = new();
-    private HashSet<Act> _abortActs = new();
+    private List<Act> _performActs = new();
+    private List<Act> _retryActs = new();
+    private List<Act> _abortActs = new();
 
     private Dictionary<Act, Act.TickFlags> _performDeferActs = new();
     private Dictionary<Act, Act.TickFlags> _retryDeferActs = new();
     private Dictionary<Act, Act.TickFlags> _abortDeferActs = new();
     private HashSet<Act> _tickActs = new();
 
-    private Dictionary<Act, Act.TickFlags> _performingDeferActs = new();
-    private Dictionary<Act, Act.TickFlags> _retryingDeferActs = new();
-    private Dictionary<Act, Act.TickFlags> _abortingDeferActs = new();
-    private HashSet<Act> _tickingActs = new();
+    private List<Act> _performingDeferActs = new();
+    private List<Act> _retryingDeferActs = new();
+    private List<Act> _abortingDeferActs = new();
+    private List<Act> _tickingActs = new();
 
     private bool _isEnabled = true;
 
@@ -230,7 +233,6 @@ public class Theater : MonoBehaviour
         }
 
         _performDeferActs[act] = flag;
-        _performingDeferActs.Remove(act);
     }
     private void RetryDeferred(Act act, Act.TickFlags flag)
     {
@@ -241,7 +243,6 @@ public class Theater : MonoBehaviour
         }
 
         _retryDeferActs[act] = flag;
-        _retryingDeferActs.Remove(act);
     }
     private void AbortDeferred(Act act, Act.TickFlags flag)
     {
@@ -252,7 +253,6 @@ public class Theater : MonoBehaviour
         }
 
         _abortDeferActs[act] = flag;
-        _abortingDeferActs.Remove(act);
     }
     private void CancelPerformDeferred(Act act)
     {
@@ -262,7 +262,6 @@ public class Theater : MonoBehaviour
         }
 
         _performDeferActs.Remove(act);
-        _performingDeferActs.Remove(act);
     }
     private void CancelRetryDeferred(Act act)
     {
@@ -272,7 +271,6 @@ public class Theater : MonoBehaviour
         }
 
         _retryDeferActs.Remove(act);
-        _retryingDeferActs.Remove(act);
     }
     private void CancelAbortDeferred(Act act)
     {
@@ -282,7 +280,6 @@ public class Theater : MonoBehaviour
         }
 
         _abortDeferActs.Remove(act);
-        _abortingDeferActs.Remove(act);
     }
     private void CancelAllPerformDeferred()
     {
@@ -316,7 +313,6 @@ public class Theater : MonoBehaviour
         }
 
         _tickActs.Remove(act);
-        _tickingActs.Remove(act);
     }
 
 
@@ -325,26 +321,30 @@ public class Theater : MonoBehaviour
     {
         Debug.LogWarning(message);
     }
-    private static Act GetFirstKey(Dictionary<Act, Act.TickFlags> collection)
+    private static void CopyHashSetToList(HashSet<Act> from, List<Act> to)
     {
-        foreach (var kvp in collection)
-        {
-            return kvp.Key;
-        }
+        to.Clear();
 
-        return null;
-    }
-    private static Act GetFirst(HashSet<Act> collection)
-    {
-        foreach (var data in collection)
+        foreach (var act in from)
         {
-            return data;
+            to.Add(act);
         }
-
-        return null;
     }
-    private static void TickStagedActs(HashSet<Act> acts, HashSet<Act> tickingActs, Act.TickFlags flag)
+    private static void CopyDictToList(Dictionary<Act, Act.TickFlags> from, List<Act> to)
     {
+        to.Clear();
+
+        foreach (var kvp in from)
+        {
+            to.Add(kvp.Key);
+        }
+    }
+    private static void TickStagedActs(HashSet<Act> acts, List<Act> tickingActs, Act.TickFlags flag)
+    {
+        // Copy all acts
+        CopyHashSetToList(acts, tickingActs);
+
+
         // Return if no acts to tick
         if (tickingActs.Count == 0)
         {
@@ -356,12 +356,19 @@ public class Theater : MonoBehaviour
         while (tickingActs.Count != 0)
         {
             // Get act
-            var act = GetFirst(tickingActs);
-            tickingActs.Remove(act);
-            acts.Add(act);
+            int lastIndex = tickingActs.Count - 1;
+            var act = tickingActs[lastIndex];
+            tickingActs.RemoveAt(lastIndex);
 
 
-            // Continue if cannot tick
+            // Skip if no longer staged
+            if (!acts.Contains(act))
+            {
+                continue;
+            }
+
+
+            // Skip if cannot tick
             if (!act.CanTick(flag))
             {
                 continue;
@@ -383,8 +390,12 @@ public class Theater : MonoBehaviour
             }
         }
     }
-    private static void InvokeOnActs(Dictionary<Act, Act.TickFlags> acts, Dictionary<Act, Act.TickFlags> invokingActs, Operation operation, Act.TickFlags flag)
+    private static void InvokeOnActs(Dictionary<Act, Act.TickFlags> acts, List<Act> invokingActs, Operation operation, Act.TickFlags flag)
     {
+        // Copy all acts
+        CopyDictToList(acts, invokingActs);
+
+
         // Return if no acts to operate
         if (invokingActs.Count == 0)
         {
@@ -396,17 +407,28 @@ public class Theater : MonoBehaviour
         while (invokingActs.Count != 0)
         {
             // Get act
-            var act = GetFirstKey(invokingActs);
-            var actFlag = invokingActs[act];
-            invokingActs.Remove(act);
+            int lastIndex = invokingActs.Count - 1;
+            var act = invokingActs[lastIndex];
+            invokingActs.RemoveAt(lastIndex);
 
 
-            // Continue if not to invoke
-            if (!((actFlag & flag) != 0))
+            // Skip if no longer staged
+            if (!acts.ContainsKey(act))
             {
-                acts[act] = actFlag;
                 continue;
             }
+
+
+            // Skip if not to invoke
+            var actFlag = acts[act];
+            if (!((actFlag & flag) != 0))
+            {
+                continue;
+            }
+
+
+            // Remove from acts
+            acts.Remove(act);  // Intentionally before invoke to avoid tick type re-defer being lost
 
 
             // Invoke operation
@@ -429,89 +451,23 @@ public class Theater : MonoBehaviour
     // Private Override Methods
     private void Update()
     {
-        // Tick all acts
-        var tickTemp = _tickActs;  // Reference swap so no act can be readded
-        _tickActs = _tickingActs;
-        _tickingActs = tickTemp;
         TickStagedActs(_tickActs, _tickingActs, Act.TickFlags.Tick);
-
-
-        // Perform deferred
-        var performTemp = _performDeferActs;  // Reference swap so no act can be readded
-        _performDeferActs = _performingDeferActs;
-        _performingDeferActs = performTemp;
         InvokeOnActs(_performDeferActs, _performingDeferActs, Operation.Perform, Act.TickFlags.Tick);
-
-
-        // Retry deferred
-        var retryTemp = _retryDeferActs;  // Reference swap so no act can be readded
-        _retryDeferActs = _retryingDeferActs;
-        _retryingDeferActs = retryTemp;
         InvokeOnActs(_retryDeferActs, _retryingDeferActs, Operation.Retry, Act.TickFlags.Tick);
-
-
-        // Abort deferred
-        var abortTemp = _abortDeferActs;  // Reference swap so no act can be readded
-        _abortDeferActs = _abortingDeferActs;
-        _abortingDeferActs = abortTemp;
         InvokeOnActs(_abortDeferActs, _abortingDeferActs, Operation.Abort, Act.TickFlags.Tick);
     }
     private void FixedUpdate()
     {
-        // Physics tick all acts
-        var tickTemp = _tickActs;  // Reference swap so no act can be readded
-        _tickActs = _tickingActs;
-        _tickingActs = tickTemp;
         TickStagedActs(_tickActs, _tickingActs, Act.TickFlags.PhysicsTick);
-
-
-        // Perform deferred
-        var performTemp = _performDeferActs;  // Reference swap so no act can be readded
-        _performDeferActs = _performingDeferActs;
-        _performingDeferActs = performTemp;
         InvokeOnActs(_performDeferActs, _performingDeferActs, Operation.Perform, Act.TickFlags.PhysicsTick);
-
-
-        // Retry deferred
-        var retryTemp = _retryDeferActs;  // Reference swap so no act can be readded
-        _retryDeferActs = _retryingDeferActs;
-        _retryingDeferActs = retryTemp;
         InvokeOnActs(_retryDeferActs, _retryingDeferActs, Operation.Retry, Act.TickFlags.PhysicsTick);
-
-
-        // Abort deferred
-        var abortTemp = _abortDeferActs;  // Reference swap so no act can be readded
-        _abortDeferActs = _abortingDeferActs;
-        _abortingDeferActs = abortTemp;
         InvokeOnActs(_abortDeferActs, _abortingDeferActs, Operation.Abort, Act.TickFlags.PhysicsTick);
     }
     private void LateUpdate()
     {
-        // Late tick all acts
-        var tickTemp = _tickActs;  // Reference swap so no act can be readded
-        _tickActs = _tickingActs;
-        _tickingActs = tickTemp;
         TickStagedActs(_tickActs, _tickingActs, Act.TickFlags.LateTick);
-
-
-        // Perform deferred
-        var performTemp = _performDeferActs;  // Reference swap so no act can be readded
-        _performDeferActs = _performingDeferActs;
-        _performingDeferActs = performTemp;
         InvokeOnActs(_performDeferActs, _performingDeferActs, Operation.Perform, Act.TickFlags.LateTick);
-
-
-        // Retry deferred
-        var retryTemp = _retryDeferActs;  // Reference swap so no act can be readded
-        _retryDeferActs = _retryingDeferActs;
-        _retryingDeferActs = retryTemp;
         InvokeOnActs(_retryDeferActs, _retryingDeferActs, Operation.Retry, Act.TickFlags.LateTick);
-
-
-        // Abort deferred
-        var abortTemp = _abortDeferActs;  // Reference swap so no act can be readded
-        _abortDeferActs = _abortingDeferActs;
-        _abortingDeferActs = abortTemp;
         InvokeOnActs(_abortDeferActs, _abortingDeferActs, Operation.Abort, Act.TickFlags.LateTick);
     }
     private void OnEnable()
