@@ -675,10 +675,12 @@ public class Act
 
 
 				// Unlink prologue, epilogue & request
-				pAct._hasModPrologues = true;
 				pAct._prologueGroups.Remove(ofAct);
 				pAct._epilogueGroups.Remove(ofAct);
 				pAct._requestedBy.Remove(ofAct);
+
+				pAct._hasModPrologues = true;
+				pAct._hasModRequest = true;
 			}
 
 
@@ -974,6 +976,7 @@ public class Act
 		// Save life time count & Reset modified request 
 		int currLifetimePerformCount = _lifetimePerformCount;
 		_hasModRequest = false;
+		_hasModPrologues = false;
 
 
 		// Iterate all head acts
@@ -1017,6 +1020,14 @@ public class Act
 				if (!didPerform)
 				{
 					Redirect(Status.Concluding, Outcome.Failure);
+					return;
+				}
+
+				
+				// Break if prologue modified
+				if (_hasModPrologues)
+				{
+					PerformPrologues();
 					return;
 				}
 
