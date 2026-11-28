@@ -501,23 +501,23 @@ public class Act
 	[NonSerialized] private Status _prevStatus = Status.None;
 	[NonSerialized] private Outcome _outcome = Outcome.None;
 
+	[NonSerialized] private string _initName;
+	[NonSerialized] private Theater _initTheater;
+	[NonSerialized] private bool _hasInitialized = false;
+	[NonSerialized] private bool _isEnabled = true;
+	[NonSerialized] private bool _isRetrying = false;
+
 	[NonSerialized] private Dictionary<Act, BlockType> _actsToBlock = null;
 	[NonSerialized] private HashSet<Act> _blockedByActs = new();
 
 	[NonSerialized] private Dictionary<Act /* headAct */, bool /* didComplete */> _requestedBy = new();
 	[NonSerialized] private Dictionary<Act /* headAct */, List<Act>> _prologueGroups = new();
 	[NonSerialized] private Dictionary<Act /* headAct */, List<Act>> _epilogueGroups = new();
-	[NonSerialized] private List<List<Act>> _finishPrologues = new();
 	[NonSerialized] private List<Act> _continueEpilogues = new();
 	[NonSerialized] private Dictionary<Act, Outcome> _epilogueOutcomes = new();
 
-	[NonSerialized] private string _initName;
-	[NonSerialized] private Theater _initTheater;
-
-	[NonSerialized] private bool _hasInitialized = false;
-	[NonSerialized] private bool _isEnabled = true;
-	[NonSerialized] private bool _isRetrying = false;
 	[NonSerialized] private bool _hasModRequest = false;
+	[NonSerialized] private bool _hasModPrologues = false;
 
 	[NonSerialized] private int _performCount = 0;
 	[NonSerialized] private int _tickCount = 0;
@@ -675,6 +675,7 @@ public class Act
 
 
 				// Unlink prologue, epilogue & request
+				pAct._hasModPrologues = true;
 				pAct._prologueGroups.Remove(ofAct);
 				pAct._epilogueGroups.Remove(ofAct);
 				pAct._requestedBy.Remove(ofAct);
@@ -721,34 +722,42 @@ public class Act
 		}
 
 
-		// Store all prologues to avoid mutation
-		if (selfOnly)
-		{
-			var pArray = ofAct._prologueGroups[ofAct];
-			ofAct._finishPrologues.Add(pArray);
-		}
-		else
-		{
-			foreach (var kvp in ofAct._prologueGroups)
-			{
-				ofAct._finishPrologues.Add(kvp.Value);
-			}
-		}
+		// Reset mod flag
+		ofAct._hasModPrologues = false;
 
 
-		// Finish all prologues
+		// Iterate prologues
 		var pOutcome = ofAct._outcome == Outcome.Retry ? Outcome.Interrupted : ofAct._outcome;
-		foreach (var pArray in ofAct._finishPrologues)
+		foreach (var kvp in ofAct._prologueGroups)
 		{
-			foreach (var pAct in pArray)
+			// Skip if self only
+			var headAct = kvp.Key;
+			if (selfOnly && headAct != ofAct)
 			{
+				continue;
+			}
+
+
+			// Finish prologues of requested
+			foreach (var pAct in kvp.Value)
+			{
+				// Skip if not requested or has already completed request
+				if (!pAct._requestedBy.ContainsKey(headAct) || pAct._requestedBy[headAct])
+				{
+					continue;
+				}
+
 				pAct.Finish(pOutcome);
 			}
+
+
+			// Restart if prologues modified
+			if (ofAct._hasModPrologues)
+			{
+				FinishPrologues(ofAct, selfOnly);
+				return;
+			}
 		}
-
-
-		// Clear store
-		ofAct._finishPrologues.Clear();
 	}
 	static private void ShiftEpilogues(Act ofAct)
 	{
@@ -1440,12 +1449,16 @@ public class Act
 
 
 			// Reset all
-			_name = "";
 			condition = null;
 			prologue = null;
 			block = null;
+			_name = "";
 			_theater = null;
 			_outcome = Outcome.None;
+
+			_hasInitialized = false;
+			_isRetrying = false;
+
 			_actsToBlock = null;
 
 			_prologueGroups.Clear();
@@ -1454,9 +1467,8 @@ public class Act
 			_continueEpilogues.Clear();
 			_epilogueOutcomes.Clear();
 
-			_hasInitialized = false;
-			_isRetrying = false;
 			_hasModRequest = false;
+			_hasModPrologues = false;
 
 			_performCount = 0;
 			_tickCount = 0;
