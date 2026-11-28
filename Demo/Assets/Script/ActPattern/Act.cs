@@ -1302,7 +1302,10 @@ public class Act
 		foreach (var kvp in _epilogueGroups)
 		{
 			var head = kvp.Key;
-			_requestedBy[head] = true;
+			if (_requestedBy.ContainsKey(head))
+			{
+				_requestedBy[head] = true;
+			}
 		}
 
 
